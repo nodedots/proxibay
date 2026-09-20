@@ -1,0 +1,191 @@
+# API_CONTRACT.md — Proxibay Phase 1 (DRAFT for review — no implementation yet)
+
+Scope: everything needed for the **Add Project flow** + **Firebase** + **Generic Webhook**
+connectors. Stripe / Supabase / Alerting are NOT in this contract (later phases).
+
+Base URL (emulator): `http://localhost:5001/proxibay-dev/europe-west1/api`
+Base URL (prod): `https://europe-west1-proxibay-dev.cloudfunctions.net/api`
+All paths below are relative to the base. One Express-style v2 `onRequest` function
+(`api`) with sub-routers keeps the function count (and cold starts) at 1.
+
+## Conventions
+
+- **Auth (all except `POST /v1/ingest/:connectorId`):** Firebase Auth ID token,
+  `Authorization: Bearer <idToken>`. 401 if missing/invalid. `ownerId` is always
+  derived from the token — never trusted from the client body.
+- **Content type:** `application/json` unless noted.
+- **Errors:** `{ "error": { "code": "string_snake_case", "message": "human readable" } }`
+  with HTTP status. Codes: `unauthenticated` 401, `forbidden` 403, `not_found` 404,
+  `invalid_argument` 400, `conflict` 409, `rate_limited` 429, `internal` 500.
+- **Timestamps:** ISO-8601 strings on the wire (`2026-09-20T14:00:00.000Z`); Firestore
+  `Timestamp` in storage. `timestamp` omitted on ingest ⇒ server receipt time.
+- **Direct Firestore reads (no endpoint):** project list/detail and metric buckets are
+  read directly by the client (rules enforce owner scoping). The `GET` endpoints below
+  exist as convenience aggregations; clients may use either.
+
+---
+
+## Projects (Add Project flow, steps 1 / 4 / 5)
+
+### POST /v1/projects — createProject
+Step 1 of the flow. Name only required.
+```json
+// request
+{ "name": "Swaptrick", "description?": "…", "stackTags?": ["firebase","react"],
+  "repoUrl?": "https://…", "liveUrl?": "https://…",
+  "environment?": "production|staging|development", "notes?": "…" }
+// 201 response
+{ "project": { "id": "abc", "ownerId": "uid", "name": "Swaptrick",
+  "status": "active", "createdAt": "…", "updatedAt": "…" } }
+```
+400 `invalid_argument` if `name` missing/blank. `status` always starts `"active"`.
+
+### GET /v1/projects — listProjects
+Portfolio Home needs per-card connector statuses + key numbers without N+1 reads.
+```json
+// 200 response
+{ "projects": [ {
+  "project": { "id": "…", "name": "…", "status": "active", "stackTags": [],
+               "updatedAt": "…" },
+  "connectorStatuses": ["connected","pending"],
+  "keyMetrics": [ { "metricType": "user_metrics", "key": "total_users",
+                    "value": 1234, "at": "…" } ],
+  "homeStatus": "green|gray|amber|red"
+} ] }
+```
+Query: `?status=active` (default all non-archived; `archived` only with explicit
+`?status=archived`). Red state is always `"green"` in Phase 1 (no alert engine yet).
+
+### PATCH /v1/projects/:projectId — updateProject
+Inline editing (flow step 5) — any subset of catalog fields + status transitions.
+```json
+// request (all optional)
+{ "name?": "…", "description?": "…", "stackTags?": ["…"], "repoUrl?": "…",
+  "liveUrl?": "…", "environment?": "production|staging|development|null",
+  "notes?": "…", "status?": "active|paused|archived" }
+// 200 response
+{ "project": { "id": "…", "updatedAt": "…", "status": "…" } }
+```
+404 if not owned. Clearing an optional field: send `null`.
+
+### DELETE /v1/projects/:projectId — deleteProject (soft-archive, per D8)
+```json
+// 200 response
+{ "project": { "id": "…", "status": "archived" },
+  "disabledConnectors": 2, "note": "Ingest URLs now return 410 Gone." }
+```
+Never hard-deletes in v1. Push URLs kept reserved so old backends fail loudly (410),
+not silently into a recycled ID.
+
+---
+
+## Firebase connector (poll)
+
+### POST /v1/projects/:projectId/connectors/firebase — createFirebaseConnector
+Flow step 3a. Body carries the service-account JSON (transport only — stored to
+Secret Manager, never Firestore).
+```json
+// request (Content-Type: application/json)
+{ "serviceAccountJson": { "type": "service_account", "project_id": "…",
+    "private_key": "…", "client_email": "…" },
+  "pollIntervalMinutes?": 30 }
+// 201 response — healthCheck already ran inline
+{ "connector": { "id": "conn_…", "type": "firebase", "authType": "service_account",
+    "fetchMode": "poll", "capabilities": ["user_metrics","error_metrics"],
+    "credentialsRef": "projects/…/secrets/proxibay-conn_…/versions/1",
+    "status": "connected|error", "lastHealthCheck": "…", "createdAt": "…" },
+  "healthCheck": { "ok": true, "detail": "listUsers(1) succeeded" } }
+```
+Failure path: 422 `connector_unhealthy` + `{ "connector": { …, "status": "error" },
+"healthCheck": { "ok": false, "detail": "…" } }` — client stays in-flow with inline
+retry (per spec, no navigation away). 409 `duplicate_connector` if a firebase
+instance already exists (1:1 per D9).
+
+### POST /v1/projects/:projectId/connectors/:connectorId/healthcheck
+Manual re-check from the detail page.
+```json
+// 200 response
+{ "connector": { "id": "…", "status": "connected|error", "lastHealthCheck": "…" },
+  "healthCheck": { "ok": true, "detail": "…" } }
+```
+
+### Polling (no HTTP contract — Cloud Scheduler → function, per D7)
+`pollFirebaseMetrics` runs every 30 min (default), reads SA from Secret Manager via
+`credentialsRef`, emits NormalizedEvents → bucketed writes. Emitted keys v1:
+`user_metrics/signups`, `user_metrics/total_users`, `error_metrics/error_count`.
+(`active_users` only if source app maintains `lastActiveAt`; `uptime`/`revenue`
+explicitly out of scope for this connector.)
+
+---
+
+## Generic Webhook connector (push)
+
+### POST /v1/projects/:projectId/connectors/webhook — createWebhookConnector
+Flow step 3b. No credentials in — secret generated server-side.
+```json
+// request: {} (empty body)
+// 201 response — signingSecret shown ONCE, never returned again
+{ "connector": { "id": "conn_…", "type": "generic-webhook", "authType": "none",
+    "fetchMode": "push", "capabilities": [],
+    "credentialsRef": "projects/…/secrets/proxibay-conn_…/versions/1",
+    "status": "pending", "createdAt": "…" },
+  "ingestUrl": "https://…/v1/ingest/conn_…",
+  "signingSecret": "whsec_…",
+  "snippet": { "curl": "curl -X POST $URL -H 'X-Proxibay-Signature: …' …",
+               "node": "crypto.createHmac('sha256', SECRET).update(body)…" } }
+```
+`capabilities` starts empty (dev can push any of the 5 metric types); server records
+observed types. Status flips `pending → connected` on first verified event.
+
+### POST /v1/ingest/:connectorId — ingestWebhook (**public**, HMAC-gated)
+```http
+POST /v1/ingest/conn_abc
+Content-Type: application/json
+X-Proxibay-Signature: <hmac-sha256 hex of RAW body with signing secret>
+```
+```json
+// single event
+{ "metricType": "user_metrics", "key": "signups", "value": 3,
+  "timestamp?": "2026-09-20T14:00:00Z", "metadata?": { "source": "nightly-batch" } }
+// …or batch (max 500 per D5)
+[ { "metricType": "user_metrics", "key": "signups", "value": 3 }, … ]
+```
+`projectId`/`connectorId` are taken from the URL, never the body.
+Validation: `metricType` ∈ 5-type enum (unknown ⇒ 400, NOT coerced to `custom`);
+`value` numeric; `timestamp` optional ⇒ receipt time.
+```json
+// 202 response
+{ "accepted": 2, "bucketIds": ["proj_user_metrics_signups_2026-09-20", "…"],
+  "connectorStatus": "connected" }
+```
+Failures: 401 `bad_signature` (no/incorrect header), 404 `unknown_connector`,
+410 `connector_disabled` (project archived per D8), 429 `rate_limited`
+(>60 req/min per connector per D5, with `Retry-After` header), 400 `invalid_event`.
+
+### POST /v1/projects/:projectId/connectors/:connectorId/rotate-secret
+```json
+// 200 response — new secret shown ONCE; old secret stays valid 24h (grace window)
+{ "signingSecret": "whsec_new…", "graceUntil": "2026-09-21T…Z" }
+```
+
+---
+
+## Metrics reads (Project Detail charts — full layout spec still to come, step 9)
+
+### GET /v1/projects/:projectId/metrics — getProjectMetrics
+```http
+GET /v1/projects/:projectId/metrics?key=signups&metricType=user_metrics&from=2026-08-21&to=2026-09-20
+// 200 response — one entry per day-bucket in range (ascending)
+{ "buckets": [ { "date": "2026-09-20",
+  "points": [{ "time": "…", "value": 3 }],
+  "dailyAggregate": { "sum": 9, "avg": 3, "max": 5, "min": 1, "last": 2 } } ] }
+```
+`metricType`+`key` required; `from`/`to` default to last 30d; max 90d per call.
+(Client may alternatively read `metrics/` docs directly — same shape.)
+
+---
+
+## Out of scope (explicitly NOT in this contract)
+Stripe, Supabase, AlertRules / alert evaluation / notifications, cross-project inbox,
+self-signup, team sharing. `homeStatus: "red"` and `hasTriggeredUnresolvedAlert`
+are carried in types for Phase 2 but the alert engine doesn't exist yet.

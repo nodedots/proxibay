@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(ownerId) {
+      return signedIn() && request.auth.uid == ownerId;
+    }
+
+    function parentProjectOwner(projectId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId == request.auth.uid;
+    }
+
+    // Catalog — single-owner only (PRD non-goal: no teams).
+    match /projects/{projectId} {
+      allow read: if signedIn()
+        && resource.data.ownerId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.keys().hasAll(['name', 'ownerId', 'status']);
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
+      // Deletion with active connectors explicitly handled server-side (open item);
+      // client deletes blocked for now — use the deleteProject function.
+      allow delete: if false;
+
+      match /connectors/{connectorId} {
+        allow read: if parentProjectOwner(projectId);
+        // Connector creates/updates go through Cloud Functions (credential
+        // handling + healthCheck). Client writes blocked.
+        allow create, update, delete: if false;
+      }
+    }
+
+    // Time-series buckets — written by Functions (Admin SDK bypasses rules).
+    // Clients get owner-scoped reads via the parent project doc; no direct
+    // client writes. (MetricBucket has no ownerId by spec — see D2.)
+    match /metrics/{bucketId} {
+      allow read: if signedIn()
+        && get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.ownerId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+  }
+}

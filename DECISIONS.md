@@ -1,0 +1,72 @@
+# DECISIONS.md — Proxibay Phase 1 working log
+
+Per instructions: reasonable calls on PRD open items are logged here and we keep
+moving. Full-stop questions (contradictions / expensive-to-reverse) go to the user.
+
+## D1 — ConnectorInstance.type adds "stripe" (2026-09-20)
+Data Model enum omits "stripe" but Stripe spec + PRD FR7 treat Stripe as v1.
+Decision: `ConnectorType = "firebase" | "generic-webhook" | "supabase" | "stripe"`.
+Cheap now, expensive later (rules + queries depend on it).
+
+## D2 — MetricBucket doc ID includes key (2026-09-20)
+Project doc says `projectId_metricType_date`; Data Model says `projectId_metricType_key_date`.
+Decision: Data Model wins (`..._key_date`) — without key, one metricType with
+multiple keys (signups + total_users) would collide.
+
+## D3 — NormalizedEvent shape = Data Model (camelCase + connectorId/key) (2026-09-20)
+Project doc uses snake_case without connectorId/key. Decision: Data Model wins;
+it is the newer, storage-aligned shape.
+
+## D4 — Credentials live in Secret Manager, Firestore holds only credentialsRef (2026-09-20)
+PRD open item. Decision: Google Secret Manager (`projects/…/secrets/proxibay-{connectorId}/versions/latest`),
+`credentialsRef` = secret resource name. Rationale: rotation + IAM without touching
+Firestore; Functions config env would leak across instances. Firebase connector SA JSON
+and webhook signing secrets both go here. Reversible cost: medium — ref format is
+just a string, so migration path stays open.
+
+## D5 — Webhook rate limit: 60 req/min per connectorId, 500-event batch cap (2026-09-20)
+Spec leaves ceiling tbd. Decision: 60/min per connector + max 500 events per POST,
+429 + `Retry-After` on exceed, signature failures logged and counted on connector
+status. Tune after dogfood data.
+
+## D6 — Retention: raw points 30 days, daily aggregates forever (2026-09-20)
+Spec open item. Decision: scheduled cleanup trims `points` older than 30d;
+`dailyAggregate` kept forever. Keeps dashboard reads bounded, preserves history.
+Revisit if charts need longer intraday zoom.
+
+## D7 — Poll cadence: Firebase every 30 min default (2026-09-20)
+Spec range 15–60 min. Decision: 30 min default, per-connector override later.
+Balances freshness vs Functions cost at ~15-project dogfood scale.
+
+## D8 — Deletion with active connectors: soft-archive + disable ingest (2026-09-20)
+PRD open item (block vs soft-archive). Decision: `deleteProject` sets
+`status: "archived"`, flips connectors to error/disabled, ingest returns 410 Gone.
+Hard delete only via explicit second confirm later. Rationale: push URLs may still
+be live in dev backends — silent data loss is worse than a retained archived row.
+
+## D9 — Connectors strictly 1:1 with projects in v1 (2026-09-20)
+One Stripe account spanning apps is real but rare at dogfood scale.
+Decision: 1:1; multi-project sharing deferred. Each instance has own secret/URL.
+
+## D10 — "No connector" renders as neutral gray, distinct from healthy green (2026-09-20)
+Home spec folds no-connector into green (deliberate but flagged confusing).
+Decision: keep spec's priority chain, but render "no connector, no alert" as gray
+(not green) so healthy-monitored vs not-monitored are distinguishable.
+Status helper in src/types.ts preserves the chain; UI maps the final else into
+green-if-any-connector / gray-if-none. Cheap to revert if dogfood disagrees.
+
+## D11 — Tailwind v4 (@theme) + Recharts for charts (2026-09-20)
+DESIGN.md ships v4 `@theme` tokens; chart lib was "Recharts / Tremor (tbd)" in
+project doc. Decision: Tailwind v4 + Recharts. Fits existing tokens verbatim.
+
+## D12 — Region europe-west1, single-owner Auth, no self-signup UI (2026-09-20)
+Region: founder locale default; data residency cheap to change pre-launch.
+Auth: email/password, accounts created in console; client has sign-in only.
+
+## D13 — Single Express `api` function + emulator fallbacks (2026-09-20)
+One v2 `onRequest` Express app (not one function per endpoint) to keep cold starts
+at 1. Secret Manager has a Firestore (`_secrets/…`) fallback on the emulator where
+Secret Manager doesn't exist; `credentialsRef` stays opaque either way. Rate limiting
+is an in-memory per-instance minute counter — best-effort at dogfood scale; move to
+a shared store if instances scale past 1.
+
