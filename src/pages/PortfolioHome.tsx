@@ -31,15 +31,18 @@ export default function PortfolioHome() {
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'archived'>('all')
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
+    setEntries(null)
+    setError(null)
     withFallback(
       () => api<{ projects: ProjectListEntry[] }>('/v1/projects').then((r) => r.projects),
       () => listProjectsDirect(),
     )
       .then((projects) => setEntries(projects))
       .catch((e) => setError(`Could not load projects: ${e instanceof Error ? e.message : String(e)}`))
-  }, [])
+  }, [attempt])
 
   const filtered = useMemo(() => {
     if (!entries) return []
@@ -76,9 +79,31 @@ export default function PortfolioHome() {
         </select>
       </div>
 
-      {error && <p className="card mt-6 text-sm text-coral-emphasis">{error}</p>}
+      {error && (
+        <div className="card mt-6 text-center">
+          <p className="font-inter text-base font-semibold">Something went wrong loading your portfolio.</p>
+          <p className="mt-1 font-inter text-sm text-slate">{error}</p>
+          <button className="btn-primary mt-4" onClick={() => setAttempt((a) => a + 1)}>
+            Try again
+          </button>
+        </div>
+      )}
 
-      {entries === null && !error && <p className="mt-6 text-slate">Loading…</p>}
+      {entries === null && !error && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading projects">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="card flex flex-col gap-3">
+              <div className="skeleton h-6 w-2/3" />
+              <div className="flex gap-2">
+                <div className="skeleton h-6 w-16" />
+                <div className="skeleton h-6 w-16" />
+              </div>
+              <div className="skeleton h-10 w-full" />
+              <div className="skeleton h-4 w-1/2" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {entries !== null && entries.length === 0 && (
         <div className="card mt-6 text-center">
@@ -96,7 +121,7 @@ export default function PortfolioHome() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((e) => (
-          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card hover:shadow-sm">
+          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover">
             <div className="flex items-center gap-2">
               <span className={STATUS_DOT[e.homeStatus]} title={e.homeStatus} />
               <h2 className="font-inter text-lg font-semibold">{e.project.name}</h2>

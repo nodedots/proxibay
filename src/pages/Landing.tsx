@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import Logo from '../components/Logo'
+import SiteNav from '../components/SiteNav'
+import SiteFooter from '../components/SiteFooter'
 
 /**
  * Public landing page. Single-column flow per DESIGN.md:
@@ -9,19 +10,11 @@ import Logo from '../components/Logo'
 export default function Landing() {
   return (
     <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
-      {/* NAV */}
-      <nav className="bg-transparent">
-        <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
-          <Logo />
-          <Link to="/signin" className="btn-ghost">
-            Sign in
-          </Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       {/* HERO */}
       <header className="mx-auto max-w-[1200px] px-6 pb-20 pt-16 text-center sm:pt-24">
-        <h1 className="mx-auto max-w-3xl font-grifter text-display font-bold leading-display tracking-display">
+        <h1 className="mx-auto max-w-3xl font-grifter text-[40px] font-bold leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
           Stop building dashboards. <span className="text-coral-emphasis">Plug your projects in.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-body-lg text-slate">
@@ -43,7 +36,7 @@ export default function Landing() {
       <section className="mx-auto max-w-[1200px] px-6 pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-inkwell-navy p-10 shadow-sm-2 sm:p-12">
           <div className="max-w-lg">
-            <h2 className="font-grifter text-heading-lg font-bold leading-heading-lg text-paper-white">
+            <h2 className="font-grifter text-4xl font-bold leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
             </h2>
             <p className="mt-4 text-body text-paper-white/70">
@@ -105,19 +98,7 @@ export default function Landing() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-warm-stone">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-8">
-          <Logo />
-          <div className="flex gap-6 font-inter text-sm">
-            <Link to="/privacy" className="text-link text-slate">
-              Privacy
-            </Link>
-            <Link to="/terms" className="text-link text-slate">
-              Terms
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

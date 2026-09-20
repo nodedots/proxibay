@@ -117,13 +117,22 @@ body {
   border-radius: 8px;
   padding: 13px 20px;
   box-shadow: var(--shadow-subtle);
+  transition: opacity 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   opacity: 0.92;
+  box-shadow: var(--shadow-sm);
+}
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
 }
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.btn-primary:focus-visible {
+  outline: 2px solid var(--color-coral-emphasis);
+  outline-offset: 2px;
 }
 
 .btn-ghost {
@@ -134,9 +143,18 @@ body {
   font-weight: 500;
   border-radius: 8px;
   padding: 8px 16px;
+  transition: border-color 150ms ease, background-color 150ms ease;
 }
 .btn-ghost:hover {
   border-color: var(--color-slate);
+  background-color: var(--color-paper-white);
+}
+.btn-ghost:active {
+  transform: translateY(1px);
+}
+.btn-ghost:focus-visible {
+  outline: 2px solid var(--color-inkwell-navy);
+  outline-offset: 2px;
 }
 
 .card {
@@ -144,6 +162,18 @@ body {
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-sm-2);
+}
+
+/* Interactive cards (portfolio grid): subtle lift on hover. */
+.card-hover {
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+.card-hover:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+.card-hover:active {
+  transform: translateY(0);
 }
 
 .badge {
@@ -183,14 +213,27 @@ body {
 .input:focus {
   outline: 2px solid var(--color-inkwell-navy);
   outline-offset: 1px;
+  border-color: var(--color-inkwell-navy);
+}
+.input {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.input:focus {
+  box-shadow: var(--shadow-subtle);
 }
 
 .text-link {
   font-weight: 500;
   color: var(--color-inkwell-navy);
+  transition: color 150ms ease;
+  border-radius: 4px;
 }
 .text-link:hover {
   text-decoration: underline;
+}
+.text-link:focus-visible {
+  outline: 2px solid var(--color-inkwell-navy);
+  outline-offset: 2px;
 }
 .text-link-emphasis {
   color: var(--color-coral-emphasis);
@@ -215,5 +258,61 @@ body {
 }
 .status-gray {
   background-color: var(--color-slate);
+}
+
+/* Loading skeletons: warm shimmer blocks. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-warm-stone);
+  border-radius: 8px;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.65) 50%, transparent 80%);
+  animation: shimmer 1.4s infinite;
+}
+@keyframes shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* Modal + backdrop entrance (150–200ms, subtle). */
+.modal-backdrop {
+  animation: fade-in 180ms ease;
+}
+.modal-pop {
+  animation: pop-in 180ms ease;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Auth tabs + misc interactive fades. */
+.fade-swap {
+  animation: fade-in 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after,
+  .modal-backdrop,
+  .modal-pop,
+  .fade-swap {
+    animation: none;
+  }
+  .btn-primary,
+  .btn-ghost,
+  .card-hover,
+  .text-link,
+  .input {
+    transition: none;
+  }
 }
 }

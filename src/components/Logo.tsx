@@ -1,21 +1,36 @@
 import { Link } from 'react-router-dom'
 
-/** Proxibay mark: navy rounded square with a white plug glyph + wordmark. */
-export default function Logo({ dark = false }: { dark?: boolean }) {
+/**
+ * Proxibay mark: three connected nodes on a navy tile — everything close,
+ * in one place. Two nodes paper-white, one coral (the single accent).
+ * Geometric, no literal plug clip-art.
+ */
+export function ProxibayMark({ size = 32 }: { size?: number }) {
   return (
-    <Link to="/" className="flex items-center gap-2" aria-label="Proxibay home">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-inkwell-navy">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path
-            d="M9.5 1.5 4 9h3.5L6.5 14.5 12 7H8.5l1-5.5z"
-            fill="#ffffff"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-      <span className={`font-inter text-xl font-semibold ${dark ? 'text-paper-white' : 'text-inkwell-navy'}`}>
-        Proxibay
-      </span>
+    <svg width={size} height={size} viewBox="0 0 32 32" role="img" aria-label="Proxibay mark">
+      <rect width="32" height="32" rx="8" fill="#151b31" />
+      <g stroke="#ffffff" strokeWidth="2" opacity="0.85">
+        <line x1="11" y1="20.5" x2="21" y2="20.5" />
+        <line x1="11" y1="20.5" x2="16" y2="11.5" />
+        <line x1="21" y1="20.5" x2="16" y2="11.5" />
+      </g>
+      <circle cx="11" cy="20.5" r="3.5" fill="#ffffff" />
+      <circle cx="21" cy="20.5" r="3.5" fill="#ffffff" />
+      <circle cx="16" cy="11.5" r="3.5" fill="#ff5858" />
+    </svg>
+  )
+}
+
+/** Full lockup: mark + Inter 600 wordmark (per DESIGN.md brand lockups). */
+export default function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
+  return (
+    <Link to="/" className="flex items-center gap-2 rounded-lg" aria-label="Proxibay home">
+      <ProxibayMark size={compact ? 28 : 32} />
+      {!compact && (
+        <span className={`font-inter text-xl font-semibold ${dark ? 'text-paper-white' : 'text-inkwell-navy'}`}>
+          Proxibay
+        </span>
+      )}
     </Link>
   )
 }

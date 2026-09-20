@@ -10,25 +10,34 @@ import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import Landing from './pages/Landing'
 import Logo from './components/Logo'
+import About from './pages/About'
+import Learn from './pages/Learn'
+import Pricing from './pages/Pricing'
+import NotFound from './pages/NotFound'
+
+const MARKETING_PATHS = ['/', '/about', '/learn', '/pricing']
 
 function Header({ user }: { user: User | null }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  // The landing page brings its own nav — app chrome stays off it.
-  if (pathname === '/') return null
+  // Marketing pages bring their own nav — app chrome stays off them.
+  if (MARKETING_PATHS.includes(pathname)) return null
   return (
     <header className="bg-ash-canvas">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
         <Logo />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {user ? (
             <>
               <span className="hidden text-sm text-slate sm:inline">{user.email}</span>
-              <Link to="/portfolio" className="btn-ghost">
+              <Link to="/portfolio" className="btn-ghost whitespace-nowrap">
                 Portfolio
               </Link>
+              <Link to="/learn" className="hidden text-link text-sm text-slate sm:inline">
+                Learn
+              </Link>
               <button
-                className="btn-ghost"
+                className="btn-ghost whitespace-nowrap"
                 onClick={() => {
                   void signOut(auth).then(() => navigate('/signin'))
                 }}
@@ -45,6 +54,13 @@ function Header({ user }: { user: User | null }) {
       </div>
     </header>
   )
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation()
+  // Marketing pages own their full layout (incl. <main>) — don't nest landmarks.
+  if (MARKETING_PATHS.includes(pathname)) return <>{children}</>
+  return <main className="mx-auto max-w-[1200px] px-6 pb-20">{children}</main>
 }
 
 function RequireAuth({ user, children }: { user: User | null | undefined; children: JSX.Element }) {
@@ -66,11 +82,14 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
         <Header user={user ?? null} />
-        <main className="mx-auto max-w-[1200px] px-6 pb-20">
+        <Shell>
           <Routes>
             <Route path="/signin" element={<SignIn />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/learn" element={<Learn />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/" element={<Landing />} />
             <Route
               path="/portfolio"
@@ -96,8 +115,9 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
-        </main>
+        </Shell>
       </div>
     </BrowserRouter>
   )

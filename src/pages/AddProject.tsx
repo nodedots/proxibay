@@ -119,11 +119,11 @@ export default function AddProject() {
 
           {!connectorChoice && !webhookResult && (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <button className="card text-left hover:shadow-sm" onClick={() => setConnectorChoice('firebase')}>
+              <button className="card card-hover text-left" onClick={() => setConnectorChoice('firebase')}>
                 <p className="font-medium">Firebase</p>
                 <p className="mt-1 text-sm text-slate">Service-account JSON · health check runs immediately · polls user + error metrics.</p>
               </button>
-              <button className="card text-left hover:shadow-sm" onClick={() => { setConnectorChoice('webhook'); void connectWebhook() }}>
+              <button className="card card-hover text-left" onClick={() => { setConnectorChoice('webhook'); void connectWebhook() }}>
                 <p className="font-medium">Generic Webhook</p>
                 <p className="mt-1 text-sm text-slate">Any backend pushes signed events to a unique ingest URL.</p>
               </button>

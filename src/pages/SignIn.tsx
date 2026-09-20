@@ -233,12 +233,12 @@ export default function SignIn() {
 
   if (pendingConsent) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
+      <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="consent-heading"
-          className="w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
+          className="modal-pop w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
         >
           <button
             onClick={() => void onDecline().then(() => navigate('/'))}
@@ -290,12 +290,12 @@ export default function SignIn() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-heading"
-        className="w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
+        className="modal-pop w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
       >
         <button
           onClick={closeToHome}
@@ -335,7 +335,7 @@ export default function SignIn() {
         {finishingRedirect ? (
           <p className="mt-4 font-inter text-sm text-slate">Finishing sign-in…</p>
         ) : (
-          <>
+          <div key={mode} className="fade-swap">
             <div className="mt-4 flex flex-col gap-2">
               <button
                 className="btn-ghost flex w-full items-center justify-center gap-2"
@@ -427,7 +427,7 @@ export default function SignIn() {
                 <>Don’t have an account? <button className="text-link" onClick={() => switchMode('signup')}>Create one</button></>
               )}
             </p>
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -105,4 +105,22 @@ overrides like `bg-paper-white` on `.badge` lost — primitives moved into
 `@layer components`. Neutral badges also vanish on the ash page, so landing
 labels use white badges.
 
+## D18 — Product-site milestone: logo, legal, pages, polish system (2026-09-20)
+Logo: connected-nodes mark (navy tile, 2 white + 1 coral node), Inter 600
+wordmark lockup + icon-only + favicon.svg. Legal pages are real standard-form
+content (Firebase Auth/Firestore, secret-manager credential handling, no
+ads/selling, liability) — template, needs lawyer review before real signups.
+New: About (founder note), Learn (quickstart + connectors + FAQ), Pricing
+("free for now"), styled 404 + catch-all route. Polish: 150–200ms transitions
+on all primitives, card lift, skeleton shimmer, modal pop/fade, focus-visible
+rings, styled error+retry states, responsive display-type steps (64px desktop /
+40px mobile), reduced-motion guard.
+
+## D19 — Shared site chrome + NodeDots credit (2026-09-20)
+`SiteNav`/`SiteFooter` replace per-page duplication (which had caused double
+headers on About/Learn/Pricing); app chrome + wrapper stay off all marketing
+paths via a shared path list (also fixes nested `<main>` landmarks). Founder
+note signed NodeDots. Footer carries a "Developed by NodeDots" modal (story +
+how-it-works links, no external URLs). Legal pages + 404 share the footer.
+
 
