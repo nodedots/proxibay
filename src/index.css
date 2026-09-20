@@ -161,12 +161,16 @@ body {
 
 .input {
   width: 100%;
-  border: 1px solid var(--color-warm-stone);
+  border: 1px solid var(--color-slate);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 16px;
   background: var(--color-paper-white);
   color: var(--color-inkwell-navy);
+}
+.input::placeholder {
+  color: var(--color-slate);
+  opacity: 0.7;
 }
 .input:focus {
   outline: 2px solid var(--color-inkwell-navy);

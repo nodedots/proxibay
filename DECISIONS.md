@@ -70,3 +70,29 @@ Secret Manager doesn't exist; `credentialsRef` stays opaque either way. Rate lim
 is an in-memory per-instance minute counter — best-effort at dogfood scale; move to
 a shared store if instances scale past 1.
 
+## D14 — Direct-Firestore fallback in the client (2026-09-20)`src/lib/store.ts` mirrors the API's project/metric reads + project create/update/
+archive with direct Firestore calls (all permitted by the rules + contract, which
+already allows direct bucket reads). Pages try the Functions API first and fall back
+automatically, so the app stays usable where only Auth+Firestore are deployed
+(demo) or the API is down. Connector attach/healthcheck/rotate stay API-only —
+they need server-side secrets and surface a clear error offline.
+
+## D15 — Self-signup enabled, consent recorded in users/{uid} (2026-09-20)
+Reverses D12's no-signup stance per request. Email signup + Google/GitHub OAuth
+(popup on desktop, redirect ≤640px). Consent checkbox gates signup only, including
+social (buttons disabled until checked); consent persisted as
+`users/{uid} {email, consentAt}` (owner-only rules) for email signups and
+first-time social signups (`isNewUser`, incl. redirect returns). /privacy + /terms
+are placeholders marked for replacement.
+
+## D16 — Consent gate is consent-state based, not signup-path based (2026-09-20)
+Caught by real usage: the founder's GitHub login (via the Sign in tab) created a
+user with no consent record — new social users entering outside the signup tab
+bypassed the checkbox. Fix: after every login the client checks `users/{uid}`
+for `consentAt`; missing record holds the user on a "One more step" interstitial
+(agree + continue, or sign out) instead of entering the app. Self-healing for
+pre-existing accounts too. Headless-browser GitHub popup tests proved unreliable
+(popup self-closes in automation); the integration was verified by the founder's
+real GitHub login instead.
+
+

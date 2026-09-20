@@ -37,6 +37,13 @@ service cloud.firestore {
       }
     }
 
+    // Signup consent records — owner-only, never deleted client-side.
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
     // Time-series buckets — written by Functions (Admin SDK bypasses rules).
     // Clients get owner-scoped reads via the parent project doc; no direct
     // client writes. (MetricBucket has no ownerId by spec — see D2.)

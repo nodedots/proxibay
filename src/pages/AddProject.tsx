@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
+import { createProjectDirect, withFallback } from '../lib/store'
 import type { CreatedProject, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { Project } from '../types'
 
@@ -48,7 +49,10 @@ export default function AddProject() {
       if (liveUrl.trim()) body.liveUrl = liveUrl.trim()
       if (environment) body.environment = environment
       if (notes.trim()) body.notes = notes.trim()
-      const res = await api<CreatedProject>('/v1/projects', { method: 'POST', body: JSON.stringify(body) })
+      const res = await withFallback(
+        () => api<CreatedProject>('/v1/projects', { method: 'POST', body: JSON.stringify(body) }),
+        async () => ({ project: await createProjectDirect(body as Parameters<typeof createProjectDirect>[0]) }),
+      )
       setProject(res.project)
       setPhase('connect')
     } catch (err) {

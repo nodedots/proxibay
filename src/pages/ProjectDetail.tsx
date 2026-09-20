@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { api, ingestUrlFor, ApiError } from '../lib/api'
+import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { ConnectorInstance, MetricType, Project } from '../types'
@@ -118,8 +119,11 @@ export default function ProjectDetail() {
     if (!projectId) return
     setError(null)
     try {
-      const list = await api<{ projects: ProjectListEntry[] }>('/v1/projects?status=active')
-      const found = list.projects.find((p) => p.project.id === projectId)
+      const list = await withFallback(
+        () => api<{ projects: ProjectListEntry[] }>('/v1/projects?status=active').then((r) => r.projects),
+        () => listProjectsDirect(),
+      )
+      const found = list.find((p) => p.project.id === projectId)
       if (!found) {
         // Maybe paused/archived — fetch the doc directly.
         const snap = await getDoc(doc(db, 'projects', projectId))
@@ -138,12 +142,15 @@ export default function ProjectDetail() {
       const conns = await getDocs(collection(db, 'projects', projectId, 'connectors'))
       setConnectors(conns.docs.map((d) => d.data() as ConnectorInstance))
       const m = await getDocs(
-        query(collection(db, 'metrics'), where('projectId', '==', projectId), orderBy('date', 'desc'), limit(60)),
+        query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(100)),
       )
+      const byDate = m.docs
+        .map((d) => d.data() as { metricType: MetricType; key: string; date: string })
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .slice(0, 60)
       const seen = new Set<string>()
       const discovered: Array<{ metricType: MetricType; key: string }> = []
-      for (const d of m.docs) {
-        const data = d.data() as { metricType: MetricType; key: string }
+      for (const data of byDate) {
         const k = `${data.metricType}/${data.key}`
         if (!seen.has(k)) {
           seen.add(k)
@@ -151,8 +158,8 @@ export default function ProjectDetail() {
         }
       }
       setKeys(discovered)
-    } catch (e) {
-      setError(e instanceof ApiError ? `${e.message} (Is the Functions emulator running?)` : 'Failed to load project.')
+    } catch {
+      setError('Failed to load project. Check your connection and Firebase config.')
     }
   }, [projectId])
 
@@ -170,10 +177,13 @@ export default function ProjectDetail() {
       const next: Record<string, BucketResp[]> = {}
       for (const k of keys) {
         try {
-          const r = await api<{ buckets: BucketResp[] }>(
-            `/v1/projects/${projectId}/metrics?metricType=${k.metricType}&key=${encodeURIComponent(k.key)}&from=${from}&to=${to}`,
+          const r = await withFallback(
+            () => api<{ buckets: BucketResp[] }>(
+              `/v1/projects/${projectId}/metrics?metricType=${k.metricType}&key=${encodeURIComponent(k.key)}&from=${from}&to=${to}`,
+            ).then((res) => res.buckets),
+            () => getMetricsDirect(projectId, k.metricType, k.key, from, to),
           )
-          next[`${k.metricType}/${k.key}`] = r.buckets
+          next[`${k.metricType}/${k.key}`] = r
         } catch {
           next[`${k.metricType}/${k.key}`] = []
         }
@@ -184,11 +194,14 @@ export default function ProjectDetail() {
   }, [projectId, keys, range])
 
   async function patchProject(body: Record<string, unknown>) {
-    const res = await api<{ project: Project }>(`/v1/projects/${projectId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    })
-    setEntry((e) => (e ? { ...e, project: { ...e.project, ...res.project } } : e))
+    const res = await withFallback(
+      () => api<{ project: Project }>(`/v1/projects/${projectId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }).then((r) => r.project),
+      () => patchProjectDirect(projectId as string, body),
+    )
+    setEntry((e) => (e ? { ...e, project: { ...e.project, ...res } } : e))
   }
 
   async function attachFirebase() {
@@ -294,7 +307,10 @@ export default function ProjectDetail() {
               <button
                 className="btn-primary bg-coral-emphasis"
                 onClick={() => {
-                  void api(`/v1/projects/${projectId}`, { method: 'DELETE' }).then(() => navigate('/'))
+                  void withFallback(
+                    () => api(`/v1/projects/${projectId}`, { method: 'DELETE' }),
+                    () => archiveProjectDirect(projectId as string),
+                  ).then(() => navigate('/'))
                 }}
               >
                 Confirm archive

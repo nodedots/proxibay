@@ -6,6 +6,8 @@ import SignIn from './pages/SignIn'
 import PortfolioHome from './pages/PortfolioHome'
 import AddProject from './pages/AddProject'
 import ProjectDetail from './pages/ProjectDetail'
+import Privacy from './pages/Privacy'
+import Terms from './pages/Terms'
 
 function Header({ user }: { user: User | null }) {
   const navigate = useNavigate()
@@ -61,6 +63,8 @@ export default function App() {
         <main className="mx-auto max-w-[1200px] px-6 pb-20">
           <Routes>
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route
               path="/"
               element={

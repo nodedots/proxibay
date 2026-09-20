@@ -1,8 +1,9 @@
 import { auth } from '../firebase'
 
+const PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'proxibay-dev'
 const BASE =
   import.meta.env.VITE_FUNCTIONS_BASE ??
-  'http://localhost:5001/proxibay-dev/europe-west1/api'
+  `http://localhost:5001/${PROJECT}/europe-west1/api`
 
 export class ApiError extends Error {
   code: string

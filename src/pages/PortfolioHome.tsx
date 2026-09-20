@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, ApiError } from '../lib/api'
+import { api } from '../lib/api'
+import { listProjectsDirect, withFallback } from '../lib/store'
 import type { ProjectListEntry } from '../lib/contracts'
 
 function timeAgo(iso: { seconds: number } | string | undefined): string {
@@ -32,9 +33,12 @@ export default function PortfolioHome() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'archived'>('all')
 
   useEffect(() => {
-    api<{ projects: ProjectListEntry[] }>('/v1/projects')
-      .then((r) => setEntries(r.projects))
-      .catch((e) => setError(e instanceof ApiError ? `${e.message} (Is the Functions emulator running?)` : 'Failed to load projects.'))
+    withFallback(
+      () => api<{ projects: ProjectListEntry[] }>('/v1/projects').then((r) => r.projects),
+      () => listProjectsDirect(),
+    )
+      .then((projects) => setEntries(projects))
+      .catch((e) => setError(`Could not load projects: ${e instanceof Error ? e.message : String(e)}`))
   }, [])
 
   const filtered = useMemo(() => {
