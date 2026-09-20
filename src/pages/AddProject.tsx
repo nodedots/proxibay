@@ -114,7 +114,8 @@ export default function AddProject() {
           <p className="badge badge-success">Project created</p>
           <h1 className="mt-3 font-inter text-2xl font-semibold">Want to connect live data?</h1>
           <p className="mt-1 text-sm text-slate">
-            {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.
+            {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.{' '}
+            <Link to="/learn/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
           </p>
 
           {!connectorChoice && !webhookResult && (
@@ -133,7 +134,10 @@ export default function AddProject() {
           {connectorChoice === 'firebase' && (
             <div className="mt-6">
               <label className="flex flex-col gap-1 text-sm font-medium">
-                Service-account JSON (read-only roles recommended: Firebase Viewer)
+                Service-account JSON (read-only roles recommended){' '}
+                <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">
+                  Where do I find this? →
+                </Link>
                 <textarea
                   className="input font-mono text-xs"
                   rows={8}
@@ -176,7 +180,8 @@ export default function AddProject() {
                     {webhookResult.snippet.node}
                   </pre>
                   <p className="mt-2 text-sm text-slate">
-                    Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.
+                    Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.{' '}
+                    <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">How to sign events →</Link>
                   </p>
                 </>
               )}
@@ -246,6 +251,9 @@ export default function AddProject() {
           <button className="btn-primary" type="submit" disabled={busy || !name.trim()}>
             {busy ? 'Creating…' : 'Create project'}
           </button>
+          <p className="text-sm text-slate">
+            Not sure what to connect? <Link to="/learn/connect" className="text-link-emphasis text-link">How connecting works →</Link>
+          </p>
         </form>
       </div>
     </div>

@@ -70,7 +70,7 @@ export default function Learn() {
             <p className="mt-1 text-body-sm text-slate">
               Paste a service-account key. Proxibay checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
-              keys.
+              keys. <Link to="/learn/connect#firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
           <div className="card">
@@ -78,7 +78,7 @@ export default function Learn() {
             <p className="mt-1 text-body-sm text-slate">
               For anything else — Express, Django, Rails, a cron job. We give you a URL
               and a signing secret; your backend signs each event and posts it. The
-              connector flips to connected on the first verified event.
+              connector flips to connected on the first verified event. <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
             </p>
           </div>
           <div className="card">

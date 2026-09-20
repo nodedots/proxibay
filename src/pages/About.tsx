@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import DeveloperModal from '../components/DeveloperModal'
 
 /** Why Proxibay exists — human, not corporate. */
 export default function About() {
+  const [devOpen, setDevOpen] = useState(false)
   return (
     <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
       <SiteNav active="about" />
@@ -43,7 +46,16 @@ export default function About() {
               tour of admin panels, it was worth building — and I think it'll do the same
               for anyone else running more than one thing.
             </p>
-            <p className="font-medium text-inkwell-navy">— NodeDots</p>
+            <p className="font-medium text-inkwell-navy">
+              —{' '}
+              <button
+                className="text-link text-inkwell-navy"
+                onClick={() => setDevOpen(true)}
+                title="About the developer"
+              >
+                NodeDots
+              </button>
+            </p>
           </div>
         </div>
 
@@ -55,6 +67,7 @@ export default function About() {
       </main>
 
       <SiteFooter />
+      {devOpen && <DeveloperModal onClose={() => setDevOpen(false)} />}
     </div>
   )
 }

@@ -123,4 +123,12 @@ paths via a shared path list (also fixes nested `<main>` landmarks). Founder
 note signed NodeDots. Footer carries a "Developed by NodeDots" modal (story +
 how-it-works links, no external URLs). Legal pages + 404 share the footer.
 
+## D20 — Connection guide page + credential links in situ (2026-09-20)
+New public `/learn/connect`: Firebase service-account key walkthrough (console
+path, read-only lockdown to Firebase Authentication Admin + Logs Viewer, key
+hygiene), webhook signing walkthrough (generate, Node + curl snippets, pending
+→connected, limits), troubleshooting cards. Linked everywhere credentials are
+asked: Add-flow step 1 + step 2 + both setup sheets, detail Live-data header +
+both attach sheets, Learn connector cards (anchored #firebase/#webhook).
+
 

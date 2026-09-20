@@ -12,16 +12,22 @@ import Landing from './pages/Landing'
 import Logo from './components/Logo'
 import About from './pages/About'
 import Learn from './pages/Learn'
+import ConnectGuide from './pages/ConnectGuide'
 import Pricing from './pages/Pricing'
 import NotFound from './pages/NotFound'
 
 const MARKETING_PATHS = ['/', '/about', '/learn', '/pricing']
 
+/** Marketing + docs pages own their chrome — match exact or nested paths. */
+function isMarketing(pathname: string): boolean {
+  return MARKETING_PATHS.includes(pathname) || pathname.startsWith('/learn/')
+}
+
 function Header({ user }: { user: User | null }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   // Marketing pages bring their own nav — app chrome stays off them.
-  if (MARKETING_PATHS.includes(pathname)) return null
+  if (isMarketing(pathname)) return null
   return (
     <header className="bg-ash-canvas">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
@@ -59,7 +65,7 @@ function Header({ user }: { user: User | null }) {
 function Shell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
   // Marketing pages own their full layout (incl. <main>) — don't nest landmarks.
-  if (MARKETING_PATHS.includes(pathname)) return <>{children}</>
+  if (isMarketing(pathname)) return <>{children}</>
   return <main className="mx-auto max-w-[1200px] px-6 pb-20">{children}</main>
 }
 
@@ -89,6 +95,7 @@ export default function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/about" element={<About />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/learn/connect" element={<ConnectGuide />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/" element={<Landing />} />
             <Route

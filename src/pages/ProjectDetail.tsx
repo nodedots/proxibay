@@ -368,7 +368,10 @@ export default function ProjectDetail() {
       {/* 3. Connectors */}
       <section className="card">
         <div className="flex items-center justify-between">
-          <h2 className="font-inter text-lg font-semibold">Live data</h2>
+          <div>
+            <h2 className="font-inter text-lg font-semibold">Live data</h2>
+            <Link to="/learn/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials →</Link>
+          </div>
           {(connectors?.length ?? 0) > 0 && (
             <div className="flex gap-2">
               {!hasFirebase && <button className="btn-ghost" onClick={() => { setAttach('firebase'); setWebhookSecret(null) }}>+ Firebase</button>}
@@ -435,7 +438,7 @@ export default function ProjectDetail() {
 
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
-            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended).</p>
+            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
             <textarea className="input mt-2 font-mono text-xs" rows={6} value={saJson} onChange={(e) => setSaJson(e.target.value)} />
             {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
             <div className="mt-2 flex gap-2">
@@ -450,7 +453,7 @@ export default function ProjectDetail() {
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             {!webhookSecret ? (
               <>
-                <p className="text-sm">Generate a unique ingest URL + signing secret for this project.</p>
+                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
                 {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
                 <div className="mt-2 flex gap-2">
                   <button className="btn-primary" disabled={attachBusy} onClick={() => void attachWebhook()}>
