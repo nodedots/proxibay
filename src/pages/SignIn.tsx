@@ -217,6 +217,20 @@ export default function SignIn() {
 
   const isSignup = mode === 'signup'
 
+  function closeToHome() {
+    navigate('/')
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      // Escape dismisses the auth card. The consent interstitial intentionally
+      // has no Escape path — agree or sign out explicitly, no accidents.
+      if (e.key === 'Escape' && !pendingRef.current) closeToHome()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navigate])
+
   if (pendingConsent) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
@@ -226,6 +240,14 @@ export default function SignIn() {
           aria-labelledby="consent-heading"
           className="w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
         >
+          <button
+            onClick={() => void onDecline().then(() => navigate('/'))}
+            aria-label="Close and sign out"
+            title="Close"
+            className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate hover:bg-ash-canvas hover:text-inkwell-navy"
+          >
+            ×
+          </button>
           <h1 id="consent-heading" className="font-inter text-2xl font-semibold text-inkwell-navy">
             One more step
           </h1>
@@ -275,6 +297,14 @@ export default function SignIn() {
         aria-labelledby="auth-heading"
         className="w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
       >
+        <button
+          onClick={closeToHome}
+          aria-label="Close and go back"
+          title="Close"
+          className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate hover:bg-ash-canvas hover:text-inkwell-navy"
+        >
+          ×
+        </button>
         <div className="flex gap-4" role="tablist" aria-label="Sign in or create account">
           {(['signin', 'signup'] as Mode[]).map((m) => (
             <button
