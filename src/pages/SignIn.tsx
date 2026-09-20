@@ -101,7 +101,7 @@ export default function SignIn() {
   /** Route post-login: enter the app, or hold on the consent interstitial. */
   async function enter(uid: string, email: string | null) {
     if (await hasConsent(uid)) {
-      navigate('/')
+      navigate('/portfolio')
     } else {
       setPendingConsent({ uid, email })
     }
@@ -150,7 +150,7 @@ export default function SignIn() {
       if (mode === 'signup') {
         const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
         await recordConsent(cred.user.uid, cred.user.email)
-        navigate('/')
+        navigate('/portfolio')
       } else {
         const cred = await signInWithEmailAndPassword(auth, email.trim(), password)
         await enter(cred.user.uid, cred.user.email)
@@ -181,7 +181,7 @@ export default function SignIn() {
       const result = await signInWithPopup(auth, provider)
       if (mode === 'signup' && getAdditionalUserInfo(result)?.isNewUser) {
         await recordConsent(result.user.uid, result.user.email)
-        navigate('/')
+        navigate('/portfolio')
       } else {
         await enter(result.user.uid, result.user.email)
       }
@@ -201,7 +201,7 @@ export default function SignIn() {
       await recordConsent(pendingConsent.uid, pendingConsent.email)
       setPendingConsent(null)
       setConsent(false)
-      navigate('/')
+      navigate('/portfolio')
     } catch {
       setError('Couldn’t save your agreement. Try again.')
     } finally {

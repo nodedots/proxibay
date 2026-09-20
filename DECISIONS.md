@@ -95,4 +95,14 @@ pre-existing accounts too. Headless-browser GitHub popup tests proved unreliable
 (popup self-closes in automation); the integration was verified by the founder's
 real GitHub login instead.
 
+## D17 — Landing page + two CSS-system fixes (2026-09-20)
+Public `/` landing (nav, hero, one dark card, 3 blurbs, footer); portfolio moved
+to `/portfolio`, app chrome hidden on `/`. Two real bugs found via screenshot:
+(1) DESIGN.md `--spacing-<n>` tokens in Tailwind v4 `@theme` hijack the numeric
+spacing scale (`h-8`→8px etc.) — tokens now live as plain `:root` vars, `@theme`
+documents why; (2) unlayered component classes beat Tailwind utilities, so
+overrides like `bg-paper-white` on `.badge` lost — primitives moved into
+`@layer components`. Neutral badges also vanish on the ash page, so landing
+labels use white badges.
+
 

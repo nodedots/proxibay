@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
 import { auth } from './firebase'
 import SignIn from './pages/SignIn'
@@ -8,19 +8,25 @@ import AddProject from './pages/AddProject'
 import ProjectDetail from './pages/ProjectDetail'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
+import Landing from './pages/Landing'
+import Logo from './components/Logo'
 
 function Header({ user }: { user: User | null }) {
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  // The landing page brings its own nav — app chrome stays off it.
+  if (pathname === '/') return null
   return (
     <header className="bg-ash-canvas">
       <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
-        <Link to="/" className="font-inter text-xl font-semibold text-inkwell-navy">
-          Proxibay
-        </Link>
+        <Logo />
         <div className="flex items-center gap-3">
           {user ? (
             <>
               <span className="hidden text-sm text-slate sm:inline">{user.email}</span>
+              <Link to="/portfolio" className="btn-ghost">
+                Portfolio
+              </Link>
               <button
                 className="btn-ghost"
                 onClick={() => {
@@ -65,8 +71,9 @@ export default function App() {
             <Route path="/signin" element={<SignIn />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/" element={<Landing />} />
             <Route
-              path="/"
+              path="/portfolio"
               element={
                 <RequireAuth user={user}>
                   <PortfolioHome />

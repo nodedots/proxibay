@@ -55,20 +55,10 @@
   --leading-display-xl: 1;
   --tracking-display-xl: -1.08px;
 
-  /* Spacing */
-  --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-32: 32px;
-  --spacing-40: 40px;
-  --spacing-48: 48px;
-  --spacing-64: 64px;
-  --spacing-72: 72px;
-  --spacing-100: 100px;
-  --spacing-120: 120px;
+  /* Spacing scale (DESIGN.md) — kept as plain vars below, NOT in @theme:
+     --spacing-<n> is Tailwind's own namespace (h-8, p-4, gap-20, …),
+     so defining --spacing-8: 8px etc. here would silently shrink every
+     numeric spacing utility. See :root. */
 
   /* Border radius */
   --radius-lg: 8px;
@@ -86,6 +76,21 @@
   --section-gap: 80px;
   --card-padding: 20px;
   --element-gap: 16px;
+
+  /* DESIGN.md spacing tokens (plain vars — see @theme note above) */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-72: 72px;
+  --spacing-100: 100px;
+  --spacing-120: 120px;
 }
 
 html {
@@ -100,7 +105,10 @@ body {
   min-height: 100vh;
 }
 
-/* Canonical primitives per DESIGN.md */
+/* Canonical primitives per DESIGN.md.
+   Layered under `components` so Tailwind utilities (e.g. bg-paper-white
+   on a .badge) can still override them — unlayered CSS beats layered. */
+@layer components {
 .btn-primary {
   background-color: var(--color-inkwell-navy);
   color: var(--color-paper-white);
@@ -207,4 +215,5 @@ body {
 }
 .status-gray {
   background-color: var(--color-slate);
+}
 }

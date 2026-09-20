@@ -259,7 +259,7 @@ export default function ProjectDetail() {
     return (
       <div className="card mt-8 text-center">
         <p className="text-lg font-medium">Project not found</p>
-        <Link to="/" className="text-link-emphasis text-link mt-2 inline-block">← Back to portfolio</Link>
+        <Link to="/portfolio" className="text-link-emphasis text-link mt-2 inline-block">← Back to portfolio</Link>
       </div>
     )
   }
@@ -310,7 +310,7 @@ export default function ProjectDetail() {
                   void withFallback(
                     () => api(`/v1/projects/${projectId}`, { method: 'DELETE' }),
                     () => archiveProjectDirect(projectId as string),
-                  ).then(() => navigate('/'))
+                  ).then(() => navigate('/portfolio'))
                 }}
               >
                 Confirm archive
@@ -510,7 +510,7 @@ export default function ProjectDetail() {
         <p className="mt-2 text-xs text-slate">Alert firings land here in Phase 2.</p>
       </section>
 
-      <Link to="/" className="text-link text-sm">← Back to portfolio</Link>
+      <Link to="/portfolio" className="text-link text-sm">← Back to portfolio</Link>
     </div>
   )
 }
