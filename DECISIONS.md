@@ -123,6 +123,22 @@ paths via a shared path list (also fixes nested `<main>` landmarks). Founder
 note signed NodeDots. Footer carries a "Developed by NodeDots" modal (story +
 how-it-works links, no external URLs). Legal pages + 404 share the footer.
 
+## D21 — OAuth repo/project importing (2026-09-20)
+GitHub `repo` scope + Google `cloudplatform.read-only` requested at runtime (no
+console scope changes needed; GitHub OAuth App untouched). Tokens: POST
+/v1/integrations/:provider/token → Secret Manager + ref in users/{uid}.oauth;
+client falls back to tab-scoped sessionStorage until the backend is deployed —
+raw tokens never touch Firestore. Popup desktop / redirect ≤640px; import
+reauth LINKS (never silently switches identity); picker auto-opens only for
+genuinely new connections (no every-login nag); stale/revoked tokens get one
+401-triggered re-auth. True webhook-driven repo sync deferred to Phase 2.
+
+## D22 — GCP project link lives in notes, not a new field (2026-09-20)
+The v1 Project model has repoUrl (used for GitHub) but no structured slot for a
+GCP project ID. Per the stop-and-ask rule on schema changes, imports write
+"Imported from GCP project ‹id›." into notes — visible, searchable, trivially
+migratable to a real field later. No contradiction with the spec, no migration risk.
+
 ## D20 — Connection guide page + credential links in situ (2026-09-20)
 New public `/learn/connect`: Firebase service-account key walkthrough (console
 path, read-only lockdown to Firebase Authentication Admin + Logs Viewer, key

@@ -5,6 +5,7 @@ import { projectsRouter } from './routes/projects.js'
 import { connectorsRouter } from './routes/connectors.js'
 import { metricsRouter } from './routes/metrics.js'
 import { ingestRouter } from './routes/ingest.js'
+import { integrationsRouter } from './routes/integrations.js'
 
 export function buildApp() {
   const app = express()
@@ -20,6 +21,7 @@ export function buildApp() {
   app.use('/v1/projects', projectsRouter)
   app.use('/v1/projects/:projectId/connectors', connectorsRouter)
   app.use('/v1/projects/:projectId/metrics', metricsRouter)
+  app.use('/v1/integrations', integrationsRouter)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((e: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

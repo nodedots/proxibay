@@ -3,15 +3,22 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   createUserWithEmailAndPassword,
   getAdditionalUserInfo,
-  getRedirectResult,
-  GithubAuthProvider,
-  GoogleAuthProvider,
   signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
 } from 'firebase/auth'
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import {
+  buildProvider,
+  flagImportPromptIfNew,
+  markConsentGiven,
+  persistToken,
+  prefersRedirect,
+  recordConsent,
+  tokenFromResult,
+  type OAuthKind,
+} from '../lib/oauth'
 
 type Mode = 'signin' | 'signup'
 
@@ -54,20 +61,13 @@ function friendlyError(code: string, mode: Mode): string {
       return 'This email is already linked to a different sign-in method. Try that one instead.'
     case 'auth/operation-not-allowed':
       return 'This sign-in method isn’t available right now. Try another one.'
+    case 'no-token':
+      return 'We couldn’t read your account list from that sign-in. Try again.'
     default:
       return mode === 'signup'
         ? 'Couldn’t create your account. Check the details and try again.'
         : 'Couldn’t sign you in. Check the details and try again.'
   }
-}
-
-/** Persist the signup consent record (users/{uid}). */
-async function recordConsent(uid: string, email: string | null) {
-  await setDoc(
-    doc(db, 'users', uid),
-    { email, consentAt: serverTimestamp(), createdAt: serverTimestamp() },
-    { merge: true },
-  )
 }
 
 /**
@@ -82,7 +82,6 @@ export default function SignIn() {
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [finishingRedirect, setFinishingRedirect] = useState(true)
   // A signed-in user with no consent record must agree before entering.
   const [pendingConsent, setPendingConsent] = useState<{ uid: string; email: string | null } | null>(null)
   const pendingRef = useRef(false)
@@ -100,31 +99,22 @@ export default function SignIn() {
 
   /** Route post-login: enter the app, or hold on the consent interstitial. */
   async function enter(uid: string, email: string | null) {
-    if (await hasConsent(uid)) {
-      navigate('/portfolio')
-    } else {
-      setPendingConsent({ uid, email })
+    // Brief retries: the App-level redirect handler may still be writing a
+    // pre-checked consent record from a signup-mode redirect.
+    for (let i = 0; i < 4; i++) {
+      if (await hasConsent(uid)) {
+        navigate('/portfolio')
+        return
+      }
+      await new Promise((r) => setTimeout(r, 500))
     }
+    setPendingConsent({ uid, email })
   }
 
-  // Shared: signed-in users leave; redirect-flow results land here.
+  // Signed-in users are routed through the consent gate.
+  // (OAuth redirect results are consumed once by the App-level handler.)
   useEffect(() => {
     let cancelled = false
-    void getRedirectResult(auth)
-      .then(async (result) => {
-        if (result && !cancelled) {
-          const info = getAdditionalUserInfo(result)
-          if (info?.isNewUser) {
-            // Consent was given via the checkbox before the redirect fired.
-            await recordConsent(result.user.uid, result.user.email).catch(() => undefined)
-          }
-          await enter(result.user.uid, result.user.email)
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setFinishingRedirect(false)
-      })
     const unsub = auth.onAuthStateChanged((u) => {
       if (u && !cancelled && !pendingRef.current) {
         void enter(u.uid, u.email)
@@ -163,7 +153,7 @@ export default function SignIn() {
     }
   }
 
-  async function onOAuth(kind: 'google' | 'github') {
+  async function onOAuth(kind: OAuthKind) {
     if (mode === 'signup' && !consent) {
       setError('Please agree to the Privacy Policy and Terms of Service first.')
       return
@@ -171,14 +161,19 @@ export default function SignIn() {
     setError(null)
     setBusy(true)
     try {
-      const provider = kind === 'google' ? new GoogleAuthProvider() : new GithubAuthProvider()
-      const useRedirect = window.matchMedia('(max-width: 640px)').matches
-      if (useRedirect) {
-        // Consent was already given via the checkbox; recorded on return.
-        await signInWithRedirect(auth, provider)
+      if (prefersRedirect()) {
+        // Consent (signup mode) was already given via the checkbox; the
+        // App-level return handler records it and re-flags the import prompt.
+        if (mode === 'signup') markConsentGiven()
+        await signInWithRedirect(auth, buildProvider(kind))
         return
       }
-      const result = await signInWithPopup(auth, provider)
+      const result = await signInWithPopup(auth, buildProvider(kind))
+      const token = tokenFromResult(kind, result)
+      if (token) {
+        await persistToken(kind, token)
+        await flagImportPromptIfNew(kind)
+      }
       if (mode === 'signup' && getAdditionalUserInfo(result)?.isNewUser) {
         await recordConsent(result.user.uid, result.user.email)
         navigate('/portfolio')
@@ -332,9 +327,7 @@ export default function SignIn() {
             : 'Enter your email and password to continue.'}
         </p>
 
-        {finishingRedirect ? (
-          <p className="mt-4 font-inter text-sm text-slate">Finishing sign-in…</p>
-        ) : (
+        {pendingConsent === null && (
           <div key={mode} className="fade-swap">
             <div className="mt-4 flex flex-col gap-2">
               <button

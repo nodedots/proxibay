@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { listProjectsDirect, withFallback } from '../lib/store'
+import {
+  consumeImportPrompt,
+  importSelected,
+  listImportCandidates,
+  type ImportItem,
+  type OAuthKind,
+} from '../lib/oauth'
+import ImportPicker from '../components/ImportPicker'
 import type { ProjectListEntry } from '../lib/contracts'
 
 function timeAgo(iso: { seconds: number } | string | undefined): string {
@@ -32,6 +40,47 @@ export default function PortfolioHome() {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'archived'>('all')
   const [attempt, setAttempt] = useState(0)
+  const [importMenu, setImportMenu] = useState(false)
+  const [picker, setPicker] = useState<{
+    kind: OAuthKind
+    items: ImportItem[]
+    loading: boolean
+    error: string | null
+  } | null>(null)
+
+  const openImporter = useCallback(async (kind: OAuthKind) => {
+    setImportMenu(false)
+    setPicker({ kind, items: [], loading: true, error: null })
+    try {
+      const { items, redirected } = await listImportCandidates(kind)
+      if (redirected) {
+        setPicker(null) // resolves on return — the auto-prompt below reopens
+        return
+      }
+      setPicker({ kind, items, loading: false, error: null })
+    } catch (e) {
+      const code = (e as { code?: string }).code ?? ''
+      setPicker({
+        kind,
+        items: [],
+        loading: false,
+        error:
+          code === 'no-token'
+            ? 'We couldn’t read your account list from that sign-in. Try again.'
+            : 'Couldn’t load anything to import. Check the connection and try again.',
+      })
+    }
+  }, [])
+
+  const refreshPicker = useCallback(() => {
+    if (picker) void openImporter(picker.kind)
+  }, [picker, openImporter])
+
+  // Auto-opens the picker once after a social auth captured a fresh token.
+  useEffect(() => {
+    const kind = consumeImportPrompt()
+    if (kind) void openImporter(kind)
+  }, [openImporter])
 
   useEffect(() => {
     setEntries(null)
@@ -59,9 +108,36 @@ export default function PortfolioHome() {
     <div className="mt-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-inter text-3xl font-semibold">Portfolio</h1>
-        <Link to="/projects/new" className="btn-primary">
-          Add project
-        </Link>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button className="btn-ghost" onClick={() => setImportMenu((m) => !m)} aria-haspopup="menu" aria-expanded={importMenu}>
+              Import ↓
+            </button>
+            {importMenu && (
+              <div role="menu" className="absolute right-0 z-30 mt-2 w-56 rounded-lg border border-warm-stone bg-paper-white p-1 shadow-sm">
+                <button
+                  role="menuitem"
+                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-inkwell-navy transition-colors duration-150 hover:bg-ash-canvas"
+                  onClick={() => void openImporter('github')}
+                >
+                  Import from GitHub
+                  <span className="block text-xs font-normal text-slate">Pick repos to add as projects</span>
+                </button>
+                <button
+                  role="menuitem"
+                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-inkwell-navy transition-colors duration-150 hover:bg-ash-canvas"
+                  onClick={() => void openImporter('google')}
+                >
+                  Import from Google Cloud
+                  <span className="block text-xs font-normal text-slate">Pick GCP projects to add</span>
+                </button>
+              </div>
+            )}
+          </div>
+          <Link to="/projects/new" className="btn-primary">
+            Add project
+          </Link>
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
@@ -156,6 +232,26 @@ export default function PortfolioHome() {
           </Link>
         ))}
       </div>
+
+      {picker && (
+        <ImportPicker
+          title={picker.kind === 'github' ? 'Import from GitHub' : 'Import from Google Cloud'}
+          subtitle={
+            picker.kind === 'github'
+              ? 'Choose repos to add as projects. Names are editable; links come along automatically.'
+              : 'Choose cloud projects to add. Their IDs are kept in the project notes.'
+          }
+          items={picker.items}
+          loading={picker.loading}
+          error={picker.error}
+          onRefresh={refreshPicker}
+          onImport={async (selections) => {
+            await importSelected(selections)
+            setAttempt((a) => a + 1)
+          }}
+          onClose={() => setPicker(null)}
+        />
+      )}
     </div>
   )
 }

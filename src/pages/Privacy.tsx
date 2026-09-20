@@ -45,6 +45,22 @@ export default function Privacy() {
             we store a timestamped record of that agreement on your account.</p>
         </Section>
 
+        <Section title="Connected accounts you import from">
+          <p><strong>GitHub repositories.</strong> If you import projects from GitHub, we read
+            your repository listing — names, public/private visibility, and last push dates —
+            so you can pick which repos to add. On import, the repo link is saved on the new
+            project. We never read your code.</p>
+          <p><strong>Google Cloud projects.</strong> If you import from Google Cloud, we read
+            your project listing — IDs, names, and project numbers — for the same picker
+            purpose. The cloud project ID is kept in the new project's notes so a future
+            connector can use it. This access uses a restricted Google scope and works for
+            test users while our app verification is pending.</p>
+          <p><strong>Access tokens.</strong> The short-lived tokens that power these listings
+            are stored securely (never alongside your project data) and used only to refresh
+            your import lists at your request. Disconnecting the provider or revoking access
+            on the provider's side stops this immediately.</p>
+        </Section>
+
         <Section title="Connector credentials">
           <p>
             Connectors that need secrets — such as a Firebase service-account key, an API key,

@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
-import { onAuthStateChanged, signOut, type User } from 'firebase/auth'
+import { getAdditionalUserInfo, getRedirectResult, onAuthStateChanged, signOut, type User } from 'firebase/auth'
 import { auth } from './firebase'
+import {
+  consumeConsentGiven,
+  flagImportPromptIfNew,
+  persistToken,
+  recordConsent,
+  tokenFromResult,
+  type OAuthKind,
+} from './lib/oauth'
 import SignIn from './pages/SignIn'
 import PortfolioHome from './pages/PortfolioHome'
 import AddProject from './pages/AddProject'
@@ -83,6 +91,33 @@ export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined)
 
   useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), [])
+
+  // Consumes OAuth redirect results exactly once, app-wide (SignIn never calls
+  // getRedirectResult itself): captures provider tokens for import flows and
+  // records consent for signup-mode redirects that pre-checked the box.
+  // Routing itself stays with onAuthStateChanged + the consent gate in SignIn.
+  useEffect(() => {
+    void getRedirectResult(auth)
+      .then(async (result) => {
+        if (!result) return
+        const info = getAdditionalUserInfo(result)
+        const kind: OAuthKind | null =
+          info?.providerId === 'github.com' ? 'github'
+          : info?.providerId === 'google.com' ? 'google'
+          : null
+        if (kind) {
+          const token = tokenFromResult(kind, result)
+          if (token) {
+            await persistToken(kind, token).catch(() => undefined)
+            await flagImportPromptIfNew(kind).catch(() => undefined)
+          }
+        }
+        if (info?.isNewUser && consumeConsentGiven()) {
+          await recordConsent(result.user.uid, result.user.email).catch(() => undefined)
+        }
+      })
+      .catch(() => undefined)
+  }, [])
 
   return (
     <BrowserRouter>
