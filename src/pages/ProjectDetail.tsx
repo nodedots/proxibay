@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { api, ingestUrlFor, ApiError } from '../lib/api'
+import SaJsonUpload from '../components/SaJsonUpload'
 import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
@@ -439,6 +440,16 @@ export default function ProjectDetail() {
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
+            <div className="mt-2">
+              <SaJsonUpload
+                disabled={attachBusy}
+                onInvalid={(m) => setAttachError(m)}
+                onLoaded={(text) => {
+                  setSaJson(text)
+                  if (text) setAttachError(null)
+                }}
+              />
+            </div>
             <textarea className="input mt-2 font-mono text-xs" rows={6} value={saJson} onChange={(e) => setSaJson(e.target.value)} />
             {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
             <div className="mt-2 flex gap-2">

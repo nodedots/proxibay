@@ -31,11 +31,11 @@ All paths below are relative to the base. One Express-style v2 `onRequest` funct
 Step 1 of the flow. Name only required.
 ```json
 // request
-{ "name": "Swaptrick", "description?": "…", "stackTags?": ["firebase","react"],
+{ "name": "Tabmeet", "description?": "…", "stackTags?": ["firebase","react"],
   "repoUrl?": "https://…", "liveUrl?": "https://…",
   "environment?": "production|staging|development", "notes?": "…" }
 // 201 response
-{ "project": { "id": "abc", "ownerId": "uid", "name": "Swaptrick",
+{ "project": { "id": "abc", "ownerId": "uid", "name": "Tabmeet",
   "status": "active", "createdAt": "…", "updatedAt": "…" } }
 ```
 400 `invalid_argument` if `name` missing/blank. `status` always starts `"active"`.

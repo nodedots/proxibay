@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { createProjectDirect, withFallback } from '../lib/store'
+import SaJsonUpload from '../components/SaJsonUpload'
 import type { CreatedProject, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { Project } from '../types'
 
@@ -133,7 +134,15 @@ export default function AddProject() {
 
           {connectorChoice === 'firebase' && (
             <div className="mt-6">
-              <label className="flex flex-col gap-1 text-sm font-medium">
+              <SaJsonUpload
+                disabled={step2Busy}
+                onInvalid={(m) => setStep2Error(m)}
+                onLoaded={(text) => {
+                  setSaJson(text)
+                  if (text) setStep2Error(null)
+                }}
+              />
+              <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
                 Service-account JSON (read-only roles recommended){' '}
                 <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">
                   Where do I find this? →
@@ -207,7 +216,7 @@ export default function AddProject() {
         <form onSubmit={(e) => void onCreate(e)} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium">
             Name *
-            <input className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Swaptrick" />
+            <input className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Tabmeet" />
           </label>
           <button type="button" className="text-link self-start text-sm" onClick={() => setShowOptional((s) => !s)}>
             {showOptional ? 'Hide optional fields −' : 'Add details (optional) +'}

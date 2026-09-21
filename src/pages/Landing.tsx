@@ -58,7 +58,7 @@ export default function Landing() {
           >
             <div className="flex items-center gap-2">
               <span className="status-dot status-green" />
-              <p className="font-inter text-base font-semibold text-inkwell-navy">Swaptrick</p>
+              <p className="font-inter text-base font-semibold text-inkwell-navy">Tabmeet</p>
             </div>
             <p className="mt-3 font-inter text-xs font-medium uppercase tracking-wide text-slate">Total users</p>
             <p className="font-inter text-2xl font-semibold text-inkwell-navy">1,248</p>
