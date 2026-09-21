@@ -32,7 +32,7 @@ import Support from './pages/Support'
 import Feedback from './pages/Feedback'
 import NotFound from './pages/NotFound'
 
-const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing']
+const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license']
 
 /** Marketing + docs pages own their chrome — match exact or nested paths. */
 function isMarketing(pathname: string): boolean {
