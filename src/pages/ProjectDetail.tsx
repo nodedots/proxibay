@@ -433,7 +433,7 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-inter text-lg font-semibold">Live data</h2>
-            <Link to="/learn/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials →</Link>
+            <Link to="/docs/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials →</Link>
           </div>
           {(connectors?.length ?? 0) > 0 && (
             <div className="flex gap-2">
@@ -511,7 +511,7 @@ export default function ProjectDetail() {
 
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
-            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/learn/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
+            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
             <div className="mt-2">
               <SaJsonUpload
                 disabled={attachBusy}
@@ -537,7 +537,7 @@ export default function ProjectDetail() {
             <p className="text-sm font-medium">
               Paste a <strong>restricted secret key</strong> from your Stripe dashboard
               (Developers → API keys, read access to charges, balance, payouts).{' '}
-              <Link to="/learn/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link>
+              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link>
             </p>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
               Restricted secret key *
@@ -590,7 +590,7 @@ export default function ProjectDetail() {
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
               Use the <strong>service_role</strong> secret — never the anon key.{' '}
-              <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
             </div>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
               Project URL *
@@ -627,7 +627,7 @@ export default function ProjectDetail() {
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             {!webhookSecret ? (
               <>
-                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
+                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
                 {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
                 <div className="mt-2 flex gap-2">
                   <button className="btn-primary" disabled={attachBusy} onClick={() => void attachWebhook()}>

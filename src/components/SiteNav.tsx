@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import GitHubStars from './GitHubStars'
 
-export type SiteSection = 'about' | 'learn' | 'pricing'
+export type SiteSection = 'about' | 'docs' | 'pricing'
 
 const LINKS: Array<{ to: string; label: string; key: SiteSection }> = [
   { to: '/about', label: 'About', key: 'about' },
-  { to: '/learn', label: 'Learn', key: 'learn' },
+  { to: '/docs', label: 'Docs', key: 'docs' },
   { to: '/pricing', label: 'Pricing', key: 'pricing' },
 ]
 
@@ -27,9 +28,10 @@ export default function SiteNav({ active }: { active?: SiteSection }) {
               </Link>
             ))}
           </div>
-          <Link to="/signin" className="btn-ghost whitespace-nowrap">
-            Sign in
-          </Link>
+            <Link to="/signin" className="btn-ghost whitespace-nowrap">
+              Sign in
+            </Link>
+            <GitHubStars />
         </div>
       </div>
     </nav>

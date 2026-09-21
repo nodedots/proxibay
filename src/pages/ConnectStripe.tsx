@@ -43,7 +43,7 @@ export default function ConnectStripe() {
         </Trouble>
       </div>
       <p className="mt-8 text-body-sm text-slate">
-        Connecting something else? <Link to="/learn/connect" className="text-link-emphasis text-link">All connection guides →</Link>
+        Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
       </p>
     </GuideShell>
   )

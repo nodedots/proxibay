@@ -74,7 +74,7 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
           <Link to="/about" className="btn-primary flex-1" onClick={onClose}>
             The story
           </Link>
-          <Link to="/learn" className="btn-ghost flex-1" onClick={onClose}>
+          <Link to="/docs" className="btn-ghost flex-1" onClick={onClose}>
             How it works
           </Link>
         </div>

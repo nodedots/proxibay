@@ -19,20 +19,24 @@ import Terms from './pages/Terms'
 import Landing from './pages/Landing'
 import Logo from './components/Logo'
 import About from './pages/About'
-import Learn from './pages/Learn'
+import Docs from './pages/Docs'
 import ConnectGuide from './pages/ConnectGuide'
 import ConnectFirebase from './pages/ConnectFirebase'
 import ConnectWebhook from './pages/ConnectWebhook'
 import ConnectStripe from './pages/ConnectStripe'
 import ConnectSupabase from './pages/ConnectSupabase'
 import Pricing from './pages/Pricing'
+import Changelog from './pages/Changelog'
+import License from './pages/License'
+import Support from './pages/Support'
+import Feedback from './pages/Feedback'
 import NotFound from './pages/NotFound'
 
-const MARKETING_PATHS = ['/', '/about', '/learn', '/pricing']
+const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing']
 
 /** Marketing + docs pages own their chrome — match exact or nested paths. */
 function isMarketing(pathname: string): boolean {
-  return MARKETING_PATHS.includes(pathname) || pathname.startsWith('/learn/')
+  return MARKETING_PATHS.includes(pathname) || pathname.startsWith('/docs/')
 }
 
 function Header({ user }: { user: User | null }) {
@@ -51,9 +55,21 @@ function Header({ user }: { user: User | null }) {
               <Link to="/portfolio" className="btn-ghost whitespace-nowrap">
                 Portfolio
               </Link>
-              <Link to="/learn" className="hidden text-link text-sm text-slate sm:inline">
-                Learn
+              <Link to="/docs" className="hidden text-link text-sm text-slate sm:inline">
+                Docs
               </Link>
+              <a
+                href="https://github.com/nodedots/proxibay"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Proxibay on GitHub"
+                title="Proxibay on GitHub"
+                className="rounded-lg border border-warm-stone p-2 text-inkwell-navy transition-colors duration-150 hover:border-slate hover:bg-paper-white"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="block">
+                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.28.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                </svg>
+              </a>
               <button
                 className="btn-ghost whitespace-nowrap"
                 onClick={() => {
@@ -133,13 +149,17 @@ export default function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/about" element={<About />} />
-            <Route path="/learn" element={<Learn />} />
-            <Route path="/learn/connect" element={<ConnectGuide />} />
-            <Route path="/learn/connect/firebase" element={<ConnectFirebase />} />
-            <Route path="/learn/connect/webhook" element={<ConnectWebhook />} />
-            <Route path="/learn/connect/stripe" element={<ConnectStripe />} />
-            <Route path="/learn/connect/supabase" element={<ConnectSupabase />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="/docs/connect" element={<ConnectGuide />} />
+            <Route path="/docs/connect/firebase" element={<ConnectFirebase />} />
+            <Route path="/docs/connect/webhook" element={<ConnectWebhook />} />
+            <Route path="/docs/connect/stripe" element={<ConnectStripe />} />
+            <Route path="/docs/connect/supabase" element={<ConnectSupabase />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/feedback" element={<Feedback />} />
+            <Route path="/changelog" element={<Changelog />} />
+            <Route path="/license" element={<License />} />
             <Route path="/" element={<Landing />} />
             <Route
               path="/portfolio"

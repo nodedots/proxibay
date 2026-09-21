@@ -3,25 +3,25 @@ import { GuideShell, Trouble } from '../components/ConnectDocs'
 
 const GUIDES = [
   {
-    to: '/learn/connect/firebase',
+    to: '/docs/connect/firebase',
     tag: 'Firebase',
     title: 'The service-account key',
     blurb: 'Generate a JSON key, lock it to read-only roles, paste it in. Health check runs on the spot.',
   },
   {
-    to: '/learn/connect/stripe',
+    to: '/docs/connect/stripe',
     tag: 'Stripe',
     title: 'The restricted key',
     blurb: 'Scoped to reading charges and payouts, verified instantly. Register the webhook for live events.',
   },
   {
-    to: '/learn/connect/supabase',
+    to: '/docs/connect/supabase',
     tag: 'Supabase',
     title: 'URL + service key',
     blurb: 'Project URL plus the service_role secret (never anon). Polls user totals, signups, and active users.',
   },
   {
-    to: '/learn/connect/webhook',
+    to: '/docs/connect/webhook',
     tag: 'Generic webhook',
     title: 'The signed webhook',
     blurb: 'A private URL plus a signing secret. Your backend signs each event; no SDKs, no agents.',

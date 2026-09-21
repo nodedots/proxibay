@@ -25,19 +25,63 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   )
 }
 
-/** Lightweight docs: quickstart, connectors at a glance, short FAQ. */
-export default function Learn() {
+/** Full documentation: concepts, quickstart, connectors, self-hosting, FAQ. */
+export default function Docs() {
   return (
     <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
-      <SiteNav active="learn" />
+      <SiteNav active="docs" />
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <h1 className="font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Up and running <span className="text-coral-emphasis">in minutes.</span>
         </h1>
         <p className="mt-4 text-body-lg text-slate">
-          Three steps. No agents to install, no code to rewrite.
+          Concepts first, then the three-step quickstart. No agents to install, no code to rewrite.
         </p>
+
+        <nav aria-label="On this page" className="card mt-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate">On this page</p>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 font-inter text-sm font-medium">
+            <a href="#concepts" className="text-link">Core concepts</a>
+            <a href="#quickstart" className="text-link">Quickstart</a>
+            <a href="#connectors" className="text-link">Connectors</a>
+            <a href="#self-hosting" className="text-link">Self-hosting & contributing</a>
+            <a href="#faq" className="text-link">Questions</a>
+          </div>
+        </nav>
+
+        <h2 id="concepts" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Core concepts</h2>
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Project — your catalog entry</h3>
+            <p className="mt-1 text-body-sm text-slate">
+              A project is the thing you run: a name plus whatever context you care about —
+              description, stack tags, repo and live links, environment. Only the name is
+              required. The catalog never gates monitoring; it's the label everything else hangs off.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Connector — how data gets in</h3>
+            <p className="mt-1 text-body-sm text-slate">
+              A connector authenticates against one of your backends and translates what it finds
+              into a common shape. Poll connectors (Firebase, Stripe reconciliation, Supabase) fetch
+              on a schedule; push connectors (generic webhook, Stripe events) receive data your
+              systems send. Each one reports its own status — connected, error, or waiting for
+              its first data — independently of the project's status.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Metric — what you actually read</h3>
+            <p className="mt-1 text-body-sm text-slate">
+              Every data point lands in one of five buckets: users, errors, revenue, uptime, or
+              custom. Points are stored as daily aggregates per project, which is why a year of
+              charts loads as fast as a week. Cards show the latest numbers; detail pages chart
+              the history.
+            </p>
+          </div>
+        </div>
+
+        <h2 id="quickstart" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Quickstart</h2>
 
         <div className="mt-10 flex flex-col gap-8">
           <Step n="1" title="Add your project">
@@ -63,14 +107,14 @@ export default function Learn() {
           </Step>
         </div>
 
-        <h2 className="mt-16 font-inter text-heading-sm font-semibold">Connectors at a glance</h2>
+        <h2 id="connectors" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Connectors at a glance</h2>
         <div className="mt-4 flex flex-col gap-3">
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Firebase</h3>
             <p className="mt-1 text-body-sm text-slate">
               Paste a service-account key. Proxibay checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
-              keys. <Link to="/learn/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              keys. <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
           <div className="card">
@@ -78,7 +122,7 @@ export default function Learn() {
             <p className="mt-1 text-body-sm text-slate">
               For anything else — Express, Django, Rails, a cron job. We give you a URL
               and a signing secret; your backend signs each event and posts it. The
-              connector flips to connected on the first verified event. <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
+              connector flips to connected on the first verified event. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
             </p>
           </div>
           <div className="card">
@@ -87,7 +131,7 @@ export default function Learn() {
               Paste a restricted secret key and Proxibay checks it on the spot. Register
               the endpoint URL we give you in your Stripe dashboard for instant charge and
               payout events — or skip it and get nightly revenue totals instead.{' '}
-              <Link to="/learn/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
           <div className="card">
@@ -97,12 +141,47 @@ export default function Learn() {
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
               pasted the wrong one.{' '}
-              <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
         </div>
 
-        <h2 className="mt-16 font-inter text-heading-sm font-semibold">Questions</h2>
+        <h2 id="self-hosting" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Self-hosting & contributing</h2>
+        <div className="mt-4 flex flex-col gap-3 text-body text-slate">
+          <p>
+            Proxibay is MIT licensed and lives at{' '}
+            <a
+              href="https://github.com/nodedots/proxibay"
+              target="_blank"
+              rel="noreferrer"
+              className="text-link-emphasis text-link"
+            >
+              github.com/nodedots/proxibay
+            </a>
+            . To run your own copy you need a Firebase project with Auth, Firestore, and
+            Functions enabled: clone the repo, copy <code>.env.example</code> to{' '}
+            <code>.env</code> with your web config, <code>npm install</code>,{' '}
+            <code>npm run dev</code>. Deploying <code>functions/</code> needs the Blaze
+            plan (Secret Manager + scheduled polling live there); Auth + Firestore alone
+            is enough to explore the whole UI.
+          </p>
+          <p>
+            Bugs and ideas belong in{' '}
+            <a
+              href="https://github.com/nodedots/proxibay/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="text-link-emphasis text-link"
+            >
+              GitHub Issues
+            </a>
+            , pull requests are welcome. A new connector is one file in{' '}
+            <code>functions/src/*Connector.ts</code> plus a card in the Add flow — the
+            existing four are the template.
+          </p>
+        </div>
+
+        <h2 id="faq" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Questions</h2>
         <div className="mt-4 flex flex-col gap-3">
           <Faq q="Do I have to change my project code?">
             <p>For Firebase: no. For other backends: a few lines to sign and post events to your ingest URL. No agents, no SDKs to install.</p>

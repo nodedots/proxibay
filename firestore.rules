@@ -44,6 +44,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Public feedback inbox — anyone may append a shaped message (reviewed in
+    // console; spam tradeoff accepted at dogfood scale, see DECISIONS).
+    match /feedback/{id} {
+      allow read, update, delete: if false;
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'message', 'createdAt'])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 1
+        && request.resource.data.message.size() <= 2000
+        && (!('name' in request.resource.data) || (request.resource.data.name is string && request.resource.data.name.size() <= 100))
+        && (!('email' in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 254));
+    }
+
     // Time-series buckets — written by Functions (Admin SDK bypasses rules).
     // Clients get owner-scoped reads via the parent project doc; no direct
     // client writes. (MetricBucket has no ownerId by spec — see D2.)

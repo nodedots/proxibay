@@ -171,7 +171,7 @@ export default function AddProject() {
           <h1 className="mt-3 font-inter text-2xl font-semibold">Want to connect live data?</h1>
           <p className="mt-1 text-sm text-slate">
             {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.{' '}
-            <Link to="/learn/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
+            <Link to="/docs/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
           </p>
 
           {!connectorChoice && !webhookResult && !stripeResult && (
@@ -207,7 +207,7 @@ export default function AddProject() {
               />
               <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
                 Service-account JSON (read-only roles recommended){' '}
-                <Link to="/learn/connect/firebase" className="text-link-emphasis text-link font-normal">
+                <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">
                   Where do I find this? →
                 </Link>
                 <textarea
@@ -234,7 +234,7 @@ export default function AddProject() {
                 Paste a <strong>restricted secret key</strong> from your Stripe dashboard
                 (Developers → API keys → Create restricted key with <strong>read</strong> access
                 to charges, balance, and payouts).{' '}
-                <Link to="/learn/connect/stripe" className="text-link-emphasis text-link">Where do I find this? →</Link>
+                <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Where do I find this? →</Link>
               </p>
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Restricted secret key *
@@ -297,7 +297,7 @@ export default function AddProject() {
               <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
                 Use the <strong>service_role</strong> secret — never the anon key. Service-role
                 bypasses all row-level security; if it was ever committed anywhere, reset it in
-                Supabase first. <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+                Supabase first. <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
               </div>
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Project URL *
@@ -356,7 +356,7 @@ export default function AddProject() {
                   </pre>
                   <p className="mt-2 text-sm text-slate">
                     Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.{' '}
-                    <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
+                    <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
                   </p>
                 </>
               )}
@@ -427,7 +427,7 @@ export default function AddProject() {
             {busy ? 'Creating…' : 'Create project'}
           </button>
           <p className="text-sm text-slate">
-            Not sure what to connect? <Link to="/learn/connect" className="text-link-emphasis text-link">How connecting works →</Link>
+            Not sure what to connect? <Link to="/docs/connect" className="text-link-emphasis text-link">How connecting works →</Link>
           </p>
         </form>
       </div>

@@ -139,6 +139,15 @@ GCP project ID. Per the stop-and-ask rule on schema changes, imports write
 "Imported from GCP project ‹id›." into notes — visible, searchable, trivially
 migratable to a real field later. No contradiction with the spec, no migration risk.
 
+## D25 — Open-source site: MIT, feedback inbox, no header dropdown (2026-09-20)
+MIT LICENSE (Saviour Ukobong/nodedots) + README referencing it. Feedback is a
+public append-only `feedback` collection (shape-validated rules, console-reviewed;
+spam risk accepted at this scale over an auth wall that would kill drive-by
+reports). Header keeps About/Docs/Pricing flat — Support/Feedback/Changelog/
+License live in the footer, so no Resources dropdown was needed. `/license` route
+collides with the root LICENSE file only under vite-dev on case-insensitive
+filesystems; production builds don't ship it, verified via preview.
+
 ## D23 — Stripe: amounts in major units, no mrr key, refunds deferred (2026-09-20)
 Per-event values stored in major currency units (2500¢ → 25) with currency +
 charge/payout id in metadata. Nightly job emits `revenue_30d` + `failed_24h`
