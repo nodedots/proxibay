@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import DurationPicker from '../components/ui/duration-picker'
 import { api, ingestUrlFor, ApiError } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
 import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
-import type { ConnectorInstance, MetricType, Project } from '../types'
+import type { AlertRule, ConnectorInstance, MetricType, Project } from '../types'
 
 function timeAgo(ts: { seconds: number } | string | undefined): string {
   if (!ts) return 'never'
@@ -120,6 +121,15 @@ export default function ProjectDetail() {
   const [attachError, setAttachError] = useState<string | null>(null)
   const [webhookSecret, setWebhookSecret] = useState<string | null>(null)
   const [healthBusy, setHealthBusy] = useState<string | null>(null)
+  const [rules, setRules] = useState<AlertRule[] | null>(null)
+  const [ruleKey, setRuleKey] = useState('')
+  const [ruleCondition, setRuleCondition] = useState<'above' | 'below'>('above')
+  const [ruleThreshold, setRuleThreshold] = useState('')
+  const [ruleWindow, setRuleWindow] = useState(15)
+  const [ruleChannel, setRuleChannel] = useState<'email' | 'webhook'>('email')
+  const [ruleTarget, setRuleTarget] = useState('')
+  const [ruleBusy, setRuleBusy] = useState(false)
+  const [ruleError, setRuleError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -147,6 +157,8 @@ export default function ProjectDetail() {
       }
       const conns = await getDocs(collection(db, 'projects', projectId, 'connectors'))
       setConnectors(conns.docs.map((d) => d.data() as ConnectorInstance))
+      const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
+      setRules(rs.docs.map((d) => ({ ...(d.data() as AlertRule), id: d.id })))
       const m = await getDocs(
         query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(100)),
       )
@@ -306,8 +318,57 @@ export default function ProjectDetail() {
     }
   }
 
-  async function runHealthcheck(connectorId: string) {
-    setHealthBusy(connectorId)
+  async function createRule() {
+    if (!projectId || !ruleKey || !ruleThreshold.trim() || !ruleTarget.trim() || ruleWindow < 1) return
+    const [metricType, ...keyParts] = ruleKey.split('/')
+    setRuleError(null)
+    setRuleBusy(true)
+    try {
+      const threshold = Number(ruleThreshold)
+      if (Number.isNaN(threshold)) {
+        setRuleError('Threshold must be a number.')
+        return
+      }
+      await addDoc(collection(db, 'projects', projectId, 'alertRules'), {
+        projectId,
+        metricType,
+        key: keyParts.join('/'),
+        condition: ruleCondition,
+        threshold,
+        windowMinutes: ruleWindow,
+        channel: ruleChannel,
+        channelTarget: ruleTarget.trim(),
+        status: 'active',
+        createdAt: Timestamp.now(),
+      })
+      setRuleKey('')
+      setRuleThreshold('')
+      setRuleTarget('')
+      setRuleWindow(15)
+      const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
+      setRules(rs.docs.map((d) => ({ ...(d.data() as AlertRule), id: d.id })))
+    } catch {
+      setRuleError('Couldn’t save the rule. Check your connection and try again.')
+    } finally {
+      setRuleBusy(false)
+    }
+  }
+
+  async function toggleRule(rule: AlertRule) {
+    if (!projectId) return
+    await updateDoc(doc(db, 'projects', projectId, 'alertRules', rule.id), {
+      status: rule.status === 'active' ? 'muted' : 'active',
+    })
+    setRules((rs) => rs?.map((r) => (r.id === rule.id ? { ...r, status: r.status === 'active' ? 'muted' : 'active' } : r)) ?? null)
+  }
+
+  async function deleteRule(rule: AlertRule) {
+    if (!projectId) return
+    await deleteDoc(doc(db, 'projects', projectId, 'alertRules', rule.id))
+    setRules((rs) => rs?.filter((r) => r.id !== rule.id) ?? null)
+  }
+
+  async function runHealthcheck(connectorId: string) {    setHealthBusy(connectorId)
     try {
       await api(`/v1/projects/${projectId}/connectors/${connectorId}/healthcheck`, { method: 'POST' })
       await load()
@@ -696,7 +757,116 @@ export default function ProjectDetail() {
         </div>
       </section>
 
-      {/* 5. Recent */}
+      {/* 5. Alerts */}
+      <section className="card">
+        <h2 className="font-inter text-lg font-semibold">Alerts</h2>
+        <p className="mt-1 text-sm text-slate">
+          Rules saved here switch on automatically once scheduled evaluation ships —
+          nothing fires yet, but your thresholds will already be in place.
+        </p>
+
+        {rules !== null && rules.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-2">
+            {rules.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warm-stone p-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className={r.status === 'active' ? 'badge badge-success' : 'badge'}>{r.status}</span>
+                  <span className="font-medium">
+                    {r.key} {r.condition} {r.threshold}
+                  </span>
+                  <span className="text-slate">
+                    over {r.windowMinutes >= 60 ? `${Math.floor(r.windowMinutes / 60)}h${r.windowMinutes % 60 ? ` ${r.windowMinutes % 60}m` : ''}` : `${r.windowMinutes}m`} → {r.channel} {r.channelTarget}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => void toggleRule(r)}>
+                    {r.status === 'active' ? 'Mute' : 'Unmute'}
+                  </button>
+                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => void deleteRule(r)}>
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-4 rounded-lg bg-ash-canvas p-4">
+          <p className="text-sm font-medium">New rule{keys.length === 0 ? ' — connect a data source first so there’s a metric to watch' : ''}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Metric
+              <select className="input" value={ruleKey} onChange={(e) => setRuleKey(e.target.value)} disabled={keys.length === 0}>
+                <option value="">Choose…</option>
+                {keys.map((k) => (
+                  <option key={`${k.metricType}/${k.key}`} value={`${k.metricType}/${k.key}`}>
+                    {k.metricType} / {k.key}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Condition
+                <select className="input" value={ruleCondition} onChange={(e) => setRuleCondition(e.target.value as 'above' | 'below')}>
+                  <option value="above">above</option>
+                  <option value="below">below</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Threshold
+                <input
+                  className="input"
+                  type="number"
+                  step="any"
+                  placeholder="e.g. 5"
+                  value={ruleThreshold}
+                  onChange={(e) => setRuleThreshold(e.target.value)}
+                />
+              </label>
+            </div>
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Evaluate over
+              <DurationPicker
+                value={{ hours: Math.floor(ruleWindow / 60), minutes: ruleWindow % 60 }}
+                onChange={(d) => setRuleWindow(Math.max(1, d.hours * 60 + d.minutes))}
+                maxHours={24}
+                hoursLabel="h"
+                minutesLabel="m"
+              />
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Channel
+                <select className="input" value={ruleChannel} onChange={(e) => setRuleChannel(e.target.value as 'email' | 'webhook')}>
+                  <option value="email">Email</option>
+                  <option value="webhook">Webhook</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                {ruleChannel === 'email' ? 'Email address' : 'Webhook URL'}
+                <input
+                  className="input"
+                  type={ruleChannel === 'email' ? 'email' : 'url'}
+                  placeholder={ruleChannel === 'email' ? 'you@example.com' : 'https://…'}
+                  value={ruleTarget}
+                  onChange={(e) => setRuleTarget(e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+          {ruleError && <p role="alert" className="mt-2 text-sm text-coral-emphasis">{ruleError}</p>}
+          <button
+            className="btn-primary mt-3"
+            disabled={ruleBusy || !ruleKey || !ruleThreshold.trim() || !ruleTarget.trim() || ruleWindow < 1}
+            onClick={() => void createRule()}
+          >
+            {ruleBusy ? 'Saving…' : 'Save rule'}
+          </button>
+        </div>
+      </section>
+
+      {/* 6. Recent */}
       <section className="card">
         <h2 className="font-inter text-lg font-semibold">Recent</h2>
         <ul className="mt-2 flex flex-col gap-1 text-sm">

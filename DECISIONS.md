@@ -144,7 +144,20 @@ MIT LICENSE (Saviour Ukobong/nodedots) + README referencing it. Feedback is a
 public append-only `feedback` collection (shape-validated rules, console-reviewed;
 spam risk accepted at this scale over an auth wall that would kill drive-by
 reports). Header keeps About/Docs/Pricing flat — Support/Feedback/Changelog/
-License live in the footer, so no Resources dropdown was needed. `/license` route
+License live in the footer, so no Resources dropdown was needed.
+
+## D26 — shadcn + Rare UI adoption, re-themed (2026-09-20)
+`components.json` + `@` alias + `cn()` wired for Tailwind v4 (no tailwind.config;
+theme stays in `@theme`). Installed only the three mapped components (nothing
+speculative): folder-component (new `proxibay` theme: paper body, navy flap,
+warm-stone strokes + `accent` flap-dot carrying the home-status color),
+fluid-orb (coral, 104px, ambient beside the hero snippet), duration-picker
+(re-skinned to navy/slate/paper via direct edits; fixed its React-18 ref typing
+and added missing flubber types). Alert rules get a minimal save/list/mute/
+delete UI on the detail page (`projects/{id}/alertRules`, owner rules) with an
+honest "evaluation ships later" note — the picker needed a real form, and a
+dead-end demo widget would have been worse. CREDITS.md + Docs acknowledgment
+per the MIT attribution ask. `/license` route
 collides with the root LICENSE file only under vite-dev on case-insensitive
 filesystems; production builds don't ship it, verified via preview.
 

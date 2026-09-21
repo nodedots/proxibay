@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { listProjectsDirect, withFallback } from '../lib/store'
+import Folder from '../components/ui/folder-component'
 import {
   consumeImportPrompt,
   importSelected,
@@ -28,6 +29,14 @@ const STATUS_DOT: Record<string, string> = {
   amber: 'status-dot status-amber',
   gray: 'status-dot status-gray',
   green: 'status-dot status-green',
+}
+
+/** Flap-dot fills mirror the home-status logic (DESIGN.md tokens only). */
+const STATUS_FILL: Record<string, string> = {
+  red: '#ff5858',
+  amber: '#fedf89',
+  gray: '#6d6f75',
+  green: '#86e0c1',
 }
 
 /**
@@ -197,8 +206,11 @@ export default function PortfolioHome() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((e) => (
-          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover">
-            <div className="flex items-center gap-2">
+          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover" aria-label={`${e.project.name} — status ${e.homeStatus}`}>
+            <div className="flex justify-center" aria-hidden="true">
+              <Folder color="proxibay" size="sm" accent={STATUS_FILL[e.homeStatus]} />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
               <span className={STATUS_DOT[e.homeStatus]} title={e.homeStatus} />
               <h2 className="font-inter text-lg font-semibold">{e.project.name}</h2>
             </div>

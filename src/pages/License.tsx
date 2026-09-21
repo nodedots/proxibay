@@ -31,7 +31,7 @@ export default function License() {
               </a>
               .
             </p>
-            <p className="text-slate">Copyright © 2026 Saviour Ukobong (nodedots).</p>
+            <p className="text-slate">Copyright © 2026 Asterverse Integrated Solutions and Allied Services Ltd.</p>
           </div>
         </div>
       </main>

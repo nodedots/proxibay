@@ -88,6 +88,28 @@ export interface MetricBucket {
   updatedAt: FirebaseTimestamp
 }
 
+/** Firestore: `projects/{projectId}/alertRules/{ruleId}` (refined per Alerting Model). */
+export type AlertCondition = 'above' | 'below'
+export type AlertChannel = 'email' | 'webhook'
+export type AlertStatus = 'active' | 'muted'
+
+export interface AlertRule {
+  id: string
+  projectId: string
+  metricType: MetricType
+  key: string
+  condition: AlertCondition
+  threshold: number
+  /** evaluation window in minutes — set via the duration picker */
+  windowMinutes: number
+  channel: AlertChannel
+  /** email address or webhook URL */
+  channelTarget: string
+  status: AlertStatus
+  lastTriggeredAt?: FirebaseTimestamp
+  createdAt: FirebaseTimestamp
+}
+
 /** Minimal Timestamp shape — Firestore Timestamp at runtime. */
 export interface FirebaseTimestamp {
   seconds: number

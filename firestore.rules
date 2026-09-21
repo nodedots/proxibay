@@ -35,6 +35,11 @@ service cloud.firestore {
         // handling + healthCheck). Client writes blocked.
         allow create, update, delete: if false;
       }
+
+      // Alert rules are owner-managed directly (no secrets involved).
+      match /alertRules/{ruleId} {
+        allow read, create, update, delete: if parentProjectOwner(projectId);
+      }
     }
 
     // Signup consent records — owner-only, never deleted client-side.
