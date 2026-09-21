@@ -123,9 +123,11 @@ paths via a shared path list (also fixes nested `<main>` landmarks). Founder
 note signed NodeDots. Footer carries a "Developed by NodeDots" modal (story +
 how-it-works links, no external URLs). Legal pages + 404 share the footer.
 
-## D21 — OAuth repo/project importing (2026-09-20)
-GitHub `repo` scope + Google `cloudplatform.read-only` requested at runtime (no
-console scope changes needed; GitHub OAuth App untouched). Tokens: POST
+## D21 — OAuth repo/project importing (2026-09-20, scope fix amended later)
+GitHub `repo` scope rides along at sign-in (proven working); Google's restricted
+`cloudplatform.read-only` is requested LAZILY at import time only — requesting it
+at login hard-breaks all Google sign-ins with `invalid_scope` (caught live).
+A friendly verification-pending message covers rejections at import. Tokens: POST
 /v1/integrations/:provider/token → Secret Manager + ref in users/{uid}.oauth;
 client falls back to tab-scoped sessionStorage until the backend is deployed —
 raw tokens never touch Firestore. Popup desktop / redirect ≤640px; import

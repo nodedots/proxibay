@@ -42,7 +42,10 @@ function GitHubIcon() {
 }
 
 /** Friendly copy for auth failures — never leaks provider internals. */
-function friendlyError(code: string, mode: Mode): string {
+function friendlyError(code: string, mode: Mode, detail = ''): string {
+  if (/invalid.scope/i.test(code) || /invalid.scope/i.test(detail)) {
+    return 'Google hasn’t enabled this level of access for Proxibay yet (verification is pending). Sign in with email or GitHub instead — importing can wait.'
+  }
   switch (code) {
     case 'auth/email-already-in-use':
       return 'An account with this email already exists. Try signing in instead.'
@@ -147,7 +150,7 @@ export default function SignIn() {
       }
     } catch (err) {
       const code = (err as { code?: string }).code ?? ''
-      setError(friendlyError(code, mode))
+      setError(friendlyError(code, mode, err instanceof Error ? err.message : ''))
     } finally {
       setBusy(false)
     }
@@ -182,7 +185,7 @@ export default function SignIn() {
       }
     } catch (err) {
       const code = (err as { code?: string }).code ?? ''
-      setError(friendlyError(code, mode))
+      setError(friendlyError(code, mode, err instanceof Error ? err.message : ''))
     } finally {
       setBusy(false)
     }

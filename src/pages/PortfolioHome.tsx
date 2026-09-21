@@ -69,6 +69,7 @@ export default function PortfolioHome() {
       setPicker({ kind, items, loading: false, error: null })
     } catch (e) {
       const code = (e as { code?: string }).code ?? ''
+      const detail = e instanceof Error ? e.message : ''
       setPicker({
         kind,
         items: [],
@@ -76,7 +77,9 @@ export default function PortfolioHome() {
         error:
           code === 'no-token'
             ? 'We couldn’t read your account list from that sign-in. Try again.'
-            : 'Couldn’t load anything to import. Check the connection and try again.',
+            : /invalid.scope/i.test(code) || /invalid.scope/i.test(detail)
+              ? 'Google hasn’t enabled this level of access for Proxibay yet (verification is pending). Email or GitHub sign-in still works — importing can wait.'
+              : 'Couldn’t load anything to import. Check the connection and try again.',
       })
     }
   }, [])

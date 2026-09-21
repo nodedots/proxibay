@@ -34,6 +34,16 @@ export function prefersRedirect(): boolean {
 }
 
 export function buildProvider(kind: OAuthKind) {
+  return kind === 'github' ? new GithubAuthProvider() : new GoogleAuthProvider()
+}
+
+/**
+ * Import-time providers with the extra data scopes. Requested LAZILY (never at
+ * sign-in): Google rejects restricted scopes on a plain login with
+ * `invalid_scope`, which would break sign-in entirely. Incremental auth at
+ * import time keeps login working while verification is pending.
+ */
+export function buildImportProvider(kind: OAuthKind) {
   if (kind === 'github') {
     // `repo` scope: list private repos too, not just public ones.
     const p = new GithubAuthProvider()
@@ -150,7 +160,8 @@ export async function authForImport(kind: OAuthKind): Promise<string | null> {
   const user = auth.currentUser
   const providerId = kind === 'github' ? 'github.com' : 'google.com'
   const linked = !!user?.providerData.some((p) => p.providerId === providerId)
-  const provider = buildProvider(kind)
+  // Import-time scopes (repo / cloudplatform.read-only) — never at sign-in.
+  const provider = buildImportProvider(kind)
   if (prefersRedirect()) {
     sessionStorage.setItem(importFlagKey, kind)
     if (!user) await signInWithRedirect(auth, provider)
