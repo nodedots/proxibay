@@ -1,6 +1,8 @@
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import { Code } from '../components/ConnectDocs'
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
@@ -27,6 +29,13 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
 
 /** Full documentation: concepts, quickstart, connectors, self-hosting, FAQ. */
 export default function Docs() {
+  // Client-side hash links (e.g. /docs#quickstart) don't auto-scroll under
+  // plain routing, so scroll to the anchor on arrival.
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (hash) document.querySelector(hash)?.scrollIntoView()
+  }, [hash])
+
   return (
     <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
       <SiteNav active="docs" />
@@ -83,7 +92,34 @@ export default function Docs() {
 
         <h2 id="quickstart" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Quickstart</h2>
 
-        <div className="mt-10 flex flex-col gap-8">
+        <h3 className="mt-6 font-inter text-body font-semibold">Run your own copy</h3>
+        <div className="mt-3 flex flex-col gap-3 text-body text-slate">
+          <p>
+            Everything below runs on your machine. You need Node 20+ and a Firebase
+            project with Authentication, Firestore, and Functions enabled.
+          </p>
+        </div>
+        <div className="mt-3">
+          <Code>{`npx degit nodedots/proxibay my-proxibay
+cd my-proxibay
+npm install
+cp .env.example .env   # paste your Firebase web config`}</Code>
+        </div>
+        <div className="mt-3 flex flex-col gap-3 text-body text-slate">
+          <p>
+            Then point the app at your Firebase project: create it in the{' '}
+            <strong>Firebase console</strong>, enable <strong>Email/Password</strong>{' '}
+            sign-in plus <strong>Firestore</strong>, and paste the web SDK config into{' '}
+            <code>.env</code>. Run <code>firebase init</code> once and select Firestore
+            + Hosting so deploys have somewhere to go, then:
+          </p>
+        </div>
+        <div className="mt-3">
+          <Code>{`npm run dev   # the whole UI on Auth + Firestore alone`}</Code>
+        </div>
+
+        <h3 className="mt-8 font-inter text-body font-semibold">Your first project</h3>
+        <div className="mt-4 flex flex-col gap-8">
           <Step n="1" title="Add your project">
             <p>
               Give it a name — that's all it takes. Add descriptions, links, and tags
@@ -158,12 +194,12 @@ export default function Docs() {
             >
               github.com/nodedots/proxibay
             </a>
-            . To run your own copy you need a Firebase project with Auth, Firestore, and
-            Functions enabled: clone the repo, copy <code>.env.example</code> to{' '}
-            <code>.env</code> with your web config, <code>npm install</code>,{' '}
-            <code>npm run dev</code>. Deploying <code>functions/</code> needs the Blaze
-            plan (Secret Manager + scheduled polling live there); Auth + Firestore alone
-            is enough to explore the whole UI.
+            . To run your own copy, follow <a href="#quickstart" className="text-link-emphasis text-link">Quickstart</a> above;
+            a few notes that only matter once you're running it: deploying{' '}
+            <code>functions/</code> needs the Blaze plan (Secret Manager + scheduled
+            polling live there), while Auth + Firestore alone is enough to explore the
+            whole UI. The API contract lives in <code>API_CONTRACT.md</code> and every
+            open question gets logged in <code>DECISIONS.md</code>.
           </p>
           <p>
             Bugs and ideas belong in{' '}

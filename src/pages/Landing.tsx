@@ -1,6 +1,58 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+
+const INSTALL_CMD = 'npx degit nodedots/proxibay my-proxibay'
+
+/** Secondary dev CTA: copy-paste self-host command + link into Docs quickstart. */
+function InstallSnippet() {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(INSTALL_CMD)
+    } catch {
+      // Clipboard unavailable (permissions, insecure context) — still show feedback.
+    }
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1500)
+  }
+
+  return (
+    <div className="mt-8 flex flex-col items-center gap-2">
+      <div className="flex items-center gap-2 rounded-lg border border-slate bg-paper-white py-2 pl-4 pr-2 shadow-subtle">
+        <code className="select-all font-mono text-sm text-inkwell-navy">
+          <span className="mr-2 select-none text-slate">$</span>
+          {INSTALL_CMD}
+        </code>
+        <button
+          onClick={() => void copy()}
+          aria-label="Copy install command"
+          title={copied ? 'Copied!' : 'Copy to clipboard'}
+          className="rounded-md p-1.5 text-slate transition-all duration-150 hover:bg-ash-canvas hover:text-inkwell-navy"
+        >
+          {copied ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="5.5" y="5.5" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M10.5 5.5v-2a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          )}
+        </button>
+      </div>
+      <p aria-live="polite" className={`h-4 font-inter text-xs text-slate transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
+        Copied!
+      </p>
+      <Link to="/docs#quickstart" className="text-link-emphasis text-link text-sm">
+        Quick Start →
+      </Link>
+    </div>
+  )
+}
 
 /**
  * Public landing page. Single-column flow per DESIGN.md:
@@ -24,12 +76,7 @@ export default function Landing() {
         <Link to="/signin" className="btn-primary mt-8 inline-block">
           Add your first project
         </Link>
-        <div className="mt-8 flex justify-center">
-          <span className="badge badge-success items-center gap-2 !py-2.5 !px-4 text-sm">
-            <span className="status-dot status-green animate-pulse" />
-            3 projects · all healthy
-          </span>
-        </div>
+        <InstallSnippet />
       </header>
 
       {/* DARK FEATURE MOMENT */}
