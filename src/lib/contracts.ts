@@ -22,3 +22,15 @@ export interface WebhookConnectResult {
   signingSecret: string
   snippet: { node: string; curl: string }
 }
+
+export interface StripeConnectResult {
+  connector: ConnectorInstance
+  healthCheck: { ok: boolean; detail: string }
+  /** Register this URL in the Stripe dashboard (Developers → Webhooks) for instant events. */
+  stripeEndpoint: string
+}
+
+export interface SupabaseConnectResult {
+  connector: ConnectorInstance
+  healthCheck: { ok: boolean; detail: string }
+}

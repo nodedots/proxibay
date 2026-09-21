@@ -186,6 +186,60 @@ GET /v1/projects/:projectId/metrics?key=signups&metricType=user_metrics&from=202
 ---
 
 ## Out of scope (explicitly NOT in this contract)
-Stripe, Supabase, AlertRules / alert evaluation / notifications, cross-project inbox,
+AlertRules / alert evaluation / notifications, cross-project inbox,
 self-signup, team sharing. `homeStatus: "red"` and `hasTriggeredUnresolvedAlert`
 are carried in types for Phase 2 but the alert engine doesn't exist yet.
+
+---
+
+## Stripe connector (live — added after Phase 1)
+
+### POST /v1/projects/:projectId/connectors/stripe — createStripeConnector
+Body carries the restricted key server-side only (Secret Manager, never Firestore).
+```json
+// request
+{ "apiKey": "rk_live_…", "webhookSecret?": "whsec_…" }
+// 201 response — healthCheck (balance.retrieve) already ran inline
+{ "connector": { "id": "conn_…", "type": "stripe", "authType": "api_key",
+    "fetchMode": "both", "capabilities": ["revenue_metrics"],
+    "status": "connected|error", "lastHealthCheck": "…" },
+  "healthCheck": { "ok": true, "detail": "balance.retrieve() succeeded …" },
+  "stripeEndpoint": "https://…/v1/stripe/conn_…" }
+```
+422 `connector_unhealthy` stays in-flow like Firebase. 409 on duplicate (1:1).
+Omit `webhookSecret` for poll-only (nightly totals, no instant events).
+
+### POST /v1/stripe/:connectorId — stripeWebhook (**public**, Stripe-gated)
+Stripe dashboard → Developers → Webhooks → add `stripeEndpoint`, subscribe to
+charge + payout events. Verifies `Stripe-Signature` (t=`…`,v1=`…`, 5-min tolerance).
+`charge.succeeded` → `{revenue_metrics, transaction_volume, $}`, `charge.failed` →
+`{revenue_metrics, failed_payments, 1}`, `payout.paid` → `{revenue_metrics,
+payout_volume, $}`. Unknown types (refunds/disputes — deferred) → 202 `{accepted: 0}`.
+401 bad signature, 404 unknown, 410 archived/disabled.
+
+### Polling — pollStripeMetrics, every 24 hours
+Per stripe connector: last-30d succeeded charges → `revenue_metrics/revenue_30d`;
+last-24h failures → `revenue_metrics/failed_24h`. Push owns per-event keys, so no
+double-counting. No `mrr` key until subscription logic exists (D23).
+
+---
+
+## Supabase connector (live)
+
+### POST /v1/projects/:projectId/connectors/supabase — createSupabaseConnector
+```json
+// request
+{ "url": "https://xyzcompany.supabase.co", "serviceKey": "eyJ…" }
+// 201 response — healthCheck (admin user lookup) already ran inline
+{ "connector": { "id": "conn_…", "type": "supabase", "authType": "api_key",
+    "fetchMode": "poll", "capabilities": ["user_metrics"],
+    "status": "connected|error", "lastHealthCheck": "…" },
+  "healthCheck": { "ok": true, "detail": "Admin user lookup succeeded …" } }
+```
+422 stays in-flow (bad URL, missing key, or anon-key rejection name the cause).
+409 on duplicate (1:1). Manual re-check via the shared `…/healthcheck` endpoint.
+
+### Polling — pollSupabaseMetrics, every 30 minutes
+Paginated admin user list → `user_metrics/total_users`, `user_metrics/signups`
+(since last poll), `user_metrics/active_users` (30d `last_sign_in_at` window).
+No `error_metrics`: log access needs a separate management token (D24).

@@ -70,7 +70,7 @@ export default function Learn() {
             <p className="mt-1 text-body-sm text-slate">
               Paste a service-account key. Proxibay checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
-              keys. <Link to="/learn/connect#firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              keys. <Link to="/learn/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
           <div className="card">
@@ -78,15 +78,26 @@ export default function Learn() {
             <p className="mt-1 text-body-sm text-slate">
               For anything else — Express, Django, Rails, a cron job. We give you a URL
               and a signing secret; your backend signs each event and posts it. The
-              connector flips to connected on the first verified event. <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
+              connector flips to connected on the first verified event. <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
             </p>
           </div>
           <div className="card">
-            <h3 className="font-inter text-body font-semibold">Stripe &amp; Supabase</h3>
+            <h3 className="font-inter text-body font-semibold">Stripe</h3>
             <p className="mt-1 text-body-sm text-slate">
-              Payments and database connectors plug into the same model: revenue events
-              from charges, user and error metrics from your database. If you run either,
-              tell us which project needs it first.
+              Paste a restricted secret key and Proxibay checks it on the spot. Register
+              the endpoint URL we give you in your Stripe dashboard for instant charge and
+              payout events — or skip it and get nightly revenue totals instead.{' '}
+              <Link to="/learn/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Supabase</h3>
+            <p className="mt-1 text-body-sm text-slate">
+              Paste your project URL plus the service_role secret and Proxibay checks it
+              on the spot, then polls user totals, signups, and 30-day active users. The
+              anon key can't list users, so the health check tells you immediately if you
+              pasted the wrong one.{' '}
+              <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
           </div>
         </div>

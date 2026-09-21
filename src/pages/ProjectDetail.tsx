@@ -6,7 +6,7 @@ import { api, ingestUrlFor, ApiError } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
 import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { db } from '../firebase'
-import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
+import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
 import type { ConnectorInstance, MetricType, Project } from '../types'
 
 function timeAgo(ts: { seconds: number } | string | undefined): string {
@@ -109,7 +109,12 @@ export default function ProjectDetail() {
   const [range, setRange] = useState<7 | 30 | 90>(30)
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const [attach, setAttach] = useState<'firebase' | 'webhook' | null>(null)
+  const [attach, setAttach] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
+  const [stripeKey, setStripeKey] = useState('')
+  const [stripeWhSecret, setStripeWhSecret] = useState('')
+  const [stripeEndpoint, setStripeEndpoint] = useState<string | null>(null)
+  const [supabaseUrl, setSupabaseUrl] = useState('')
+  const [supabaseKey, setSupabaseKey] = useState('')
   const [saJson, setSaJson] = useState('')
   const [attachBusy, setAttachBusy] = useState(false)
   const [attachError, setAttachError] = useState<string | null>(null)
@@ -229,6 +234,61 @@ export default function ProjectDetail() {
     }
   }
 
+  async function attachStripe() {
+    setAttachError(null)
+    setAttachBusy(true)
+    try {
+      const res = await api<StripeConnectResult>(`/v1/projects/${projectId}/connectors/stripe`, {
+        method: 'POST',
+        body: JSON.stringify({
+          apiKey: stripeKey.trim(),
+          ...(stripeWhSecret.trim() ? { webhookSecret: stripeWhSecret.trim() } : {}),
+        }),
+      })
+      if (!res.healthCheck.ok) {
+        setAttachError(`Saved but unhealthy: ${res.healthCheck.detail}`)
+      } else {
+        setStripeEndpoint(res.stripeEndpoint)
+      }
+      await load()
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 422) {
+        setAttachError(e.message)
+        return
+      }
+      setAttachError(e instanceof ApiError ? e.message : 'Connection failed.')
+    } finally {
+      setAttachBusy(false)
+    }
+  }
+
+  async function attachSupabase() {
+    setAttachError(null)
+    setAttachBusy(true)
+    try {
+      const res = await api<SupabaseConnectResult>(`/v1/projects/${projectId}/connectors/supabase`, {
+        method: 'POST',
+        body: JSON.stringify({ url: supabaseUrl.trim(), serviceKey: supabaseKey.trim() }),
+      })
+      if (!res.healthCheck.ok) {
+        setAttachError(`Saved but unhealthy: ${res.healthCheck.detail}`)
+      } else {
+        setAttach(null)
+        setSupabaseUrl('')
+        setSupabaseKey('')
+      }
+      await load()
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 422) {
+        setAttachError(e.message)
+        return
+      }
+      setAttachError(e instanceof ApiError ? e.message : 'Connection failed.')
+    } finally {
+      setAttachBusy(false)
+    }
+  }
+
   async function attachWebhook() {
     setAttachError(null)
     setAttachBusy(true)
@@ -295,6 +355,8 @@ export default function ProjectDetail() {
   const p = entry.project
   const archived = p.status === 'archived'
   const hasFirebase = (connectors ?? []).some((c) => c.type === 'firebase')
+  const hasStripe = (connectors ?? []).some((c) => c.type === 'stripe')
+  const hasSupabase = (connectors ?? []).some((c) => c.type === 'supabase')
 
   return (
     <div className="mt-8 flex flex-col gap-4">
@@ -375,7 +437,9 @@ export default function ProjectDetail() {
           </div>
           {(connectors?.length ?? 0) > 0 && (
             <div className="flex gap-2">
-              {!hasFirebase && <button className="btn-ghost" onClick={() => { setAttach('firebase'); setWebhookSecret(null) }}>+ Firebase</button>}
+              {!hasFirebase && <button className="btn-ghost" onClick={() => { setAttach('firebase'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Firebase</button>}
+              {!hasStripe && <button className="btn-ghost" onClick={() => { setAttach('stripe'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Stripe</button>}
+              {!hasSupabase && <button className="btn-ghost" onClick={() => { setAttach('supabase'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Supabase</button>}
               <button className="btn-ghost" onClick={() => { setAttach('webhook'); setWebhookSecret(null) }}>+ Webhook</button>
             </div>
           )}
@@ -386,8 +450,10 @@ export default function ProjectDetail() {
         {connectors !== null && connectors.length === 0 && attach === null && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             <p className="text-sm font-medium">No live data yet — this page stays useful without it.</p>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               <button className="btn-primary" onClick={() => setAttach('firebase')}>Connect Firebase</button>
+              {!hasStripe && <button className="btn-ghost" onClick={() => setAttach('stripe')}>Connect Stripe</button>}
+              {!hasSupabase && <button className="btn-ghost" onClick={() => setAttach('supabase')}>Connect Supabase</button>}
               <button className="btn-ghost" onClick={() => setAttach('webhook')}>Create webhook URL</button>
             </div>
           </div>
@@ -398,14 +464,14 @@ export default function ProjectDetail() {
             <li key={c.id} className="rounded-lg border border-warm-stone p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">{c.type === 'firebase' ? 'Firebase' : 'Generic Webhook'}</span>
+                  <span className="text-sm font-semibold">{c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Generic Webhook'}</span>
                   <span className={CONN_PILL[c.status]}>{c.status}</span>
                   {c.capabilities.map((cap) => (
                     <span key={cap} className="badge">{cap}</span>
                   ))}
                 </div>
                 <div className="flex gap-2">
-                  {c.type === 'firebase' && (
+                  {(c.type === 'firebase' || c.type === 'stripe' || c.type === 'supabase') && (
                     <button className="btn-ghost text-sm" disabled={healthBusy === c.id} onClick={() => void runHealthcheck(c.id)}>
                       {healthBusy === c.id ? 'Checking…' : 'Run health check'}
                     </button>
@@ -425,6 +491,12 @@ export default function ProjectDetail() {
               {c.status === 'connected' && c.fetchMode === 'poll' && keys.length === 0 && (
                 <p className="mt-2 text-sm text-slate">Connected — waiting for the next poll (~30 min) to deliver the first points.</p>
               )}
+              {c.status === 'connected' && c.type === 'stripe' && keys.length === 0 && (
+                <p className="mt-2 text-sm text-slate">
+                  Connected — instant events arrive once the endpoint below is registered in Stripe;
+                  nightly totals reconcile automatically.
+                </p>
+              )}
               {c.type === 'generic-webhook' && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <code className="break-all text-xs">{ingestUrlFor(c.id)}</code>
@@ -439,7 +511,7 @@ export default function ProjectDetail() {
 
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
-            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
+            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/learn/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
             <div className="mt-2">
               <SaJsonUpload
                 disabled={attachBusy}
@@ -460,11 +532,102 @@ export default function ProjectDetail() {
             </div>
           </div>
         )}
+        {attach === 'stripe' && !stripeEndpoint && (
+          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+            <p className="text-sm font-medium">
+              Paste a <strong>restricted secret key</strong> from your Stripe dashboard
+              (Developers → API keys, read access to charges, balance, payouts).{' '}
+              <Link to="/learn/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link>
+            </p>
+            <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
+              Restricted secret key *
+              <input
+                className="input font-mono text-xs"
+                type="password"
+                autoComplete="off"
+                placeholder="rk_live_… or rk_test_…"
+                value={stripeKey}
+                onChange={(e) => setStripeKey(e.target.value)}
+              />
+            </label>
+            <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
+              Webhook signing secret <span className="font-normal text-slate">(optional — enables instant events)</span>
+              <input
+                className="input font-mono text-xs"
+                type="password"
+                autoComplete="off"
+                placeholder="whsec_… (skip for nightly totals only)"
+                value={stripeWhSecret}
+                onChange={(e) => setStripeWhSecret(e.target.value)}
+              />
+            </label>
+            {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
+            <div className="mt-2 flex gap-2">
+              <button className="btn-primary" disabled={attachBusy || !stripeKey.trim()} onClick={() => void attachStripe()}>
+                {attachBusy ? 'Checking…' : 'Connect + run health check'}
+              </button>
+              <button className="btn-ghost" onClick={() => { setAttach(null); setAttachError(null) }}>Cancel</button>
+            </div>
+          </div>
+        )}
+        {stripeEndpoint && (
+          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate">Stripe webhook endpoint</p>
+            <code className="mt-1 block break-all text-sm">{stripeEndpoint}</code>
+            <div className="mt-2 flex gap-2">
+              <button className="btn-ghost" onClick={() => { void navigator.clipboard.writeText(stripeEndpoint) }}>
+                Copy URL
+              </button>
+              <button className="btn-ghost" onClick={() => { setAttach(null); setStripeEndpoint(null); setStripeKey(''); setStripeWhSecret('') }}>Done</button>
+            </div>
+            <p className="mt-2 text-sm text-slate">
+              Register this under <strong>Stripe dashboard → Developers → Webhooks</strong> for instant
+              charge and payout events. Without it, nightly totals still reconcile.
+            </p>
+          </div>
+        )}
+        {attach === 'supabase' && (
+          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+            <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
+              Use the <strong>service_role</strong> secret — never the anon key.{' '}
+              <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+            </div>
+            <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
+              Project URL *
+              <input
+                className="input font-mono text-xs"
+                type="url"
+                autoComplete="off"
+                placeholder="https://xyzcompany.supabase.co"
+                value={supabaseUrl}
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+              />
+            </label>
+            <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
+              service_role secret *
+              <input
+                className="input font-mono text-xs"
+                type="password"
+                autoComplete="off"
+                placeholder="eyJ…"
+                value={supabaseKey}
+                onChange={(e) => setSupabaseKey(e.target.value)}
+              />
+            </label>
+            {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
+            <div className="mt-2 flex gap-2">
+              <button className="btn-primary" disabled={attachBusy || !supabaseUrl.trim() || !supabaseKey.trim()} onClick={() => void attachSupabase()}>
+                {attachBusy ? 'Checking…' : 'Connect + run health check'}
+              </button>
+              <button className="btn-ghost" onClick={() => { setAttach(null); setAttachError(null) }}>Cancel</button>
+            </div>
+          </div>
+        )}
         {attach === 'webhook' && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
             {!webhookSecret ? (
               <>
-                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
+                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
                 {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
                 <div className="mt-2 flex gap-2">
                   <button className="btn-primary" disabled={attachBusy} onClick={() => void attachWebhook()}>

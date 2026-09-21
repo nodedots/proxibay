@@ -139,6 +139,22 @@ GCP project ID. Per the stop-and-ask rule on schema changes, imports write
 "Imported from GCP project ‹id›." into notes — visible, searchable, trivially
 migratable to a real field later. No contradiction with the spec, no migration risk.
 
+## D23 — Stripe: amounts in major units, no mrr key, refunds deferred (2026-09-20)
+Per-event values stored in major currency units (2500¢ → 25) with currency +
+charge/payout id in metadata. Nightly job emits `revenue_30d` + `failed_24h`
+gauges instead of the spec's approximate `mrr` — real MRR needs subscription
+logic; a mislabeled number is worse than a missing one. Push owns per-event keys
+so the two streams never double-count. Refunds/disputes acknowledged-ignored
+until handling is designed. Webhook secret optional at connect (poll-only mode).
+
+## D24 — Supabase: user_metrics only, active window 30d, anon rejected inline (2026-09-20)
+Error logs need a Supabase management token the service_role key can't mint, so
+the connector claims only `user_metrics` (spec's "don't assume" rule honored by
+construction). `active_users` uses a stable 30d `last_sign_in_at` window rather
+than the poll interval, so the gauge means the same thing every poll. The anon
+key fails the admin lookup by design — the health check names that mistake
+explicitly instead of a generic 401. Push upgrade (DB webhooks) deferred.
+
 ## D20 — Connection guide page + credential links in situ (2026-09-20)
 New public `/learn/connect`: Firebase service-account key walkthrough (console
 path, read-only lockdown to Firebase Authentication Admin + Logs Viewer, key

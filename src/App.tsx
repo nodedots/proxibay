@@ -21,6 +21,10 @@ import Logo from './components/Logo'
 import About from './pages/About'
 import Learn from './pages/Learn'
 import ConnectGuide from './pages/ConnectGuide'
+import ConnectFirebase from './pages/ConnectFirebase'
+import ConnectWebhook from './pages/ConnectWebhook'
+import ConnectStripe from './pages/ConnectStripe'
+import ConnectSupabase from './pages/ConnectSupabase'
 import Pricing from './pages/Pricing'
 import NotFound from './pages/NotFound'
 
@@ -131,6 +135,10 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/learn" element={<Learn />} />
             <Route path="/learn/connect" element={<ConnectGuide />} />
+            <Route path="/learn/connect/firebase" element={<ConnectFirebase />} />
+            <Route path="/learn/connect/webhook" element={<ConnectWebhook />} />
+            <Route path="/learn/connect/stripe" element={<ConnectStripe />} />
+            <Route path="/learn/connect/supabase" element={<ConnectSupabase />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/" element={<Landing />} />
             <Route

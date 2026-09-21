@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
 import { createProjectDirect, withFallback } from '../lib/store'
 import SaJsonUpload from '../components/SaJsonUpload'
-import type { CreatedProject, FirebaseConnectResult, WebhookConnectResult } from '../lib/contracts'
+import type { CreatedProject, FirebaseConnectResult, StripeConnectResult, SupabaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { Project } from '../types'
 
 type Phase = 'create' | 'connect'
@@ -31,11 +31,16 @@ export default function AddProject() {
   const [busy, setBusy] = useState(false)
 
   // Step 2 state
-  const [connectorChoice, setConnectorChoice] = useState<'firebase' | 'webhook' | null>(null)
+  const [connectorChoice, setConnectorChoice] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
   const [saJson, setSaJson] = useState('')
+  const [stripeKey, setStripeKey] = useState('')
+  const [stripeWhSecret, setStripeWhSecret] = useState('')
+  const [supabaseUrl, setSupabaseUrl] = useState('')
+  const [supabaseKey, setSupabaseKey] = useState('')
   const [step2Error, setStep2Error] = useState<string | null>(null)
   const [step2Busy, setStep2Busy] = useState(false)
   const [webhookResult, setWebhookResult] = useState<WebhookConnectResult | null>(null)
+  const [stripeResult, setStripeResult] = useState<StripeConnectResult | null>(null)
   const [secretCopied, setSecretCopied] = useState(false)
 
   async function onCreate(e: React.FormEvent) {
@@ -92,6 +97,56 @@ export default function AddProject() {
     }
   }
 
+  async function connectStripe() {
+    setStep2Error(null)
+    setStep2Busy(true)
+    try {
+      const res = await api<StripeConnectResult>(`/v1/projects/${project!.id}/connectors/stripe`, {
+        method: 'POST',
+        body: JSON.stringify({
+          apiKey: stripeKey.trim(),
+          ...(stripeWhSecret.trim() ? { webhookSecret: stripeWhSecret.trim() } : {}),
+        }),
+      })
+      setStripeResult(res)
+      if (!res.healthCheck.ok) {
+        setStep2Error(`Saved but unhealthy: ${res.healthCheck.detail}`)
+      }
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 422) {
+        setStep2Error(err.message)
+        return
+      }
+      setStep2Error(err instanceof ApiError ? err.message : 'Connection failed.')
+    } finally {
+      setStep2Busy(false)
+    }
+  }
+
+  async function connectSupabase() {
+    setStep2Error(null)
+    setStep2Busy(true)
+    try {
+      const res = await api<SupabaseConnectResult>(`/v1/projects/${project!.id}/connectors/supabase`, {
+        method: 'POST',
+        body: JSON.stringify({ url: supabaseUrl.trim(), serviceKey: supabaseKey.trim() }),
+      })
+      if (!res.healthCheck.ok) {
+        setStep2Error(`Saved but unhealthy: ${res.healthCheck.detail}`)
+        return
+      }
+      navigate(`/projects/${project!.id}`)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 422) {
+        setStep2Error(err.message)
+        return
+      }
+      setStep2Error(err instanceof ApiError ? err.message : 'Connection failed.')
+    } finally {
+      setStep2Busy(false)
+    }
+  }
+
   async function connectWebhook() {
     setStep2Error(null)
     setStep2Busy(true)
@@ -119,15 +174,23 @@ export default function AddProject() {
             <Link to="/learn/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
           </p>
 
-          {!connectorChoice && !webhookResult && (
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {!connectorChoice && !webhookResult && !stripeResult && (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <button className="card card-hover text-left" onClick={() => setConnectorChoice('firebase')}>
                 <p className="font-medium">Firebase</p>
-                <p className="mt-1 text-sm text-slate">Service-account JSON · health check runs immediately · polls user + error metrics.</p>
+                <p className="mt-1 text-sm text-slate">Service-account key · polls user + error metrics.</p>
+              </button>
+              <button className="card card-hover text-left" onClick={() => setConnectorChoice('stripe')}>
+                <p className="font-medium">Stripe</p>
+                <p className="mt-1 text-sm text-slate">Restricted key · instant revenue events + nightly totals.</p>
+              </button>
+              <button className="card card-hover text-left" onClick={() => setConnectorChoice('supabase')}>
+                <p className="font-medium">Supabase</p>
+                <p className="mt-1 text-sm text-slate">Project URL + service key · polls user metrics.</p>
               </button>
               <button className="card card-hover text-left" onClick={() => { setConnectorChoice('webhook'); void connectWebhook() }}>
                 <p className="font-medium">Generic Webhook</p>
-                <p className="mt-1 text-sm text-slate">Any backend pushes signed events to a unique ingest URL.</p>
+                <p className="mt-1 text-sm text-slate">Any backend pushes signed events to a unique URL.</p>
               </button>
             </div>
           )}
@@ -144,7 +207,7 @@ export default function AddProject() {
               />
               <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
                 Service-account JSON (read-only roles recommended){' '}
-                <Link to="/learn/connect#firebase" className="text-link-emphasis text-link font-normal">
+                <Link to="/learn/connect/firebase" className="text-link-emphasis text-link font-normal">
                   Where do I find this? →
                 </Link>
                 <textarea
@@ -158,6 +221,109 @@ export default function AddProject() {
               {step2Error && <p className="mt-2 text-sm text-coral-emphasis">{step2Error}</p>}
               <div className="mt-4 flex gap-3">
                 <button className="btn-primary" disabled={step2Busy || !saJson.trim()} onClick={() => void connectFirebase()}>
+                  {step2Busy ? 'Checking…' : 'Connect + run health check'}
+                </button>
+                <button className="btn-ghost" onClick={() => setConnectorChoice(null)}>Back</button>
+              </div>
+            </div>
+          )}
+
+          {connectorChoice === 'stripe' && !stripeResult && (
+            <div className="mt-6 flex flex-col gap-4">
+              <p className="text-sm text-slate">
+                Paste a <strong>restricted secret key</strong> from your Stripe dashboard
+                (Developers → API keys → Create restricted key with <strong>read</strong> access
+                to charges, balance, and payouts).{' '}
+                <Link to="/learn/connect/stripe" className="text-link-emphasis text-link">Where do I find this? →</Link>
+              </p>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Restricted secret key *
+                <input
+                  className="input font-mono text-xs"
+                  type="password"
+                  autoComplete="off"
+                  placeholder="rk_live_… or rk_test_…"
+                  value={stripeKey}
+                  onChange={(e) => setStripeKey(e.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Webhook signing secret <span className="font-normal text-slate">(optional — enables instant events)</span>
+                <input
+                  className="input font-mono text-xs"
+                  type="password"
+                  autoComplete="off"
+                  placeholder="whsec_… (skip for nightly totals only)"
+                  value={stripeWhSecret}
+                  onChange={(e) => setStripeWhSecret(e.target.value)}
+                />
+              </label>
+              {step2Error && <p className="text-sm text-coral-emphasis">{step2Error}</p>}
+              <div className="flex gap-3">
+                <button className="btn-primary" disabled={step2Busy || !stripeKey.trim()} onClick={() => void connectStripe()}>
+                  {step2Busy ? 'Checking…' : 'Connect + run health check'}
+                </button>
+                <button className="btn-ghost" onClick={() => setConnectorChoice(null)}>Back</button>
+              </div>
+            </div>
+          )}
+
+          {stripeResult && (
+            <div className="mt-6">
+              <div className="rounded-lg bg-ash-canvas p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate">Stripe webhook endpoint</p>
+                <code className="mt-1 block break-all text-sm">{stripeResult.stripeEndpoint}</code>
+                <button
+                  className="btn-ghost mt-2"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(stripeResult.stripeEndpoint)
+                    setSecretCopied(true)
+                  }}
+                >
+                  {secretCopied ? 'Copied ✓' : 'Copy URL'}
+                </button>
+                <p className="mt-3 text-sm text-slate">
+                  Register this URL under <strong>Stripe dashboard → Developers → Webhooks</strong> (listen
+                  to charges + payouts) and paste that endpoint's signing secret when connecting — or leave
+                  it out and Proxibay reconciles nightly totals instead.
+                </p>
+              </div>
+              {step2Error && <p className="mt-2 text-sm text-coral-emphasis">{step2Error}</p>}
+            </div>
+          )}
+
+          {connectorChoice === 'supabase' && (
+            <div className="mt-6 flex flex-col gap-4">
+              <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
+                Use the <strong>service_role</strong> secret — never the anon key. Service-role
+                bypasses all row-level security; if it was ever committed anywhere, reset it in
+                Supabase first. <Link to="/learn/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+              </div>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                Project URL *
+                <input
+                  className="input font-mono text-xs"
+                  type="url"
+                  autoComplete="off"
+                  placeholder="https://xyzcompany.supabase.co"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm font-medium">
+                service_role secret *
+                <input
+                  className="input font-mono text-xs"
+                  type="password"
+                  autoComplete="off"
+                  placeholder="eyJ…"
+                  value={supabaseKey}
+                  onChange={(e) => setSupabaseKey(e.target.value)}
+                />
+              </label>
+              {step2Error && <p className="text-sm text-coral-emphasis">{step2Error}</p>}
+              <div className="flex gap-3">
+                <button className="btn-primary" disabled={step2Busy || !supabaseUrl.trim() || !supabaseKey.trim()} onClick={() => void connectSupabase()}>
                   {step2Busy ? 'Checking…' : 'Connect + run health check'}
                 </button>
                 <button className="btn-ghost" onClick={() => setConnectorChoice(null)}>Back</button>
@@ -190,7 +356,7 @@ export default function AddProject() {
                   </pre>
                   <p className="mt-2 text-sm text-slate">
                     Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.{' '}
-                    <Link to="/learn/connect#webhook" className="text-link-emphasis text-link">How to sign events →</Link>
+                    <Link to="/learn/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
                   </p>
                 </>
               )}
