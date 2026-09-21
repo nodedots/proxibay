@@ -53,7 +53,11 @@ connectorsRouter.post('/firebase', async (req: AuthedRequest, res) => {
   }
   await projectRef.collection('connectors').doc(id).set(connector)
   if (!healthCheck.ok) {
-    return res.status(422).json({ connector, healthCheck })
+    return res.status(422).json({
+      error: { code: 'connector_unhealthy', message: healthCheck.detail },
+      connector,
+      healthCheck,
+    })
   }
   return res.status(201).json({ connector, healthCheck })
 })
@@ -92,7 +96,11 @@ connectorsRouter.post('/supabase', async (req: AuthedRequest, res) => {
   }
   await projectRef.collection('connectors').doc(id).set(connector)
   if (!healthCheck.ok) {
-    return res.status(422).json({ connector, healthCheck })
+    return res.status(422).json({
+      error: { code: 'connector_unhealthy', message: healthCheck.detail },
+      connector,
+      healthCheck,
+    })
   }
   return res.status(201).json({ connector, healthCheck })
 })
@@ -164,7 +172,12 @@ connectorsRouter.post('/stripe', async (req: AuthedRequest, res) => {
   const base = process.env.PUBLIC_API_BASE ?? 'https://europe-west1-proxibay-dev.cloudfunctions.net/api'
   const stripeEndpoint = `${base}/v1/stripe/${id}`
   if (!healthCheck.ok) {
-    return res.status(422).json({ connector, healthCheck, stripeEndpoint })
+    return res.status(422).json({
+      error: { code: 'connector_unhealthy', message: healthCheck.detail },
+      connector,
+      healthCheck,
+      stripeEndpoint,
+    })
   }
   return res.status(201).json({ connector, healthCheck, stripeEndpoint })
 })

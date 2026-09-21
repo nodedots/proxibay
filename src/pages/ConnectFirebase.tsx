@@ -14,16 +14,50 @@ export default function ConnectFirebase() {
           <Path>console.firebase.google.com → your project → ⚙️ Project settings → Service accounts tab</Path>
           <p>Click <strong>Generate new private key</strong> and confirm. A JSON file downloads to your computer.</p>
         </Step>
-        <Step n="2" title="Lock the key down to read-only (recommended)">
-          <p>
-            Fresh keys arrive with the powerful <strong>Editor</strong> role. Proxibay only
-            reads, so shrink it: open{' '}
-            <strong>console.cloud.google.com → IAM &amp; Admin → IAM</strong>, find the new
-            service account in the list, edit its roles — remove Editor and add{' '}
-            <strong>Firebase Authentication Admin</strong> (lets us list users) plus{' '}
-            <strong>Logs Viewer</strong> (lets us read error logs). Nothing else is needed.
-          </p>
-        </Step>
+          <Step n="2" title="Lock the key down to read-only (recommended)">
+            <p>
+              Fresh keys arrive with the powerful <strong>Editor</strong> role. Proxibay only
+              reads, so shrink it: open{' '}
+              <strong>console.cloud.google.com → IAM &amp; Admin → IAM</strong> and find the
+              new service account in the list. It looks like this (your random letters and
+              project name will differ — that's normal):
+            </p>
+            <div className="rounded-lg border border-warm-stone bg-paper-white p-3">
+              <code className="block break-all font-mono text-xs text-inkwell-navy">
+                firebase-adminsdk-a1b2c@my-project.iam.gserviceaccount.com
+              </code>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">Before — remove this</p>
+              <p className="mt-1">
+                <span className="badge badge-alert">Editor ✕</span>
+              </p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">After — add these two</p>
+              <p className="mt-1 flex flex-wrap gap-1">
+                <span className="badge badge-success">Firebase Authentication Viewer</span>
+                <span className="badge badge-success">Logs Viewer</span>
+              </p>
+            </div>
+            <p>
+              Click the pencil icon on that row, delete the Editor role, then add{' '}
+              <strong>Firebase Authentication Viewer</strong> (lets us list users — read-only;
+              the Admin variant works too, but you don't need its write access) plus{' '}
+              <strong>Logs Viewer</strong> (lets us read error logs). Save. Nothing else
+              is needed — if you only see the email and the two green roles, you did it right.
+            </p>
+            <figure className="overflow-hidden rounded-lg border border-warm-stone bg-paper-white">
+              <img
+                src="/iam-done-right.png"
+                alt="Example IAM setup done right: only Firebase Authentication Viewer and Logs Viewer assigned"
+                className="w-full"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.closest('figure')?.remove()
+                }}
+              />
+              <figcaption className="px-3 py-2 font-inter text-xs text-slate">
+                Done right: two read-only roles, nothing else.
+              </figcaption>
+            </figure>
+          </Step>
         <Step n="3" title="Paste it into Proxibay">
           <p>
             Open the JSON file in any text editor, copy everything, and paste it into the
@@ -36,11 +70,13 @@ export default function ConnectFirebase() {
       </div>
       <div className="card mt-6">
         <h3 className="font-inter text-body font-semibold">Keep this key safe</h3>
-        <ul className="mt-1 list-disc pl-5 text-body-sm text-slate">
-          <li>Never commit the JSON file to git or paste it into a chat.</li>
-          <li>Use one key per project, so you can revoke them independently.</li>
-          <li>If a key ever leaks, delete it under the same Service accounts tab and generate a fresh one.</li>
-        </ul>
+          <ul className="mt-1 list-disc pl-5 text-body-sm text-slate">
+            <li>Never commit the JSON file to git or paste it into a chat.</li>
+            <li>Use one key per project — and one per tool. Sharing a single key across
+              instances means every instance inherits every permission (including dangerous
+              ones like Token Creator), and a leak anywhere forces you to re-key everywhere.</li>
+            <li>If a key ever leaks, delete it under the same Service accounts tab and generate a fresh one.</li>
+          </ul>
       </div>
       <h2 className="mt-12 font-inter text-heading-sm font-semibold">If something fails</h2>
       <div className="mt-4 flex flex-col gap-3">

@@ -49,9 +49,11 @@ export default function ConnectGuide() {
       <h2 className="mt-12 font-inter text-heading-sm font-semibold">If something fails</h2>
       <div className="mt-4 flex flex-col gap-3">
         <Trouble title="“Could not create” / connector won't generate">
-          Proxibay couldn't reach its own services — usually you're offline or the request
-          timed out. Check your connection and try again; nothing is half-created, so it's
-          safe to retry. Each connector's own page covers what comes next.
+          Proxibay couldn't reach its own services — usually you're offline, the request
+          timed out, or (if you run your own copy) the API backend isn't deployed yet:
+          connectors need the Functions API, Auth + database alone aren't enough. Check
+          your connection and try again; nothing is half-created, so it's safe to retry.
+          Each connector's own page covers what comes next.
         </Trouble>
       </div>
     </GuideShell>

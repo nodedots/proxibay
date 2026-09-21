@@ -15,6 +15,22 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Product-grade message for connector-setup failures. Distinguishes the three
+ * cases users actually hit: bad input locally (SyntaxError), the server
+ * rejecting the credentials (ApiError with detail), and no server reachable
+ * at all (anything else — offline, wrong URL, or backend not deployed).
+ */
+export function connectErrorMessage(err: unknown): string {
+  if (err instanceof SyntaxError) {
+    return 'That is not valid JSON — paste the full service-account file contents.'
+  }
+  if (err instanceof ApiError) {
+    return err.message
+  }
+  return 'Couldn’t reach Proxibay’s servers. Check your connection and try again — if you self-host, the API backend must be deployed first (Auth + database alone aren’t enough for connectors).'
+}
+
 async function token(): Promise<string> {
   const user = auth.currentUser
   if (!user) throw new ApiError(401, 'unauthenticated', 'Not signed in.')

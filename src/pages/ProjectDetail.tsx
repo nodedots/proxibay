@@ -3,8 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import DurationPicker from '../components/ui/duration-picker'
-import { api, ingestUrlFor, ApiError } from '../lib/api'
+import { api, ingestUrlFor, ApiError, connectErrorMessage } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
+import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
 import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
@@ -239,8 +240,7 @@ export default function ProjectDetail() {
       }
       await load()
     } catch (e) {
-      if (e instanceof SyntaxError) setAttachError('Not valid JSON — paste the full service-account file.')
-      else setAttachError(e instanceof ApiError ? e.message : 'Connection failed.')
+      setAttachError(connectErrorMessage(e))
     } finally {
       setAttachBusy(false)
     }
@@ -264,11 +264,7 @@ export default function ProjectDetail() {
       }
       await load()
     } catch (e) {
-      if (e instanceof ApiError && e.status === 422) {
-        setAttachError(e.message)
-        return
-      }
-      setAttachError(e instanceof ApiError ? e.message : 'Connection failed.')
+      setAttachError(connectErrorMessage(e))
     } finally {
       setAttachBusy(false)
     }
@@ -291,11 +287,7 @@ export default function ProjectDetail() {
       }
       await load()
     } catch (e) {
-      if (e instanceof ApiError && e.status === 422) {
-        setAttachError(e.message)
-        return
-      }
-      setAttachError(e instanceof ApiError ? e.message : 'Connection failed.')
+      setAttachError(connectErrorMessage(e))
     } finally {
       setAttachBusy(false)
     }
@@ -312,7 +304,7 @@ export default function ProjectDetail() {
       setWebhookSecret(res.signingSecret)
       await load()
     } catch (e) {
-      setAttachError(e instanceof ApiError ? e.message : 'Could not create webhook.')
+      setAttachError(connectErrorMessage(e))
     } finally {
       setAttachBusy(false)
     }
@@ -415,9 +407,6 @@ export default function ProjectDetail() {
 
   const p = entry.project
   const archived = p.status === 'archived'
-  const hasFirebase = (connectors ?? []).some((c) => c.type === 'firebase')
-  const hasStripe = (connectors ?? []).some((c) => c.type === 'stripe')
-  const hasSupabase = (connectors ?? []).some((c) => c.type === 'supabase')
 
   return (
     <div className="mt-8 flex flex-col gap-4">
@@ -497,11 +486,15 @@ export default function ProjectDetail() {
             <Link to="/docs/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials →</Link>
           </div>
           {(connectors?.length ?? 0) > 0 && (
-            <div className="flex gap-2">
-              {!hasFirebase && <button className="btn-ghost" onClick={() => { setAttach('firebase'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Firebase</button>}
-              {!hasStripe && <button className="btn-ghost" onClick={() => { setAttach('stripe'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Stripe</button>}
-              {!hasSupabase && <button className="btn-ghost" onClick={() => { setAttach('supabase'); setWebhookSecret(null); setStripeEndpoint(null) }}>+ Supabase</button>}
-              <button className="btn-ghost" onClick={() => { setAttach('webhook'); setWebhookSecret(null) }}>+ Webhook</button>
+            <div className="mt-3">
+              <ConnectorPicker
+                connectedTypes={(connectors ?? []).map((c) => c.type)}
+                onSelect={(type: ConnectableType) => {
+                  setAttach(type === 'generic-webhook' ? 'webhook' : type)
+                  setWebhookSecret(null)
+                  setStripeEndpoint(null)
+                }}
+              />
             </div>
           )}
         </div>
@@ -510,12 +503,16 @@ export default function ProjectDetail() {
 
         {connectors !== null && connectors.length === 0 && attach === null && (
           <div className="mt-3 rounded-lg bg-ash-canvas p-4">
-            <p className="text-sm font-medium">No live data yet — this page stays useful without it.</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button className="btn-primary" onClick={() => setAttach('firebase')}>Connect Firebase</button>
-              {!hasStripe && <button className="btn-ghost" onClick={() => setAttach('stripe')}>Connect Stripe</button>}
-              {!hasSupabase && <button className="btn-ghost" onClick={() => setAttach('supabase')}>Connect Supabase</button>}
-              <button className="btn-ghost" onClick={() => setAttach('webhook')}>Create webhook URL</button>
+            <p className="text-sm font-medium">No live data yet — pick a source below. This page stays useful without it.</p>
+            <div className="mt-3">
+              <ConnectorPicker
+                connectedTypes={[]}
+                onSelect={(type: ConnectableType) => {
+                  setAttach(type === 'generic-webhook' ? 'webhook' : type)
+                  setWebhookSecret(null)
+                  setStripeEndpoint(null)
+                }}
+              />
             </div>
           </div>
         )}

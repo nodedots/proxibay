@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api, ApiError } from '../lib/api'
+import { api, ApiError, connectErrorMessage } from '../lib/api'
 import { createProjectDirect, withFallback } from '../lib/store'
 import SaJsonUpload from '../components/SaJsonUpload'
+import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
 import type { CreatedProject, FirebaseConnectResult, StripeConnectResult, SupabaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { Project } from '../types'
 
@@ -83,15 +84,7 @@ export default function AddProject() {
       }
       navigate(`/projects/${project!.id}`)
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        setStep2Error(err.message)
-        return
-      }
-      if (err instanceof SyntaxError) {
-        setStep2Error('That is not valid JSON — paste the full service-account file contents.')
-        return
-      }
-      setStep2Error(err instanceof ApiError ? err.message : 'Connection failed.')
+      setStep2Error(connectErrorMessage(err))
     } finally {
       setStep2Busy(false)
     }
@@ -113,11 +106,7 @@ export default function AddProject() {
         setStep2Error(`Saved but unhealthy: ${res.healthCheck.detail}`)
       }
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        setStep2Error(err.message)
-        return
-      }
-      setStep2Error(err instanceof ApiError ? err.message : 'Connection failed.')
+      setStep2Error(connectErrorMessage(err))
     } finally {
       setStep2Busy(false)
     }
@@ -137,11 +126,7 @@ export default function AddProject() {
       }
       navigate(`/projects/${project!.id}`)
     } catch (err) {
-      if (err instanceof ApiError && err.status === 422) {
-        setStep2Error(err.message)
-        return
-      }
-      setStep2Error(err instanceof ApiError ? err.message : 'Connection failed.')
+      setStep2Error(connectErrorMessage(err))
     } finally {
       setStep2Busy(false)
     }
@@ -157,7 +142,7 @@ export default function AddProject() {
       })
       setWebhookResult(res)
     } catch (err) {
-      setStep2Error(err instanceof ApiError ? err.message : 'Could not create webhook connector.')
+      setStep2Error(connectErrorMessage(err))
     } finally {
       setStep2Busy(false)
     }
@@ -175,23 +160,15 @@ export default function AddProject() {
           </p>
 
           {!connectorChoice && !webhookResult && !stripeResult && (
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <button className="card card-hover text-left" onClick={() => setConnectorChoice('firebase')}>
-                <p className="font-medium">Firebase</p>
-                <p className="mt-1 text-sm text-slate">Service-account key · polls user + error metrics.</p>
-              </button>
-              <button className="card card-hover text-left" onClick={() => setConnectorChoice('stripe')}>
-                <p className="font-medium">Stripe</p>
-                <p className="mt-1 text-sm text-slate">Restricted key · instant revenue events + nightly totals.</p>
-              </button>
-              <button className="card card-hover text-left" onClick={() => setConnectorChoice('supabase')}>
-                <p className="font-medium">Supabase</p>
-                <p className="mt-1 text-sm text-slate">Project URL + service key · polls user metrics.</p>
-              </button>
-              <button className="card card-hover text-left" onClick={() => { setConnectorChoice('webhook'); void connectWebhook() }}>
-                <p className="font-medium">Generic Webhook</p>
-                <p className="mt-1 text-sm text-slate">Any backend pushes signed events to a unique URL.</p>
-              </button>
+            <div className="mt-6">
+              <ConnectorPicker
+                connectedTypes={[]}
+                onSelect={(type: ConnectableType) => {
+                  const choice = type === 'generic-webhook' ? 'webhook' : type
+                  setConnectorChoice(choice)
+                  if (type === 'generic-webhook') void connectWebhook()
+                }}
+              />
             </div>
           )}
 
