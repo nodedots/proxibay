@@ -232,16 +232,6 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </Faq>
         </div>
 
-        <h2 id="acknowledgments" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Acknowledgments</h2>
-        <p className="mt-2 text-body text-slate">
-          The folder cards, hero orb, and duration picker come from{' '}
-          <a href="https://www.rareui.com" target="_blank" rel="noreferrer" className="text-link-emphasis text-link">
-            Rare UI
-          </a>{' '}
-          (MIT), re-themed to this site's design tokens — see <code>CREDITS.md</code> in
-          the repo for the full list of open-source ingredients.
-        </p>
-
         <div className="mt-10 text-center">
           <Link to="/signin" className="btn-primary inline-block">
             Add your first project
