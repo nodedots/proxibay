@@ -7,7 +7,7 @@ export default function Support() {
     <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
       <SiteNav />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
-        <h1 className="font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Help, <span className="text-coral-emphasis">human included.</span>
         </h1>
         <p className="mt-4 text-body-lg text-slate">

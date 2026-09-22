@@ -1,9 +1,52 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import Folder from '../components/ui/folder-component'
 
 const INSTALL_CMD = 'npx degit nodedots/proxibay my-proxibay'
+
+/** Demo projects cycled through the landing folder demo. */
+const DEMO_PROJECTS = [
+  { name: 'Tabmeet', dot: 'status-green', accent: '#86e0c1' },
+  { name: 'Loopstack', dot: 'status-amber', accent: '#fedf89' },
+  { name: 'Nodedots', dot: 'status-green', accent: '#86e0c1' },
+] as const
+
+/**
+ * Ambient portfolio demo: the folder breathes open/closed on a loop while a
+ * chip cycles through projects being "added" — the catalog filling up live.
+ * Decorative only (aria-hidden at the call site).
+ */
+function PortfolioFolderDemo() {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setActive((i) => (i + 1) % DEMO_PROJECTS.length),
+      2400,
+    )
+    return () => window.clearInterval(id)
+  }, [])
+
+  const project = DEMO_PROJECTS[active]
+
+  return (
+    <div className="flex w-60 flex-col items-center gap-6">
+      <Folder color="proxibay" size="sm" autoPlay accent={project.accent} />
+      <div
+        key={active}
+        className="fade-swap flex items-center gap-2 rounded-full bg-paper-white py-1.5 pl-3 pr-4 shadow-sm-2"
+      >
+        <span className={`status-dot ${project.dot}`} />
+        <span className="font-inter text-xs font-semibold text-inkwell-navy">
+          {project.name}
+        </span>
+        <span className="font-inter text-xs text-slate">added to portfolio</span>
+      </div>
+    </div>
+  )
+}
 
 /** Secondary dev CTA: copy-paste self-host command + link into Docs quickstart. */
 function InstallSnippet() {
@@ -21,8 +64,8 @@ function InstallSnippet() {
 
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
-      <div className="flex items-center gap-2 rounded-lg border border-slate bg-paper-white py-2 pl-4 pr-2 shadow-subtle">
-        <code className="select-all font-mono text-sm text-inkwell-navy">
+      <div className="flex max-w-full items-center gap-2 rounded-lg border border-slate bg-paper-white py-2 pl-4 pr-2 shadow-subtle">
+        <code className="block min-w-0 select-all overflow-x-auto whitespace-nowrap font-mono text-sm text-inkwell-navy">
           <span className="mr-2 select-none text-slate">$</span>
           {INSTALL_CMD}
         </code>
@@ -66,8 +109,11 @@ export default function Landing() {
 
       {/* HERO */}
       <header className="mx-auto max-w-[1200px] px-6 pb-20 pt-16 text-center sm:pt-24">
-        <h1 className="mx-auto max-w-3xl font-grifter text-[40px] font-bold leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
-          Stop building dashboards. <span className="text-coral-emphasis">Plug your projects in.</span>
+        <h1 className="mx-auto max-w-4xl font-grifter text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
+          Stop building dashboards. <span className="text-coral-emphasis">Plug</span> your{' '}
+          <span className="sm:whitespace-nowrap">
+            projects <span className="text-coral-emphasis">in.</span>
+          </span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-body-lg text-slate">
           Proxibay gives every project a home and a heartbeat. See health, users,
@@ -83,7 +129,7 @@ export default function Landing() {
       <section className="mx-auto max-w-[1200px] px-6 pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-inkwell-navy p-10 shadow-sm-2 sm:p-12">
           <div className="max-w-lg">
-            <h2 className="font-grifter text-4xl font-bold leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
+            <h2 className="font-grifter text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
             </h2>
             <p className="mt-4 text-body text-paper-white/70">
@@ -98,26 +144,22 @@ export default function Landing() {
               See how it works
             </a>
           </div>
-          {/* Tilted product-preview card */}
+          {/* Ambient portfolio demo — folder fills as projects are "added" */}
           <div
             aria-hidden="true"
-            className="mt-8 rotate-[-5deg] rounded-2xl bg-paper-white p-5 shadow-sm-2 md:absolute md:-right-6 md:top-1/2 md:mt-0 md:w-64 md:-translate-y-1/2"
+            className="mt-12 flex justify-center md:absolute md:right-10 md:top-1/2 md:mt-0 md:w-60 md:-translate-y-1/2"
           >
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-green" />
-              <p className="font-inter text-base font-semibold text-inkwell-navy">Tabmeet</p>
-            </div>
-            <p className="mt-3 font-inter text-xs font-medium uppercase tracking-wide text-slate">Total users</p>
-            <p className="font-inter text-2xl font-semibold text-inkwell-navy">1,248</p>
+            <PortfolioFolderDemo />
           </div>
         </div>
       </section>
 
-      {/* FEATURE BLURBS */}
-      <section id="features" className="mx-auto max-w-2xl px-6 pb-20">
-        <div className="flex flex-col gap-20">
+      {/* FEATURE BLURBS — Paper White band with Warm Stone hairlines for
+          section depth; three-up on desktop, stacked on mobile. */}
+      <section id="features" className="border-y border-warm-stone bg-paper-white">
+        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-20 md:grid-cols-3 md:gap-10">
           <div>
-            <p className="badge bg-paper-white">Catalog</p>
+            <p className="badge">Catalog</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Register any project in seconds.</h3>
             <p className="mt-2 text-body text-slate">
               A name is enough to start. Add stack tags, repo links, and notes
@@ -125,7 +167,7 @@ export default function Landing() {
             </p>
           </div>
           <div>
-            <p className="badge bg-paper-white">Connectors</p>
+            <p className="badge">Connectors</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Plug in where your data already lives.</h3>
             <p className="mt-2 text-body text-slate">
               Firebase and Stripe connect directly, and a generic webhook covers
@@ -134,7 +176,7 @@ export default function Landing() {
             </p>
           </div>
           <div>
-            <p className="badge bg-paper-white">Alerts</p>
+            <p className="badge">Alerts</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Know before you go looking.</h3>
             <p className="mt-2 text-body text-slate">
               Set a threshold on anything you track. When something breaks,

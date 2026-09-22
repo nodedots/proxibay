@@ -1,0 +1,369 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { deleteUser, signOut, updateProfile, type User } from 'firebase/auth'
+import { auth } from '../firebase'
+import { useAuthUser } from '../lib/useAuthUser'
+import { DEFAULT_PREFS, loadUserPrefs, saveUserPrefs, type UserPrefs } from '../lib/prefs'
+import UserAvatar from '../components/UserAvatar'
+
+function Section({
+  title,
+  blurb,
+  children,
+}: {
+  title: string
+  blurb: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="card" aria-label={title}>
+      <h2 className="font-inter text-lg font-semibold text-inkwell-navy">{title}</h2>
+      <p className="mt-1 font-inter text-sm font-normal text-slate">{blurb}</p>
+      <div className="mt-5">{children}</div>
+    </section>
+  )
+}
+
+function Toggle({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string
+  hint: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex w-full items-center justify-between gap-4 rounded-lg px-1 py-2 text-left focus-visible:outline-2 focus-visible:outline-inkwell-navy"
+    >
+      <span>
+        <span className="block font-inter text-sm font-medium text-inkwell-navy">{label}</span>
+        <span className="block font-inter text-xs font-normal text-slate">{hint}</span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150 ${
+          checked ? 'bg-inkwell-navy' : 'bg-warm-stone'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper-white shadow-subtle transition-transform duration-150 ${
+            checked ? 'translate-x-[22px]' : 'translate-x-0.5'
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
+
+function fmtDate(iso: string | undefined): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const PROVIDER_LABEL: Record<string, string> = {
+  'google.com': 'Google',
+  'github.com': 'GitHub',
+  password: 'Email & password',
+}
+
+
+/**
+ * Account settings (auth-gated): profile, persisted preferences, security
+ * overview, and a danger zone. Preferences live on `users/{uid}.prefs`
+ * (owner-scoped by firestore.rules; merge write keeps consent fields intact).
+ */
+export default function Account() {
+  const user = useAuthUser()
+  const navigate = useNavigate()
+
+  const [name, setName] = useState('')
+  const [photoUrl, setPhotoUrl] = useState('')
+  const [profileMsg, setProfileMsg] = useState<string | null>(null)
+  const [savingProfile, setSavingProfile] = useState(false)
+
+  const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
+  const [prefsLoaded, setPrefsLoaded] = useState(false)
+  const [prefsMsg, setPrefsMsg] = useState<string | null>(null)
+  const [savingPrefs, setSavingPrefs] = useState(false)
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [dangerError, setDangerError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    setName(user.displayName ?? '')
+    setPhotoUrl(user.photoURL ?? '')
+    void loadUserPrefs(user.uid).then((p) => {
+      setPrefs(p)
+      setPrefsLoaded(true)
+    })
+  }, [user])
+
+  if (user === undefined) return <p className="p-8 text-slate">Loading…</p>
+  if (user === null) return null // RequireAuth owns the redirect
+
+  async function saveProfile(u: User) {
+    setSavingProfile(true)
+    setProfileMsg(null)
+    try {
+      await updateProfile(u, {
+        displayName: name.trim() || null,
+        photoURL: photoUrl.trim() || null,
+      })
+      setProfileMsg('Profile updated.')
+    } catch {
+      setProfileMsg('Couldn’t save your profile. Try again.')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  async function savePrefs(uid: string) {
+    setSavingPrefs(true)
+    setPrefsMsg(null)
+    try {
+      await saveUserPrefs(uid, prefs)
+      setPrefsMsg('Preferences saved.')
+    } catch {
+      setPrefsMsg('Couldn’t save preferences. Check your connection and try again.')
+    } finally {
+      setSavingPrefs(false)
+    }
+  }
+
+  async function handleDelete(u: User) {
+    setDangerError(null)
+    try {
+      await deleteUser(u)
+      navigate('/')
+    } catch (e) {
+      const code = (e as { code?: string }).code ?? ''
+      setDangerError(
+        code === 'auth/requires-recent-login'
+          ? 'For your security, sign out and sign back in before deleting your account.'
+          : 'Couldn’t delete your account. Try again, or contact support.',
+      )
+    }
+  }
+
+
+  return (
+    <main className="mx-auto w-full max-w-2xl px-6 pb-20 pt-10">
+      <h1 className="font-inter text-2xl font-semibold text-inkwell-navy">Account settings</h1>
+      <p className="mt-2 font-inter text-sm font-normal text-slate">
+        Manage your profile, preferences, and sign-in security.
+      </p>
+
+      <div className="mt-8 flex flex-col gap-6">
+        <Section title="Profile" blurb="How you appear across Proxibay. Your email comes from your sign-in provider and can’t be changed here.">
+          <div className="flex items-center gap-4">
+            <UserAvatar user={{ displayName: name, email: user.email, photoURL: photoUrl }} size={56} />
+            <div className="min-w-0">
+              <p className="truncate font-inter text-sm font-medium text-inkwell-navy">{user.email}</p>
+              <p className="font-inter text-xs font-normal text-slate">
+                {user.emailVerified ? 'Email verified' : 'Email not verified'}
+              </p>
+            </div>
+          </div>
+          <form
+            className="mt-5 flex flex-col gap-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void saveProfile(user)
+            }}
+          >
+            <label className="block">
+              <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">Display name</span>
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                maxLength={80}
+                placeholder="Ada Lovelace"
+                autoComplete="name"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">Avatar photo URL</span>
+              <input
+                className="input"
+                type="url"
+                value={photoUrl}
+                onChange={(e) => setPhotoUrl(e.target.value)}
+                placeholder="https://…"
+              />
+              <span className="mt-1 block font-inter text-xs font-normal text-slate">
+                Paste a link to a square image. Leave empty to use your initials.
+              </span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button type="submit" className="btn-primary" disabled={savingProfile}>
+                {savingProfile ? 'Saving…' : 'Save profile'}
+              </button>
+              {profileMsg && (
+                <p className="font-inter text-sm font-normal text-slate" role="status">
+                  {profileMsg}
+                </p>
+              )}
+            </div>
+          </form>
+        </Section>
+
+
+        <Section title="Preferences" blurb="Defaults for your portfolio and the emails we send you.">
+          {!prefsLoaded ? (
+            <div className="flex flex-col gap-3" aria-hidden="true">
+              <div className="skeleton h-8 w-full" />
+              <div className="skeleton h-8 w-2/3" />
+              <div className="skeleton h-8 w-1/2" />
+            </div>
+          ) : (
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void savePrefs(user.uid)
+              }}
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">
+                    Default metrics window
+                  </span>
+                  <select
+                    className="input"
+                    value={prefs.defaultWindowDays}
+                    onChange={(e) =>
+                      setPrefs((p) => ({ ...p, defaultWindowDays: Number(e.target.value) as UserPrefs['defaultWindowDays'] }))
+                    }
+                  >
+                    <option value={7}>Last 7 days</option>
+                    <option value={30}>Last 30 days</option>
+                    <option value={90}>Last 90 days</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">
+                    Portfolio sort order
+                  </span>
+                  <select
+                    className="input"
+                    value={prefs.portfolioSort}
+                    onChange={(e) => setPrefs((p) => ({ ...p, portfolioSort: e.target.value as UserPrefs['portfolioSort'] }))}
+                  >
+                    <option value="updated">Recently updated</option>
+                    <option value="name">Name (A–Z)</option>
+                  </select>
+                </label>
+              </div>
+              <fieldset>
+                <legend className="sr-only">Email notifications</legend>
+                <Toggle
+                  label="Product updates"
+                  hint="Occasional announcements about new Proxibay features."
+                  checked={prefs.emailProductUpdates}
+                  onChange={(v) => setPrefs((p) => ({ ...p, emailProductUpdates: v }))}
+                />
+                <Toggle
+                  label="Weekly digest"
+                  hint="A once-a-week summary of your projects’ key metrics."
+                  checked={prefs.emailWeeklyDigest}
+                  onChange={(v) => setPrefs((p) => ({ ...p, emailWeeklyDigest: v }))}
+                />
+              </fieldset>
+              <div className="flex items-center gap-3">
+                <button type="submit" className="btn-primary" disabled={savingPrefs}>
+                  {savingPrefs ? 'Saving…' : 'Save preferences'}
+                </button>
+                {prefsMsg && (
+                  <p className="font-inter text-sm font-normal text-slate" role="status">
+                    {prefsMsg}
+                  </p>
+                )}
+              </div>
+            </form>
+          )}
+        </Section>
+
+        <Section title="Security" blurb="How you sign in and when your account was created.">
+          <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            <div>
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Sign-in methods</dt>
+              <dd className="mt-1 flex flex-wrap gap-2">
+                {user.providerData.map((p) => (
+                  <span key={p.providerId} className="badge">
+                    {PROVIDER_LABEL[p.providerId] ?? p.providerId}
+                  </span>
+                ))}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Member since</dt>
+              <dd className="mt-1 font-inter text-sm font-normal text-inkwell-navy">
+                {fmtDate(user.metadata.creationTime)}
+              </dd>
+            </div>
+            <div>
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Last sign-in</dt>
+              <dd className="mt-1 font-inter text-sm font-normal text-inkwell-navy">
+                {fmtDate(user.metadata.lastSignInTime)}
+              </dd>
+            </div>
+          </dl>
+          <button
+            type="button"
+            className="btn-ghost mt-5"
+            onClick={() => void signOut(auth).then(() => navigate('/'))}
+          >
+            Sign out
+          </button>
+        </Section>
+
+        <section className="card border-coral-emphasis" aria-label="Danger zone">
+          <h2 className="font-inter text-lg font-semibold text-inkwell-navy">Danger zone</h2>
+          <p className="mt-1 font-inter text-sm font-normal text-slate">
+            Deleting your account removes your sign-in immediately. Project data is retained per our{' '}
+            <a href="/privacy" className="text-link text-link-emphasis">
+              privacy policy
+            </a>
+            .
+          </p>
+          <div className="mt-5">
+            {confirmingDelete ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(user)}
+                  className="rounded-lg bg-coral-emphasis px-4 py-2.5 font-inter text-sm font-semibold text-paper-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-inkwell-navy"
+                >
+                  Yes, delete my account
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setConfirmingDelete(false)}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn-ghost" onClick={() => setConfirmingDelete(true)}>
+                Delete account…
+              </button>
+            )}
+            {dangerError && (
+              <p className="mt-3 font-inter text-sm font-normal text-coral-emphasis" role="alert">
+                {dangerError}
+              </p>
+            )}
+          </div>
+        </section>
+      </div>
+    </main>
+  )
+}

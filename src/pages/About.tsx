@@ -12,7 +12,7 @@ export default function About() {
       <SiteNav active="about" />
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
-        <h1 className="font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Too many projects. <span className="text-coral-emphasis">Too many tabs.</span>
         </h1>
         <div className="mt-6 flex flex-col gap-4 text-body text-graphite">

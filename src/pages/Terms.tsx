@@ -16,7 +16,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  */
 export default function Terms() {
   return (
-    <div className="mx-auto mt-8 max-w-2xl pb-16">
+    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+      <main className="mx-auto max-w-2xl px-6 pb-16 pt-8">
       <div className="card">
         <h1 className="font-inter text-2xl font-semibold text-inkwell-navy">Terms of Service</h1>
         <p className="mt-1 font-inter text-sm text-slate">Last updated: September 2026</p>
@@ -85,9 +86,8 @@ export default function Terms() {
 
         <Link to="/" className="text-link mt-6 inline-block text-sm">← Back</Link>
       </div>
-      <div className="mt-10">
-        <SiteFooter />
-      </div>
+      </main>
+      <SiteFooter />
     </div>
   )
 }

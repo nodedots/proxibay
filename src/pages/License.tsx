@@ -8,7 +8,7 @@ export default function License() {
       <SiteNav />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <p className="badge bg-paper-white">MIT License</p>
-        <h1 className="mt-3 font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="mt-3 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Free as in <span className="text-coral-emphasis">actually free.</span>
         </h1>
         <div className="card mt-8">

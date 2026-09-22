@@ -47,7 +47,7 @@ export default function Pricing() {
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10 text-center">
         <p className="badge badge-success">Early access</p>
-        <h1 className="mt-4 font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="mt-4 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Free <span className="text-coral-emphasis">for now.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-body-lg text-slate">

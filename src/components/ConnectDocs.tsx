@@ -49,7 +49,7 @@ export function GuideShell(props: {
       <SiteNav active="docs" />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <p className="badge bg-paper-white">{props.badge}</p>
-        <h1 className="mt-3 font-grifter text-4xl font-bold leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="mt-3 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           {props.title}
         </h1>
         <p className="mt-4 text-body-lg text-slate">{props.intro}</p>

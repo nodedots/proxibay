@@ -103,6 +103,18 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
+  /* Crisp type rendering — especially for GRIFTER/Bagel Fat One display
+     headings on dark surfaces (no synthetic smearing). */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Display font (GRIFTER substitute: Bagel Fat One ships weight 400 ONLY).
+   Never let the browser synthesize a faux-bold weight — that's what caused
+   jagged/blurry heading edges at 48px+. Headings must use font-normal. */
+.font-grifter {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
 }
 
 /* Canonical primitives per DESIGN.md.
@@ -237,6 +249,26 @@ body {
 }
 .text-link-emphasis {
   color: var(--color-coral-emphasis);
+}
+
+/* Top-nav link per Text Link spec: Inter 500, Slate at rest,
+   Inkwell Navy on hover, no underline. */
+.nav-link {
+  font-weight: 500;
+  color: var(--color-slate);
+  transition: color 150ms ease;
+  border-radius: 4px;
+}
+.nav-link:hover {
+  color: var(--color-inkwell-navy);
+  text-decoration: none;
+}
+.nav-link:focus-visible {
+  outline: 2px solid var(--color-inkwell-navy);
+  outline-offset: 2px;
+}
+.nav-link-active {
+  color: var(--color-inkwell-navy);
 }
 
 /* Proxibay status colors mapped onto system palette (no new hues):

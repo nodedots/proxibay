@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div className="mx-auto mt-16 max-w-md pb-16">
       <div className="card text-center">
-        <p className="font-grifter text-display font-bold text-inkwell-navy">404</p>
+        <p className="font-grifter text-display text-inkwell-navy">404</p>
         <h1 className="mt-2 font-inter text-xl font-semibold text-inkwell-navy">
           This page doesn't exist.
         </h1>

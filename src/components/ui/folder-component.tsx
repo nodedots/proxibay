@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +73,8 @@ type FolderComponentProps = Omit<React.ComponentProps<"div">, "color"> & {
   size?: "sm" | "md" | "lg";
   /** Optional status-dot fill (e.g. a project health color) drawn on the flap. */
   accent?: string;
+  /** Ambient demo mode: breathe open/closed on a loop. Hover/click still win. */
+  autoPlay?: boolean;
 };
 
 const BASE_WIDTH = 321;
@@ -85,6 +87,7 @@ const FolderComponent = ({
   color = "black",
   size = "md",
   accent,
+  autoPlay = false,
   className,
   ...props
 }: FolderComponentProps) => {
@@ -92,6 +95,21 @@ const FolderComponent = ({
   const scale = sizeScales[size];
   const [isHovered, setIsHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+
+  // Ambient demo loop for showcase surfaces (e.g. the landing page).
+  // Reduced-motion users get a static open folder instead of animation.
+  useEffect(() => {
+    if (!autoPlay) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setAutoOpen(true);
+      return;
+    }
+    const id = window.setInterval(() => setAutoOpen((v) => !v), 2400);
+    return () => window.clearInterval(id);
+  }, [autoPlay]);
+
+  const open = isOpen || autoOpen;
 
   return (
     <div
@@ -142,15 +160,15 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: isOpen ? -160 : isHovered ? -30 : -10,
-                x: isOpen ? 70 : 40,
-                rotate: isOpen ? 18 : isHovered ? 14 : 10,
+                y: open ? -160 : isHovered ? -30 : -10,
+                x: open ? 70 : 40,
+                rotate: open ? 18 : isHovered ? 14 : 10,
               }}
               transition={{
                 type: "spring",
                 stiffness: 120,
                 damping: 13,
-                delay: isOpen ? 0.1 : isHovered ? 0.12 : 0,
+                delay: open ? 0.1 : isHovered ? 0.12 : 0,
               }}
             >
               <Card id={1} theme={theme} />
@@ -158,15 +176,15 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: isOpen ? -180 : isHovered ? -35 : -20,
-                x: isOpen ? 0 : 3,
-                rotate: isOpen ? -3 : isHovered ? -1 : 2,
+                y: open ? -180 : isHovered ? -35 : -20,
+                x: open ? 0 : 3,
+                rotate: open ? -3 : isHovered ? -1 : 2,
               }}
               transition={{
                 type: "spring",
                 stiffness: 120,
                 damping: 13,
-                delay: isOpen ? 0.05 : isHovered ? 0.06 : 0,
+                delay: open ? 0.05 : isHovered ? 0.06 : 0,
               }}
             >
               <Card id={2} theme={theme} />
@@ -174,9 +192,9 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: isOpen ? -170 : isHovered ? -44 : -22,
-                x: isOpen ? -65 : -40,
-                rotate: isOpen ? -14 : isHovered ? -9 : -5,
+                y: open ? -170 : isHovered ? -44 : -22,
+                x: open ? -65 : -40,
+                rotate: open ? -14 : isHovered ? -9 : -5,
               }}
               transition={{
                 type: "spring",
@@ -197,7 +215,7 @@ const FolderComponent = ({
               width: 321,
               height: 241,
             }}
-            animate={{ rotateX: isOpen ? -55 : isHovered ? -45 : -15 }}
+            animate={{ rotateX: open ? -55 : isHovered ? -45 : -15 }}
             transition={{ type: "spring", stiffness: 120, damping: 14 }}
           >
             <div

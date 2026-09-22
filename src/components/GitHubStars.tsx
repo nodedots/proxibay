@@ -74,10 +74,13 @@ export default function GitHubStars() {
     >
       <GitHubMark />
       <span className="hidden font-inter font-medium md:inline">GitHub</span>
-      <span className="flex items-center gap-1 border-l border-warm-stone pl-2 font-inter font-semibold text-inkwell-navy">
-        <StarIcon />
-        {stars === null ? 'Star' : formatCount(stars)}
-      </span>
+      {/* Hide the count until the repo has real stars — "★ 0" reads as a bug. */}
+      {stars !== null && stars > 0 && (
+        <span className="flex items-center gap-1 border-l border-warm-stone pl-2 font-inter font-semibold text-inkwell-navy">
+          <StarIcon />
+          {formatCount(stars)}
+        </span>
+      )}
     </a>
   )
 }
