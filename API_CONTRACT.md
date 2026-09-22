@@ -202,24 +202,24 @@ client sends `{tier: "pro", period: "monthly"|"yearly"}` and the server maps to
 ### GET /v1/billing/plans — **public** display catalog
 ```json
 // 200 response
-{ "currency": "USD", "seatFeature": "seats",
+{ "currency": "USD",
   "teamsNote": "Teams/Enterprise plans are coming soon.",
   "plans": [
-    { "tier": "pro", "period": "monthly", "perSeat": 9.99, "offered": false },
-    { "tier": "pro", "period": "yearly", "perSeat": 107.89, "offered": false }
+    { "tier": "pro", "period": "monthly", "price": 9.99, "offered": false },
+    { "tier": "pro", "period": "yearly", "price": 107.89, "offered": false }
   ] }
 ```
 
 ### POST /v1/billing/checkout — createCheckout
 ```json
 // request
-{ "tier": "pro", "period": "monthly", "seats?": 1 }
+{ "tier": "pro", "period": "monthly" }
 // 200 response
 { "checkoutUrl": "https://www.kelviq.com/checkout/…" }
 ```
 Ensures the Kelviq customer (create-with-email, conflicts ignored), then
-`checkout.createSession({ planIdentifier, chargePeriod, customerId, successUrl,
-features: [{ identifier, quantity: seats }] })`. 409 `plan-not-published`
+`checkout.createSession({ planIdentifier, chargePeriod, customerId, successUrl })`.
+Pro is flat per account — no seat quantities (seats arrive with Teams). 409 `plan-not-published`
 while identifiers are unset. `successUrl` = `{PUBLIC_APP_URL}/billing/success`.
 
 ### POST /v1/billing/portal — createPortalSession

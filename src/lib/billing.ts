@@ -3,7 +3,7 @@ import { api, ApiError } from './api'
 export interface PlanOffer {
   tier: 'pro'
   period: 'monthly' | 'yearly'
-  perSeat: number
+  price: number
   offered: boolean
 }
 
@@ -20,7 +20,7 @@ export async function getPlans(): Promise<{ plans: PlanOffer[]; teamsNote: strin
 export async function startCheckout(period: 'monthly' | 'yearly'): Promise<void> {
   const res = await api<{ checkoutUrl: string }>('/v1/billing/checkout', {
     method: 'POST',
-    body: JSON.stringify({ tier: 'pro', period, seats: 1 }),
+    body: JSON.stringify({ tier: 'pro', period }),
   })
   window.location.href = res.checkoutUrl
 }

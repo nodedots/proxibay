@@ -23,7 +23,7 @@ export default function Pricing() {
   const offered = (period: 'monthly' | 'yearly') =>
     offers?.find((o) => o.period === period)?.offered ?? false
   const price = (period: 'monthly' | 'yearly') =>
-    offers?.find((o) => o.period === period)?.perSeat
+    offers?.find((o) => o.period === period)?.price
 
   async function upgrade(period: 'monthly' | 'yearly') {
     if (!auth.currentUser) {
@@ -69,7 +69,7 @@ export default function Pricing() {
           small portfolios. No surprises.
         </p>
 
-        <h2 className="mt-14 font-inter text-heading-sm font-semibold">Pro — per seat</h2>
+        <h2 className="mt-14 font-inter text-heading-sm font-semibold">Pro — flat rate</h2>
         <p className="mx-auto mt-2 max-w-lg text-body text-slate">
           For portfolios that have outgrown the free tier. Same product, higher
           limits, priority support.
@@ -91,7 +91,7 @@ export default function Pricing() {
                     {amount !== undefined ? `$${amount.toFixed(2)}` : '$—'}
                   </span>{' '}
                   <span className="font-inter text-sm text-slate">
-                    / seat{period === 'yearly' ? ' / year' : ' / month'}
+                    / {period === 'yearly' ? 'year' : 'month'}
                   </span>
                 </p>
                 {period === 'yearly' && (

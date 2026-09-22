@@ -11,15 +11,15 @@ import { AuthedRequest, err } from '../auth.js'
 
 type Period = 'monthly' | 'yearly'
 
-const MONTHLY_PER_SEAT = 9.99
+const MONTHLY_PRICE = 9.99
 const YEARLY_DISCOUNT = 0.1
-const YEARLY_PER_SEAT = Math.round(MONTHLY_PER_SEAT * 12 * (1 - YEARLY_DISCOUNT) * 100) / 100 // 107.89
-const SEATS_FEATURE = process.env.KELVIQ_SEATS_FEATURE_ID ?? 'seats'
+const YEARLY_PRICE = Math.round(MONTHLY_PRICE * 12 * (1 - YEARLY_DISCOUNT) * 100) / 100 // 107.89
+// Per-seat billing arrives with Teams/Enterprise — Pro is flat per account.
 
 interface PlanOffer {
   tier: 'pro'
   period: Period
-  perSeat: number
+  price: number
   identifier: string
   offered: boolean
 }
@@ -29,14 +29,14 @@ function planOffers(): PlanOffer[] {
     {
       tier: 'pro',
       period: 'monthly',
-      perSeat: MONTHLY_PER_SEAT,
+      price: MONTHLY_PRICE,
       identifier: process.env.KELVIQ_PLAN_PRO_MONTHLY ?? '',
       offered: !!(process.env.KELVIQ_PLAN_PRO_MONTHLY ?? '').trim(),
     },
     {
       tier: 'pro',
       period: 'yearly',
-      perSeat: YEARLY_PER_SEAT,
+      price: YEARLY_PRICE,
       identifier: process.env.KELVIQ_PLAN_PRO_YEARLY ?? '',
       offered: !!(process.env.KELVIQ_PLAN_PRO_YEARLY ?? '').trim(),
     },
@@ -85,25 +85,23 @@ export const billingRouter = Router()
 
 /** GET /v1/billing/plans — PUBLIC display catalog (no identifiers leak). */
 billingRouter.get('/plans', (_req, res) => {
-  const offers = planOffers().map(({ tier, period, perSeat, offered }) => ({ tier, period, perSeat, offered }))
+  const offers = planOffers().map(({ tier, period, price, offered }) => ({ tier, period, price, offered }))
   return res.json({
     currency: 'USD',
-    seatFeature: SEATS_FEATURE,
     teamsNote: 'Teams/Enterprise plans are coming soon.',
     plans: offers,
   })
 })
 
-/** POST /v1/billing/checkout {tier, period, seats?} → {checkoutUrl}. */
+/** POST /v1/billing/checkout {tier, period} → {checkoutUrl}. */
 billingRouter.post('/checkout', async (req: AuthedRequest, res) => {
   const uid = req.uid as string
-  const { tier, period, seats } = (req.body ?? {}) as { tier?: string; period?: string; seats?: number }
+  const { tier, period } = (req.body ?? {}) as { tier?: string; period?: string }
   const offer = planOffers().find((o) => o.tier === tier && o.period === period)
   if (!offer) return err(res, 400, 'invalid_argument', 'Unknown plan or period.')
   if (!offer.offered) {
     return err(res, 409, 'plan-not-published', 'This plan isn’t on sale yet. Everything is free during early access.')
   }
-  const quantity = seats === undefined ? 1 : Math.max(1, Math.floor(Number(seats) || 1))
   try {
     await ensureCustomer(uid)
     const session = await kelviq().checkout.createSession({
@@ -111,7 +109,6 @@ billingRouter.post('/checkout', async (req: AuthedRequest, res) => {
       chargePeriod: period === 'monthly' ? 'MONTHLY' : 'YEARLY',
       customerId: uid,
       successUrl: `${appUrl()}/billing/success`,
-      features: [{ identifier: SEATS_FEATURE, quantity }],
     })
     return res.json({ checkoutUrl: session.checkoutUrl })
   } catch (e) {

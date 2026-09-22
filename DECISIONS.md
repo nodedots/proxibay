@@ -149,8 +149,8 @@ reports). Header keeps About/Docs/Pricing flat — Support/Feedback/Changelog/
 License live in the footer, so no Resources dropdown was needed.
 
 ## D27 — Kelviq billing, sandbox-only (2026-09-22)
-Pro monthly/yearly per seat ($9.99 → $107.89 computed, not hardcoded); Teams/
-Enterprise are footer-copy only, no code. Plan identifiers stay server-side —
+Pro monthly/yearly flat per account ($9.99 → $107.89 computed, not hardcoded);
+per-seat billing deferred to Teams/Enterprise (footer-copy only, no code). Plan identifiers stay server-side —
 client sends tier/period, server maps via env (empty = 409 not-published, so
 Pricing degrades to Coming-soon). customerId is always the verified UID.
 Portal auto-provisions the Kelviq customer-with-email on first 400 and never
