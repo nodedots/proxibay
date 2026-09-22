@@ -192,6 +192,54 @@ are carried in types for Phase 2 but the alert engine doesn't exist yet.
 
 ---
 
+## Kelviq billing (merchant of record, sandbox until go-live)
+
+Base + auth as above. `customerId` is always the Firebase UID from the ID
+token — never a request field. Plan identifiers never leave the server: the
+client sends `{tier: "pro", period: "monthly"|"yearly"}` and the server maps to
+`KELVIQ_PLAN_PRO_*`. Empty identifier = plan not offered (409).
+
+### GET /v1/billing/plans — **public** display catalog
+```json
+// 200 response
+{ "currency": "USD", "seatFeature": "seats",
+  "teamsNote": "Teams/Enterprise plans are coming soon.",
+  "plans": [
+    { "tier": "pro", "period": "monthly", "perSeat": 9.99, "offered": false },
+    { "tier": "pro", "period": "yearly", "perSeat": 107.89, "offered": false }
+  ] }
+```
+
+### POST /v1/billing/checkout — createCheckout
+```json
+// request
+{ "tier": "pro", "period": "monthly", "seats?": 1 }
+// 200 response
+{ "checkoutUrl": "https://www.kelviq.com/checkout/…" }
+```
+Ensures the Kelviq customer (create-with-email, conflicts ignored), then
+`checkout.createSession({ planIdentifier, chargePeriod, customerId, successUrl,
+features: [{ identifier, quantity: seats }] })`. 409 `plan-not-published`
+while identifiers are unset. `successUrl` = `{PUBLIC_APP_URL}/billing/success`.
+
+### POST /v1/billing/portal — createPortalSession
+```json
+// 200 response
+{ "portalUrl": "https://www.kelviq.com/portal/…?token=…" }
+```
+Retries once after ensuring the customer-with-email on 400 (the documented
+unknown-id / no-email case) — returns 400 `no-email` / `portal-unavailable`,
+never a bare 500.
+
+### POST /v1/billing/webhooks — **public**, Kelviq-signature-gated
+Raw body + `validateEvent(payload, headers, KELVIQ_WEBHOOK_SECRET)`; 403 on
+`WebhookVerificationError`, 400 on malformed. Duplicate event IDs skipped
+(in-memory set; Redis before scaling). Handler TODOs: `checkout.completed`,
+`invoice.payment_failed`, `subscription.created`, `.updated`, `.plan_changed`,
+`.cancelled` (fires at actual end, not on schedule).
+
+---
+
 ## Stripe connector (live — added after Phase 1)
 
 ### POST /v1/projects/:projectId/connectors/stripe — createStripeConnector

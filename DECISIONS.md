@@ -148,6 +148,17 @@ spam risk accepted at this scale over an auth wall that would kill drive-by
 reports). Header keeps About/Docs/Pricing flat — Support/Feedback/Changelog/
 License live in the footer, so no Resources dropdown was needed.
 
+## D27 — Kelviq billing, sandbox-only (2026-09-22)
+Pro monthly/yearly per seat ($9.99 → $107.89 computed, not hardcoded); Teams/
+Enterprise are footer-copy only, no code. Plan identifiers stay server-side —
+client sends tier/period, server maps via env (empty = 409 not-published, so
+Pricing degrades to Coming-soon). customerId is always the verified UID.
+Portal auto-provisions the Kelviq customer-with-email on first 400 and never
+bare-500s. Webhook dedupe is an in-memory set (single instance; Redis before
+scaling). No license wiring (no license-key plans), no free-plan enrolment (no
+free plan published), no enforcement gates yet — all flagged as follow-ups.
+Keys live in functions/.env.local (gitignored) → Functions env at deploy.
+
 ## D26 — shadcn + Rare UI adoption, re-themed (2026-09-20)
 `components.json` + `@` alias + `cn()` wired for Tailwind v4 (no tailwind.config;
 theme stays in `@theme`). Installed only the three mapped components (nothing

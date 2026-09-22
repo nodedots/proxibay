@@ -7,6 +7,7 @@ import { metricsRouter } from './routes/metrics.js'
 import { ingestRouter } from './routes/ingest.js'
 import { integrationsRouter } from './routes/integrations.js'
 import { stripeRouter } from './routes/stripe.js'
+import { billingRouter, billingWebhookRouter } from './routes/billing.js'
 
 export function buildApp() {
   const app = express()
@@ -16,14 +17,16 @@ export function buildApp() {
   // Ingest endpoints need the RAW body for signature verification — mount before json parser.
   app.use('/v1/ingest', express.raw({ type: 'application/json', limit: '1mb' }), ingestRouter)
   app.use('/v1/stripe', express.raw({ type: 'application/json', limit: '1mb' }), stripeRouter)
+  app.use('/v1/billing/webhooks', express.raw({ type: '*/*', limit: '1mb' }), billingWebhookRouter)
 
   app.use(express.json({ limit: '1mb' }))
-  app.use(authMiddleware([/^\/v1\/health$/, /^\/v1\/ingest\//, /^\/v1\/stripe\//]))
+  app.use(authMiddleware([/^\/v1\/health$/, /^\/v1\/ingest\//, /^\/v1\/stripe\//, /^\/v1\/billing\/webhooks/, /^\/v1\/billing\/plans$/]))
 
   app.use('/v1/projects', projectsRouter)
   app.use('/v1/projects/:projectId/connectors', connectorsRouter)
   app.use('/v1/projects/:projectId/metrics', metricsRouter)
   app.use('/v1/integrations', integrationsRouter)
+  app.use('/v1/billing', billingRouter)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   app.use((e: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

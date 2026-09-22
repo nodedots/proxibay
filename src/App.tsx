@@ -30,6 +30,7 @@ import Changelog from './pages/Changelog'
 import License from './pages/License'
 import Support from './pages/Support'
 import Feedback from './pages/Feedback'
+import BillingSuccess from './pages/BillingSuccess'
 import NotFound from './pages/NotFound'
 
 const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license']
@@ -158,6 +159,7 @@ export default function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/support" element={<Support />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/billing/success" element={<BillingSuccess />} />
             <Route path="/changelog" element={<Changelog />} />
             <Route path="/license" element={<License />} />
             <Route path="/" element={<Landing />} />
