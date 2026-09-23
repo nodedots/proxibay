@@ -162,9 +162,9 @@ export default function Landing() {
       </section>
 
       {/* FEATURE BLURBS — Paper White band with Warm Stone hairlines for
-          section depth; three-up on desktop, stacked on mobile. */}
+          section depth; four-up on desktop, two-up on tablet, stacked on mobile. */}
       <section id="features" className="border-y border-line bg-surface">
-        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-24 sm:py-28 md:grid-cols-3 md:gap-10">
+        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-24 sm:grid-cols-2 sm:py-28 lg:grid-cols-4 lg:gap-10">
           <Reveal>
           <div>
             <p className="badge">Catalog</p>
@@ -193,6 +193,23 @@ export default function Landing() {
             <p className="mt-2 text-body text-ink-muted">
               Set a threshold on anything you track. When something breaks,
               Stackduck taps you on the shoulder — email or webhook, your call.
+            </p>
+          </div>
+          </Reveal>
+          <Reveal delay={0.24}>
+          <div>
+            <div className="flex items-center gap-2">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-ink">
+                <path d="M12 2.5 19 5.5v6c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2v-6l7-3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                <path d="M9 11.5 11.2 13.7 15 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="badge">Security</p>
+            </div>
+            <h3 className="mt-3 font-inter text-subheading font-semibold">Built with security in mind.</h3>
+            <p className="mt-2 text-body text-ink-muted">
+              Stackduck only asks for the access it needs to monitor your projects.
+              Credentials stay encrypted and under your control — revoke anytime
+              from your own accounts.
             </p>
           </div>
           </Reveal>

@@ -56,11 +56,19 @@ export default function UserMenu({ user }: { user: User }) {
       </button>
 
       {open && (
-        <div
-          role="menu"
-          aria-label="Account"
-          className="modal-pop absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-line bg-elevated p-2 shadow-sm"
-        >
+        <>
+          <button
+            aria-hidden
+            tabIndex={-1}
+            aria-label="Close account menu"
+            className="fixed inset-0 z-40 cursor-default bg-ink/30 sm:hidden"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            role="menu"
+            aria-label="Account"
+            className="modal-pop fixed inset-x-4 bottom-4 z-50 mt-2 rounded-2xl border border-line bg-elevated p-2 shadow-sm sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:w-64"
+          >
           <div className="flex items-center gap-3 border-b border-line px-3 pb-3 pt-1">
             <UserAvatar user={user} size={36} />
             <div className="min-w-0">
@@ -82,6 +90,7 @@ export default function UserMenu({ user }: { user: User }) {
             </button>
           </div>
         </div>
+        </>
       )}
     </div>
   )
