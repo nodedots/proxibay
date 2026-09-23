@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { api, loadErrorMessage } from '../lib/api'
 import { auth } from '../firebase'
 import { listProjectsDirect, withFallback } from '../lib/store'
@@ -40,6 +41,8 @@ const STATUS_FILL: Record<string, string> = {
   gray: '#6d6f75',
   green: '#86e0c1',
 }
+
+const MotionLink = motion(Link)
 
 /** One checklist row: done check or step number, title, blurb, optional action. */
 function OnboardingStep(props: {
@@ -309,8 +312,17 @@ export default function PortfolioHome() {
       )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((e) => (
-          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover" aria-label={`${e.project.name} — ${homeStatusLabel(e.homeStatus)}`}>
+        {filtered.map((e, i) => (
+          <MotionLink
+            key={e.project.id}
+            to={`/projects/${e.project.id}`}
+            className="card card-hover"
+            aria-label={`${e.project.name} — ${homeStatusLabel(e.homeStatus)}`}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.6, delay: Math.min(i * 0.05, 0.3), ease: [0, 0, 0.2, 1] }}
+          >
             <div className="flex justify-center" aria-hidden="true">
               <Folder color="stackduck" size="sm" accent={STATUS_FILL[e.homeStatus]} />
             </div>
@@ -347,7 +359,7 @@ export default function PortfolioHome() {
                 return t ? `Updated ${t}` : 'No updates yet'
               })()}
             </p>
-          </Link>
+          </MotionLink>
         ))}
       </div>
 

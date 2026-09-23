@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import { Reveal } from '../components/Reveal'
 import { auth } from '../firebase'
 import { getPlans, startCheckout, type PlanOffer } from '../lib/billing'
 
@@ -74,9 +75,9 @@ export default function Pricing() {
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="pricing" />
 
-      <main className="mx-auto max-w-2xl px-6 pb-20 pt-10 text-center">
+      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 text-center sm:pb-28 sm:pt-20">
         <p className="badge badge-success">Early access</p>
-        <h1 className="mt-4 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+        <h1 className="mt-4 font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Free <span className="text-coral-emphasis">for now.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-body-lg text-ink-muted">
@@ -84,6 +85,7 @@ export default function Pricing() {
           every connector, every alert. Pro switches on when paid plans publish.
         </p>
 
+        <Reveal>
         <div className="card mt-10 text-left">
           <h2 className="font-inter text-subheading font-semibold">What's included free</h2>
           <ul className="mt-3 flex flex-col gap-2 text-body text-ink-secondary">
@@ -93,7 +95,9 @@ export default function Pricing() {
             <li>· Threshold alerts by email and webhook</li>
           </ul>
         </div>
+        </Reveal>
 
+        <Reveal delay={0.06}>
         <h2 className="mt-14 font-inter text-heading-sm font-semibold">Pro — flat rate</h2>
         <p className="mx-auto mt-2 max-w-lg text-body text-ink-muted">
           One price per account, not per seat. Same product, higher limits,
@@ -135,6 +139,9 @@ export default function Pricing() {
           })}
         </div>
 
+        </Reveal>
+
+        <Reveal delay={0.06}>
         <h2 className="mt-14 font-inter text-heading-sm font-semibold">Free vs Pro</h2>
         <div className="card mt-4 overflow-x-auto p-0 text-left">
           <table className="w-full min-w-[420px] border-collapse font-inter text-sm">
@@ -162,7 +169,9 @@ export default function Pricing() {
           <span className="text-mint-pulse"><Check /></span>
           Early users keep a free tier that covers small portfolios. No surprises.
         </p>
+        </Reveal>
 
+        <Reveal delay={0.06}>
         <div className="card mt-10 bg-feature text-left">
           <h2 className="font-inter text-subheading font-semibold text-paper-white">Running a team?</h2>
           <p className="mt-2 text-body text-paper-white/70">
@@ -172,7 +181,9 @@ export default function Pricing() {
             Tell us what your team needs →
           </Link>
         </div>
+        </Reveal>
 
+        <Reveal delay={0.06}>
         <h2 className="mt-14 font-inter text-heading-sm font-semibold">Questions</h2>
         <div className="mt-4 flex flex-col gap-3 text-left">
           <Faq q="When will I actually be charged?">
@@ -185,6 +196,7 @@ export default function Pricing() {
             <p>Yes — switch anytime from the billing portal. Yearly works out 10% cheaper than twelve monthly payments.</p>
           </Faq>
         </div>
+        </Reveal>
 
         <Link to="/signin" className="btn-primary mt-10 inline-block">
           Add your first project

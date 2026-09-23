@@ -1,5 +1,6 @@
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import { Reveal } from '../components/Reveal'
 
 const ENTRIES: Array<{ version: string; date: string; items: string[] }> = [
   {
@@ -20,16 +21,17 @@ export default function Changelog() {
   return (
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
-      <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
-        <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
+        <h1 className="font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           What <span className="text-coral-emphasis">changed.</span>
         </h1>
         <p className="mt-4 text-body-lg text-ink-muted">
           Every release, newest first. Short on purpose.
         </p>
         <div className="mt-8 flex flex-col gap-6">
-          {ENTRIES.map((e) => (
-            <div key={e.version} className="card">
+          {ENTRIES.map((e, i) => (
+            <Reveal key={e.version} delay={Math.min(i * 0.06, 0.24)}>
+            <div className="card">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-inter text-subheading font-semibold">{e.version}</h2>
                 <p className="font-inter text-sm text-ink-muted">{e.date}</p>
@@ -40,6 +42,7 @@ export default function Changelog() {
                 ))}
               </ul>
             </div>
+            </Reveal>
           ))}
         </div>
       </main>

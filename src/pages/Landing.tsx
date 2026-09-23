@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import Folder from '../components/ui/folder-component'
+import { Reveal } from '../components/Reveal'
 
 const INSTALL_CMD = 'npx degit nodedots/stackduck my-stackduck'
 
@@ -108,8 +109,9 @@ export default function Landing() {
       <SiteNav />
 
       {/* HERO */}
-      <header className="mx-auto max-w-[1200px] px-6 pb-20 pt-16 text-center sm:pt-24">
-        <h1 className="mx-auto max-w-4xl font-grifter text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
+      <header className="mx-auto max-w-[1200px] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
+        <Reveal>
+          <h1 className="mx-auto max-w-4xl font-display font-bold text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
           Stop building dashboards. <span className="text-coral-emphasis">Plug</span> your{' '}
           <span className="sm:whitespace-nowrap">
             projects <span className="text-coral-emphasis">in.</span>
@@ -123,15 +125,17 @@ export default function Landing() {
           Add your first project
         </Link>
         <InstallSnippet />
+        </Reveal>
       </header>
 
       {/* DARK FEATURE MOMENT */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-20">
+      <section className="mx-auto max-w-[1200px] px-6 pb-28">
+        <Reveal>
         {/* bg-feature: Inkwell Navy in light; bumps to Raised Navy in dark so
             the card stays distinct from the now-darker page (DARK_MODE.md). */}
         <div className="relative overflow-hidden rounded-3xl bg-feature p-10 shadow-sm-2 sm:p-12">
           <div className="max-w-lg">
-            <h2 className="font-grifter text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
+            <h2 className="font-display font-bold text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
             </h2>
             <p className="mt-4 text-body text-paper-white/70">
@@ -154,12 +158,14 @@ export default function Landing() {
             <PortfolioFolderDemo />
           </div>
         </div>
+        </Reveal>
       </section>
 
       {/* FEATURE BLURBS — Paper White band with Warm Stone hairlines for
           section depth; three-up on desktop, stacked on mobile. */}
       <section id="features" className="border-y border-line bg-surface">
-        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-20 md:grid-cols-3 md:gap-10">
+        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-24 sm:py-28 md:grid-cols-3 md:gap-10">
+          <Reveal>
           <div>
             <p className="badge">Catalog</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Register any project in seconds.</h3>
@@ -168,6 +174,8 @@ export default function Landing() {
               whenever you like — the catalog never gets in the way of monitoring.
             </p>
           </div>
+          </Reveal>
+          <Reveal delay={0.08}>
           <div>
             <p className="badge">Connectors</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Plug in where your data already lives.</h3>
@@ -177,6 +185,8 @@ export default function Landing() {
               projects read the same.
             </p>
           </div>
+          </Reveal>
+          <Reveal delay={0.16}>
           <div>
             <p className="badge">Alerts</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Know before you go looking.</h3>
@@ -185,6 +195,7 @@ export default function Landing() {
               Stackduck taps you on the shoulder — email or webhook, your call.
             </p>
           </div>
+          </Reveal>
         </div>
       </section>
 

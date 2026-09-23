@@ -89,11 +89,19 @@ function Header({ user }: { user: User | null }) {
   )
 }
 
+import { PageFade } from './components/Reveal'
+
 function Shell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
   // Marketing pages own their full layout (incl. <main>) — don't nest landmarks.
-  if (isMarketing(pathname)) return <>{children}</>
-  return <main className="mx-auto max-w-[1200px] px-6 pb-20">{children}</main>
+  if (isMarketing(pathname)) {
+    return <PageFade routeKey={pathname}>{children}</PageFade>
+  }
+  return (
+    <main className="mx-auto max-w-[1200px] px-6 pb-20">
+      <PageFade routeKey={pathname}>{children}</PageFade>
+    </main>
+  )
 }
 
 function RequireAuth({ user, children }: { user: User | null | undefined; children: JSX.Element }) {

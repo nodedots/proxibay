@@ -17,7 +17,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function Terms() {
   return (
     <div className="min-h-screen bg-canvas font-inter text-ink">
-      <main className="mx-auto max-w-2xl px-6 pb-16 pt-8">
+      <main className="mx-auto max-w-2xl px-6 pb-20 pt-12">
       <div className="card">
         <h1 className="font-inter text-2xl font-semibold text-ink">Terms of Service</h1>
         <p className="mt-1 font-inter text-sm text-ink-muted">Last updated: September 2026</p>

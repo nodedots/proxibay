@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import DeveloperModal from '../components/DeveloperModal'
+import { Reveal } from '../components/Reveal'
 
 /** Why Stackduck exists — human, not corporate. */
 export default function About() {
@@ -11,11 +12,12 @@ export default function About() {
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="about" />
 
-      <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
-        <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
-          Too many projects. <span className="text-coral-emphasis">Too many tabs.</span>
-        </h1>
-        <div className="mt-6 flex flex-col gap-4 text-body text-ink-secondary">
+      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
+        <Reveal>
+          <h1 className="font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+            Too many projects. <span className="text-coral-emphasis">Too many tabs.</span>
+          </h1>
+          <div className="mt-6 flex flex-col gap-4 text-body text-ink-secondary">
           <p>
             Every project you ship comes with its own admin panels: users over here,
             errors over there, revenue somewhere else entirely. With one project that's
@@ -30,7 +32,9 @@ export default function About() {
             not two chores.
           </p>
         </div>
+        </Reveal>
 
+        <Reveal delay={0.08}>
         <div className="card mt-10">
           <p className="badge bg-surface">Founder note</p>
           <div className="mt-3 flex flex-col gap-3 text-body text-ink-secondary">
@@ -58,6 +62,7 @@ export default function About() {
             </p>
           </div>
         </div>
+        </Reveal>
 
         <div className="mt-10 text-center">
           <Link to="/signin" className="btn-primary inline-block">
