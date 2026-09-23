@@ -54,7 +54,7 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
             X
           </a>
           <a
-            href="https://discord.gg/nodedots"
+            href="https://discord.com/users/1147515838493110385"
             target="_blank"
             rel="noreferrer"
             className="btn-ghost flex flex-1 items-center justify-center gap-2 text-sm"

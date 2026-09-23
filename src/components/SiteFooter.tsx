@@ -44,7 +44,7 @@ const SOCIALS: Array<{
   { href: 'https://github.com/nodedots/stackduck', label: 'GitHub', Icon: GitHubIcon },
   { href: 'https://x.com/stackduck', label: 'X', Icon: XIcon },
   { href: 'https://www.linkedin.com/company/stackduck', label: 'LinkedIn', Icon: LinkedInIcon },
-  { href: 'https://discord.gg/stackduck', label: 'Discord', Icon: DiscordIcon },
+  { href: 'https://discord.com/users/1147515838493110385', label: 'Discord', Icon: DiscordIcon },
 ]
 
 const GROUPS: Array<{
