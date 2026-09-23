@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../lib/api'
+import { api, loadErrorMessage } from '../lib/api'
+import { auth } from '../firebase'
 import { listProjectsDirect, withFallback } from '../lib/store'
+import { homeStatusLabel, humanKeyLabel } from '../lib/format'
 import Folder from '../components/ui/folder-component'
 import {
   consumeImportPrompt,
@@ -13,8 +15,8 @@ import {
 import ImportPicker from '../components/ImportPicker'
 import type { ProjectListEntry } from '../lib/contracts'
 
-function timeAgo(iso: { seconds: number } | string | undefined): string {
-  if (!iso) return 'never'
+function timeAgo(iso: { seconds: number } | string | undefined): string | null {
+  if (!iso) return null
   const ms = typeof iso === 'string' ? new Date(iso).getTime() : iso.seconds * 1000
   const mins = Math.max(0, Math.round((Date.now() - ms) / 60000))
   if (mins < 1) return 'just now'
@@ -39,6 +41,39 @@ const STATUS_FILL: Record<string, string> = {
   green: '#86e0c1',
 }
 
+/** One checklist row: done check or step number, title, blurb, optional action. */
+function OnboardingStep(props: {
+  done: boolean
+  title: string
+  blurb: string
+  action?: { to: string; label: string }
+}) {
+  return (
+    <li className="flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-inter text-sm font-semibold transition-colors duration-150 ${
+          props.done ? 'bg-mint-pulse text-inkwell-navy' : 'bg-inset text-ink-muted'
+        }`}
+      >
+        {props.done ? '✓' : ''}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={`font-inter text-sm font-medium ${props.done ? 'text-ink-muted line-through' : ''}`}>
+          {props.title}
+          {props.done && <span className="sr-only"> (done)</span>}
+        </p>
+        {!props.done && <p className="font-inter text-xs text-ink-muted">{props.blurb}</p>}
+      </div>
+      {props.action && !props.done && (
+        <Link to={props.action.to} className="btn-primary shrink-0 px-3 py-1.5 text-sm">
+          {props.action.label}
+        </Link>
+      )}
+    </li>
+  )
+}
+
 /**
  * Portfolio Home View (per spec): card grid, status color logic, search/filter,
  * empty state. No inline card actions — click through to detail.
@@ -50,6 +85,7 @@ export default function PortfolioHome() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused' | 'archived'>('all')
   const [attempt, setAttempt] = useState(0)
   const [importMenu, setImportMenu] = useState(false)
+  const [onboardingGone, setOnboardingGone] = useState(false)
   const [picker, setPicker] = useState<{
     kind: OAuthKind
     items: ImportItem[]
@@ -102,7 +138,7 @@ export default function PortfolioHome() {
       () => listProjectsDirect(),
     )
       .then((projects) => setEntries(projects))
-      .catch((e) => setError(`Could not load projects: ${e instanceof Error ? e.message : String(e)}`))
+      .catch((e) => setError(loadErrorMessage('your portfolio', e)))
   }, [attempt])
 
   const filtered = useMemo(() => {
@@ -115,6 +151,30 @@ export default function PortfolioHome() {
       return e.project.name.toLowerCase().includes(q) || tags.includes(q) || e.project.status.includes(q)
     })
   }, [entries, query, statusFilter])
+
+  // Guided first run: shown until all three steps are done (or dismissed).
+  // Returning users with live projects never see it.
+  const onboarding = useMemo(() => {
+    if (!entries || onboardingGone) return null
+    const uid = auth.currentUser?.uid ?? 'anon'
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(`stackduck:onboarding-dismissed:${uid}`)) return null
+    const hasProject = entries.length > 0
+    const hasConnector = entries.some((e) => e.connectorStatuses.length > 0)
+    const hasMetric = entries.some((e) => e.keyMetrics.length > 0)
+    if (hasProject && hasConnector && hasMetric) return null
+    const firstOpen = entries.find((e) => e.connectorStatuses.length === 0) ?? entries[0]
+    return { hasProject, hasConnector, hasMetric, firstOpen }
+  }, [entries, onboardingGone])
+
+  function dismissOnboarding() {
+    const uid = auth.currentUser?.uid ?? 'anon'
+    try {
+      localStorage.setItem(`stackduck:onboarding-dismissed:${uid}`, '1')
+    } catch {
+      // Private mode — dismissal just lasts this visit.
+    }
+    setOnboardingGone(true)
+  }
 
   return (
     <div className="mt-8">
@@ -193,7 +253,48 @@ export default function PortfolioHome() {
         </div>
       )}
 
-      {entries !== null && entries.length === 0 && (
+      {onboarding && (
+        <div className="card mt-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="font-inter text-lg font-semibold">Get set up in three steps</h2>
+              <p className="mt-1 text-sm text-ink-muted">A quick tour — most people finish in a few minutes.</p>
+            </div>
+            <button
+              className="rounded-lg px-2 py-1 font-inter text-sm text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+              onClick={dismissOnboarding}
+              aria-label="Dismiss setup guide"
+            >
+              Dismiss
+            </button>
+          </div>
+          <ol className="mt-4 flex flex-col gap-3">
+            <OnboardingStep
+              done={onboarding.hasProject}
+              title="Add your first project"
+              blurb="Just a name — details can wait."
+              action={!onboarding.hasProject ? { to: '/projects/new', label: 'Add project' } : undefined}
+            />
+            <OnboardingStep
+              done={onboarding.hasConnector}
+              title="Connect a data source"
+              blurb="Link Firebase, Stripe, Supabase, or a webhook."
+              action={
+                onboarding.hasProject && !onboarding.hasConnector && onboarding.firstOpen
+                  ? { to: `/projects/${onboarding.firstOpen.project.id}`, label: 'Connect now' }
+                  : undefined
+              }
+            />
+            <OnboardingStep
+              done={onboarding.hasMetric}
+              title="See your first metric"
+              blurb="Charts appear here on their own once data arrives."
+            />
+          </ol>
+        </div>
+      )}
+
+      {entries !== null && entries.length === 0 && !onboarding && (
         <div className="card mt-6 text-center">
           <p className="text-lg font-medium">Register your first project</p>
           <p className="mt-1 text-sm text-ink-muted">Name-only is enough — you can connect live data right after.</p>
@@ -209,12 +310,12 @@ export default function PortfolioHome() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((e) => (
-          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover" aria-label={`${e.project.name} — status ${e.homeStatus}`}>
+          <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover" aria-label={`${e.project.name} — ${homeStatusLabel(e.homeStatus)}`}>
             <div className="flex justify-center" aria-hidden="true">
               <Folder color="stackduck" size="sm" accent={STATUS_FILL[e.homeStatus]} />
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <span className={STATUS_DOT[e.homeStatus]} title={e.homeStatus} />
+              <span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />
               <h2 className="font-inter text-lg font-semibold">{e.project.name}</h2>
             </div>
             {(e.project.stackTags?.length ?? 0) > 0 && (
@@ -233,7 +334,7 @@ export default function PortfolioHome() {
                 <dl className="flex flex-wrap gap-x-4 gap-y-1">
                   {e.keyMetrics.slice(0, 3).map((m) => (
                     <div key={`${m.metricType}/${m.key}`}>
-                      <dt className="text-xs text-ink-muted">{m.key.replace(/_/g, ' ')}</dt>
+                      <dt className="text-xs text-ink-muted">{humanKeyLabel(m.key)}</dt>
                       <dd className="text-lg font-semibold">{m.value.toLocaleString()}</dd>
                     </div>
                   ))}
@@ -241,8 +342,10 @@ export default function PortfolioHome() {
               )}
             </div>
             <p className="mt-3 text-xs text-ink-muted">
-              Updated {timeAgo((e.project.updatedAt as unknown as { seconds: number }) ?? undefined)}
-              {e.connectorStatuses.length > 0 && ` · ${e.connectorStatuses.join(', ')}`}
+              {(() => {
+                const t = timeAgo((e.project.updatedAt as unknown as { seconds: number }) ?? undefined)
+                return t ? `Updated ${t}` : 'No updates yet'
+              })()}
             </p>
           </Link>
         ))}

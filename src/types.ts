@@ -126,7 +126,7 @@ export function metricBucketId(
   return `${projectId}_${metricType}_${key}_${date}`
 }
 
-/** Portfolio Home status color logic (spec § status): alerts deferred to Phase 2. */
+/** Portfolio Home status color logic (spec § status): red reflects firing alerts once evaluation runs. */
 export type HomeStatus = 'red' | 'amber' | 'gray' | 'green'
 export function projectHomeStatus(args: {
   hasTriggeredUnresolvedAlert: boolean

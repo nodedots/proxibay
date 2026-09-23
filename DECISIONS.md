@@ -218,4 +218,16 @@ hygiene), webhook signing walkthrough (generate, Node + curl snippets, pending
 asked: Add-flow step 1 + step 2 + both setup sheets, detail Live-data header +
 both attach sheets, Learn connector cards (anchored #firebase/#webhook).
 
+## D21 — Guided UX pass: layout v2, plain language, onboarding, toasts
+Detail page rebuilt to PROJECT_DETAIL_SPEC.md v2 (inline-editable name, "..."
+menu with typed-confirm hard delete, connector cards, hero stats, 24h/7d/30d,
+sentence-form alert rules + empty feed shell, human Recent). Hard delete is
+owner-scoped client-side batched deletes (rules updated + deployed); orphaned
+Secret Manager credentials accepted as a v1 caveat. All user-facing enums go
+through src/lib/format.ts; error codes map to sentences (code in parens).
+First-run checklist shows until project+connector+metric or dismissal (per-uid
+localStorage). Connect toasts fire on attach + on arrival from the Add flow via
+session flag. "Dashboard" now means Portfolio only; user-facing "alert", code
+"rule". No model changes. String audit saved as PLAIN_LANGUAGE_AUDIT.md.
+
 

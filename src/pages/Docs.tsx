@@ -75,8 +75,8 @@ export default function Docs() {
               A connector authenticates against one of your backends and translates what it finds
               into a common shape. Poll connectors (Firebase, Stripe reconciliation, Supabase) fetch
               on a schedule; push connectors (generic webhook, Stripe events) receive data your
-              systems send. Each one reports its own status — connected, error, or waiting for
-              its first data — independently of the project's status.
+              systems send. Each one reports its own status — receiving updates, having trouble,
+              or waiting for first data — independently of the project's status.
             </p>
           </div>
           <div className="card">

@@ -32,7 +32,7 @@ const GROUPS: CatalogGroup[] = [
     blurb: 'Where the money moves.',
     items: [
       { key: 'stripe', name: 'Stripe', blurb: 'Instant charge + payout events, nightly totals.', state: 'live', type: 'stripe' },
-      { key: 'flutterwave', name: 'Flutterwave', blurb: 'African payment rails revenue.', state: 'soon' },
+      { key: 'flutterwave', name: 'Flutterwave', blurb: 'Collections and payouts across African payment methods.', state: 'soon' },
       { key: 'paystack', name: 'Paystack', blurb: 'Paystack collections and payouts.', state: 'soon' },
       { key: 'more-rev', name: 'More providers', blurb: 'Tell us who processes your payments.', state: 'soon' },
     ],

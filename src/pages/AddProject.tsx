@@ -9,6 +9,30 @@ import type { Project } from '../types'
 
 type Phase = 'create' | 'connect'
 
+/** Name → Connect → Done. Done lights once a connector is attached. */
+function FlowSteps({ phase, done }: { phase: Phase; done: boolean }) {
+  const steps = ['Name', 'Connect', 'Done']
+  const active = phase === 'create' ? 0 : done ? 2 : 1
+  return (
+    <ol className="flex items-center gap-2" aria-label="Progress">
+      {steps.map((label, i) => (
+        <li key={label} className="flex items-center gap-2">
+          <span
+            aria-current={i === active ? 'step' : undefined}
+            className={`flex h-6 w-6 items-center justify-center rounded-full font-inter text-xs font-semibold transition-colors duration-150 ${
+              i < active ? 'bg-mint-pulse text-inkwell-navy' : i === active ? 'bg-inkwell-navy text-paper-white' : 'bg-inset text-ink-muted'
+            }`}
+          >
+            {i < active ? '✓' : i + 1}
+          </span>
+          <span className={`font-inter text-xs font-medium ${i === active ? 'text-ink' : 'text-ink-muted'}`}>{label}</span>
+          {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-line" aria-hidden="true" />}
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 /**
  * Add Project flow (per spec):
  * Step 1 — name only required, rest optional.
@@ -82,6 +106,7 @@ export default function AddProject() {
         setStep2Error(`Connected with a warning: ${res.healthCheck.detail}`)
         return
       }
+      sessionStorage.setItem('stackduck:just-connected', 'Firebase')
       navigate(`/projects/${project!.id}`)
     } catch (err) {
       setStep2Error(connectErrorMessage(err))
@@ -124,6 +149,7 @@ export default function AddProject() {
         setStep2Error(`Saved but unhealthy: ${res.healthCheck.detail}`)
         return
       }
+      sessionStorage.setItem('stackduck:just-connected', 'Supabase')
       navigate(`/projects/${project!.id}`)
     } catch (err) {
       setStep2Error(connectErrorMessage(err))
@@ -149,15 +175,23 @@ export default function AddProject() {
   }
 
   if (phase === 'connect' && project) {
+    const done = !!webhookResult || !!stripeResult
     return (
       <div className="mx-auto mt-8 max-w-2xl">
-        <div className="card">
+        <FlowSteps phase={phase} done={done} />
+        <div className="card mt-4">
           <p className="badge badge-success">Project created</p>
           <h1 className="mt-3 font-inter text-2xl font-semibold">Want to connect live data?</h1>
           <p className="mt-1 text-sm text-ink-muted">
             {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.{' '}
             <Link to="/docs/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
           </p>
+          <ul className="mt-4 flex flex-col gap-1.5 text-sm text-ink-muted">
+            <li><strong className="font-medium text-ink">Firebase</strong> — for apps built on Firebase. We read your user counts and error logs.</li>
+            <li><strong className="font-medium text-ink">Stripe</strong> — for products that take card payments. We read sales and payouts.</li>
+            <li><strong className="font-medium text-ink">Supabase</strong> — for apps backed by a Supabase database. We read your users.</li>
+            <li><strong className="font-medium text-ink">Generic Webhook</strong> — for anything else. We give you a link your app can send updates to.</li>
+          </ul>
 
           {!connectorChoice && !webhookResult && !stripeResult && (
             <div className="mt-6">
@@ -182,6 +216,17 @@ export default function AddProject() {
                   if (text) setStep2Error(null)
                 }}
               />
+              <details className="mt-3 rounded-lg bg-inset p-3 text-sm">
+                <summary className="cursor-pointer font-medium text-ink">What is this?</summary>
+                <p className="mt-2 text-ink-muted">
+                  A service account is like a read-only username your Firebase project issues
+                  for tools like Stackduck. It can only look — it can't change or delete
+                  anything. You create it in your Firebase settings in under a minute:{' '}
+                  <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">
+                    step-by-step guide →
+                  </Link>
+                </p>
+              </details>
               <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
                 Service-account JSON (read-only roles recommended){' '}
                 <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">
@@ -208,7 +253,8 @@ export default function AddProject() {
           {connectorChoice === 'stripe' && !stripeResult && (
             <div className="mt-6 flex flex-col gap-4">
               <p className="text-sm text-ink-muted">
-                Paste a <strong>restricted secret key</strong> from your Stripe dashboard
+                A restricted key can only read — it can't move money or change anything.
+                Paste it from your Stripe dashboard
                 (Developers → API keys → Create restricted key with <strong>read</strong> access
                 to charges, balance, and payouts).{' '}
                 <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Where do I find this? →</Link>
@@ -272,9 +318,9 @@ export default function AddProject() {
           {connectorChoice === 'supabase' && (
             <div className="mt-6 flex flex-col gap-4">
               <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
-                Use the <strong>service_role</strong> secret — never the anon key. Service-role
-                bypasses all row-level security; if it was ever committed anywhere, reset it in
-                Supabase first. <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+                Use the <strong>service_role</strong> secret — never the anon key. Think of it
+                as a master key for your database: powerful, so keep it private. If it was ever
+                committed anywhere, reset it in Supabase first. <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
               </div>
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Project URL *
@@ -332,7 +378,9 @@ export default function AddProject() {
                     {webhookResult.snippet.node}
                   </pre>
                   <p className="mt-2 text-sm text-ink-muted">
-                    Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.{' '}
+                    If you're not comfortable with this step, this connector needs a developer
+                    to set up — the other options don't. Status is <span className="badge">Waiting for first update</span> until
+                    the first verified event arrives — then it switches on by itself.{' '}
                     <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
                   </p>
                 </>
@@ -343,7 +391,7 @@ export default function AddProject() {
 
           <div className="mt-6 border-t border-line pt-4">
             <Link to={project ? `/projects/${project.id}` : '/'} className="text-link">
-              {webhookResult ? 'Done — open project dashboard →' : 'Skip for now — open project dashboard →'}
+              {webhookResult ? 'Done — open project page →' : 'Skip for now — open project page →'}
             </Link>
           </div>
         </div>
@@ -353,7 +401,8 @@ export default function AddProject() {
 
   return (
     <div className="mx-auto mt-8 max-w-xl">
-      <div className="card">
+      <FlowSteps phase={phase} done={false} />
+      <div className="card mt-4">
         <h1 className="font-inter text-2xl font-semibold">Add project</h1>
         <p className="mt-1 text-sm text-ink-muted">Only the name is required. Everything else can be filled in later.</p>
         <form onSubmit={(e) => void onCreate(e)} className="mt-6 flex flex-col gap-4">

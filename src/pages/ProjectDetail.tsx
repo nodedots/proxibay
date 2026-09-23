@@ -1,18 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp, writeBatch, type QuerySnapshot, type DocumentData } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import DurationPicker from '../components/ui/duration-picker'
-import { api, ingestUrlFor, ApiError, connectErrorMessage } from '../lib/api'
+import { api, ingestUrlFor, stripeUrlFor, ApiError, connectErrorMessage, loadErrorMessage } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
-import { archiveProjectDirect, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
+import { getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
+import { connectorStatus, describeRule, humanKeyLabel, metricFamilyLabel } from '../lib/format'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
 import type { AlertRule, ConnectorInstance, MetricType, Project } from '../types'
 
-function timeAgo(ts: { seconds: number } | string | undefined): string {
-  if (!ts) return 'never'
+function timeAgo(ts: { seconds: number } | string | undefined): string | null {
+  if (!ts) return null
   const ms = typeof ts === 'string' ? new Date(ts).getTime() : ts.seconds * 1000
   const mins = Math.max(0, Math.round((Date.now() - ms) / 60000))
   if (mins < 1) return 'just now'
@@ -22,10 +23,30 @@ function timeAgo(ts: { seconds: number } | string | undefined): string {
   return `${Math.round(hours / 24)}d ago`
 }
 
-const CONN_PILL: Record<string, string> = {
-  connected: 'badge badge-success',
-  error: 'badge badge-alert',
-  pending: 'badge',
+/** "Polled 12m ago · checked 1h ago" — segments omitted when there's nothing to report. */
+function connectorActivity(c: ConnectorInstance): string | null {
+  const polled = timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)
+  const checked = timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)
+  const parts: string[] = []
+  if (c.fetchMode === 'poll' && polled) parts.push(`new data ${polled}`)
+  if (checked) parts.push(`last checked ${checked}`)
+  return parts.length ? parts.join(' · ') : null
+}
+
+/** "Users: total, signups" from live keys, or just the family names before data arrives. */
+function reportingFor(c: ConnectorInstance, keys: Array<{ metricType: MetricType; key: string }>): string {
+  const fams = [...new Set(c.capabilities.map(metricFamilyLabel))]
+  return fams
+    .map((f) => {
+      const ks = keys.filter((k) => metricFamilyLabel(k.metricType) === f).map((k) => humanKeyLabel(k.key))
+      return ks.length ? `${f}: ${ks.join(', ')}` : f
+    })
+    .join(' · ')
+}
+
+/** Production → Production, paused → Paused. Enum values stay internal. */
+function titleCase(s: string): string {
+  return s ? s[0].toUpperCase() + s.slice(1) : s
 }
 
 interface BucketPoint { time: string; value: number }
@@ -55,7 +76,7 @@ function Editable(props: {
       await props.onSave(draft)
       setEditing(false)
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : 'Save failed.')
+      setErr(e instanceof ApiError ? e.message : "Couldn't save that change — try again.")
     } finally {
       setSaving(false)
     }
@@ -108,9 +129,14 @@ export default function ProjectDetail() {
   const [connectors, setConnectors] = useState<ConnectorInstance[] | null>(null)
   const [keys, setKeys] = useState<Array<{ metricType: MetricType; key: string }>>([])
   const [buckets, setBuckets] = useState<Record<string, BucketResp[]>>({})
-  const [range, setRange] = useState<7 | 30 | 90>(30)
+  const [rangeHours, setRangeHours] = useState<24 | 168 | 720>(168)
   const [error, setError] = useState<string | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [deleteArmed, setDeleteArmed] = useState(false)
+  const [deleteDraft, setDeleteDraft] = useState('')
+  const [nameEditing, setNameEditing] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [nameSaving, setNameSaving] = useState(false)
   const [attach, setAttach] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
   const [stripeKey, setStripeKey] = useState('')
   const [stripeWhSecret, setStripeWhSecret] = useState('')
@@ -131,6 +157,26 @@ export default function ProjectDetail() {
   const [ruleTarget, setRuleTarget] = useState('')
   const [ruleBusy, setRuleBusy] = useState(false)
   const [ruleError, setRuleError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 4000)
+  }
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem('stackduck:just-connected')
+    if (pending) {
+      sessionStorage.removeItem('stackduck:just-connected')
+      showToast(`${pending} connected! Your first data will show up shortly.`)
+    }
+    return () => {
+      if (toastTimer.current) window.clearTimeout(toastTimer.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -178,7 +224,7 @@ export default function ProjectDetail() {
       }
       setKeys(discovered)
     } catch {
-      setError('Failed to load project. Check your connection and Firebase config.')
+      setError(loadErrorMessage('this project', undefined))
     }
   }, [projectId])
 
@@ -190,7 +236,7 @@ export default function ProjectDetail() {
   useEffect(() => {
     if (!projectId || keys.length === 0) return
     const to = new Date().toISOString().slice(0, 10)
-    const from = new Date(Date.now() - (range - 1) * 86400000).toISOString().slice(0, 10)
+    const from = new Date(Date.now() - rangeHours * 3600000).toISOString().slice(0, 10)
     let cancelled = false
     void (async () => {
       const next: Record<string, BucketResp[]> = {}
@@ -210,10 +256,9 @@ export default function ProjectDetail() {
       if (!cancelled) setBuckets(next)
     })()
     return () => { cancelled = true }
-  }, [projectId, keys, range])
+  }, [projectId, keys, rangeHours])
 
-  async function patchProject(body: Record<string, unknown>) {
-    const res = await withFallback(
+  async function patchProject(body: Record<string, unknown>) {    const res = await withFallback(
       () => api<{ project: Project }>(`/v1/projects/${projectId}`, {
         method: 'PATCH',
         body: JSON.stringify(body),
@@ -221,6 +266,50 @@ export default function ProjectDetail() {
       () => patchProjectDirect(projectId as string, body),
     )
     setEntry((e) => (e ? { ...e, project: { ...e.project, ...res } } : e))
+  }
+
+  async function saveName() {
+    const next = nameDraft.trim()
+    if (!next || next === entry?.project.name) {
+      setNameEditing(false)
+      return
+    }
+    setNameSaving(true)
+    try {
+      await patchProject({ name: next })
+      await load()
+      setNameEditing(false)
+    } finally {
+      setNameSaving(false)
+    }
+  }
+
+  /** Hard delete: project doc + connectors + rules + metric buckets, in batches.
+   *  Secret-manager credentials are orphaned (no client access) — documented. */
+  async function deleteProject() {
+    if (!projectId) return
+    const batchDelete = async (snap: QuerySnapshot<DocumentData>) => {
+      const CHUNK = 400
+      for (let i = 0; i < snap.docs.length; i += CHUNK) {
+        const batch = writeBatch(db)
+        for (const d of snap.docs.slice(i, i + CHUNK)) batch.delete(d.ref)
+        await batch.commit()
+      }
+    }
+    const conns = await getDocs(collection(db, 'projects', projectId, 'connectors'))
+    await batchDelete(conns)
+    const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
+    await batchDelete(rs)
+    for (;;) {
+      const buckets = await getDocs(
+        query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(400)),
+      )
+      if (buckets.docs.length === 0) break
+      await batchDelete(buckets)
+      if (buckets.docs.length < 400) break
+    }
+    await deleteDoc(doc(db, 'projects', projectId))
+    navigate('/portfolio')
   }
 
   async function attachFirebase() {
@@ -237,6 +326,7 @@ export default function ProjectDetail() {
       } else {
         setAttach(null)
         setSaJson('')
+        showToast('Firebase connected! Your first data will show up shortly.')
       }
       await load()
     } catch (e) {
@@ -261,6 +351,7 @@ export default function ProjectDetail() {
         setAttachError(`Saved but unhealthy: ${res.healthCheck.detail}`)
       } else {
         setStripeEndpoint(res.stripeEndpoint)
+        showToast('Stripe connected! Your first data will show up shortly.')
       }
       await load()
     } catch (e) {
@@ -284,6 +375,7 @@ export default function ProjectDetail() {
         setAttach(null)
         setSupabaseUrl('')
         setSupabaseKey('')
+        showToast('Supabase connected! Your first data will show up shortly.')
       }
       await load()
     } catch (e) {
@@ -302,6 +394,7 @@ export default function ProjectDetail() {
         body: JSON.stringify({}),
       })
       setWebhookSecret(res.signingSecret)
+      showToast('Webhook created! Send your first update to switch it on.')
       await load()
     } catch (e) {
       setAttachError(connectErrorMessage(e))
@@ -412,7 +505,7 @@ export default function ProjectDetail() {
     <div className="mt-8 flex flex-col gap-4">
       {archived && (
         <div className="card bg-butter-yellow text-inkwell-navy">
-          <p className="text-sm font-medium">This project is archived. Ingest disabled (URLs return 410).</p>
+          <p className="text-sm font-medium">This project is archived. New data is paused — nothing is lost.</p>
           <button className="btn-ghost mt-2 !border-line-strong bg-paper-white text-inkwell-navy hover:!bg-paper-white" onClick={() => void patchProject({ status: 'active' }).then(load)}>
             Restore to active
           </button>
@@ -420,41 +513,111 @@ export default function ProjectDetail() {
       )}
 
       {/* 1. Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="font-inter text-3xl font-semibold">{p.name}</h1>
-          {p.environment && <span className="badge">{p.environment}</span>}
-          <span className={p.status === 'active' ? 'badge badge-success' : p.status === 'paused' ? 'badge badge-highlight' : 'badge'}>
-            {p.status}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            className="input w-auto"
-            value={p.status}
-            onChange={(e) => { void patchProject({ status: e.target.value }).then(load) }}
-          >
-            <option value="active">active</option>
-            <option value="paused">paused</option>
-            <option value="archived">archived</option>
-          </select>
-          {!deleteConfirm ? (
-            <button className="btn-ghost" onClick={() => setDeleteConfirm(true)}>Archive…</button>
-          ) : (
-            <>
-              <button
-                className="btn-primary bg-coral-emphasis"
-                onClick={() => {
-                  void withFallback(
-                    () => api(`/v1/projects/${projectId}`, { method: 'DELETE' }),
-                    () => archiveProjectDirect(projectId as string),
-                  ).then(() => navigate('/portfolio'))
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          {nameEditing ? (
+            <div className="flex items-center gap-2">
+              <input
+                className="input max-w-xs !text-2xl font-semibold"
+                value={nameDraft}
+                autoFocus
+                aria-label="Project name"
+                onChange={(e) => setNameDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void saveName()
+                  if (e.key === 'Escape') setNameEditing(false)
                 }}
+              />
+              <button
+                className="btn-primary px-3 py-1 text-sm"
+                disabled={nameSaving || !nameDraft.trim()}
+                onClick={() => void saveName()}
               >
-                Confirm archive
+                {nameSaving ? '…' : 'Save'}
               </button>
-              <button className="btn-ghost" onClick={() => setDeleteConfirm(false)}>Cancel</button>
-            </>
+              <button className="btn-ghost px-3 py-1 text-sm" onClick={() => setNameEditing(false)}>Cancel</button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1 className="font-inter text-3xl font-semibold">{p.name}</h1>
+              <button
+                className="rounded-lg p-1.5 text-sm text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+                title="Rename project"
+                aria-label="Rename project"
+                onClick={() => { setNameDraft(p.name); setNameEditing(true) }}
+              >
+                ✎
+              </button>
+            </div>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {p.environment && <span className="badge">{titleCase(p.environment)}</span>}
+            <span className={p.status === 'active' ? 'badge badge-success' : p.status === 'paused' ? 'badge badge-highlight' : 'badge'}>
+              {titleCase(p.status)}
+            </span>
+          </div>
+        </div>
+        <div className="relative">
+          <button
+            className="btn-ghost px-3"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label="Project actions"
+            onClick={() => { setMenuOpen((m) => !m); setDeleteArmed(false); setDeleteDraft('') }}
+          >
+            ···
+          </button>
+          {menuOpen && !deleteArmed && (
+            <div role="menu" className="absolute right-0 z-30 mt-2 w-52 rounded-lg border border-line bg-elevated p-1 shadow-sm">
+              {p.status === 'paused' ? (
+                <button role="menuitem" className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset" onClick={() => { setMenuOpen(false); void patchProject({ status: 'active' }).then(load) }}>
+                  Resume<span className="block text-xs font-normal text-ink-muted">Back to active</span>
+                </button>
+              ) : (
+                <button role="menuitem" className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset" onClick={() => { setMenuOpen(false); void patchProject({ status: 'paused' }).then(load) }}>
+                  Pause<span className="block text-xs font-normal text-ink-muted">Keep everything, stop surfacing as live</span>
+                </button>
+              )}
+              {archived ? (
+                <button role="menuitem" className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset" onClick={() => { setMenuOpen(false); void patchProject({ status: 'active' }).then(load) }}>
+                  Restore<span className="block text-xs font-normal text-ink-muted">Back to active</span>
+                </button>
+              ) : (
+                <button role="menuitem" className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset" onClick={() => { setMenuOpen(false); void patchProject({ status: 'archived' }).then(load) }}>
+                  Archive<span className="block text-xs font-normal text-ink-muted">Kept, restorable, ingest paused</span>
+                </button>
+              )}
+              <button role="menuitem" className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-coral-emphasis transition-colors duration-150 hover:bg-inset" onClick={() => setDeleteArmed(true)}>
+                Delete…<span className="block text-xs font-normal text-ink-muted">Permanent — needs your project name to confirm</span>
+              </button>
+            </div>
+          )}
+          {menuOpen && deleteArmed && (
+            <div className="absolute right-0 z-30 mt-2 w-72 rounded-lg border border-line bg-elevated p-4 shadow-sm">
+              <p className="font-inter text-sm font-semibold">Delete this project?</p>
+              <p className="mt-1 font-inter text-xs text-ink-muted">
+                Everything goes: catalog, connectors, metrics, alerts. This can’t be undone.
+                Type <strong>{p.name}</strong> to confirm.
+              </p>
+              <input
+                className="input mt-2"
+                autoFocus
+                aria-label="Type the project name to confirm deletion"
+                placeholder={p.name}
+                value={deleteDraft}
+                onChange={(e) => setDeleteDraft(e.target.value)}
+              />
+              <div className="mt-3 flex gap-2">
+                <button
+                  className="btn-primary bg-coral-emphasis"
+                  disabled={deleteDraft.trim() !== p.name}
+                  onClick={() => void deleteProject()}
+                >
+                  Delete forever
+                </button>
+                <button className="btn-ghost" onClick={() => { setDeleteArmed(false); setDeleteDraft('') }}>Cancel</button>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -475,11 +638,16 @@ export default function ProjectDetail() {
             <Editable label="Notes" value={p.notes ?? ''} multiline onSave={(v) => patchProject({ notes: v || null })} />
           </div>
         </dl>
-        <p className="mt-3 text-xs text-ink-muted">Saved {timeAgo(p.updatedAt as unknown as { seconds: number })}</p>
+        <p className="mt-3 text-xs text-ink-muted">
+          {(() => {
+            const t = timeAgo(p.updatedAt as unknown as { seconds: number })
+            return t ? `Saved ${t}` : 'Not saved yet'
+          })()}
+        </p>
       </section>
 
       {/* 3. Connectors */}
-      <section className="card">
+      <section className="card" id="connectors">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-inter text-lg font-semibold">Live data</h2>
@@ -518,58 +686,68 @@ export default function ProjectDetail() {
         )}
 
         <ul className="mt-3 flex flex-col gap-3">
-          {connectors?.map((c) => (
-            <li key={c.id} className="rounded-lg border border-line p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold">{c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Generic Webhook'}</span>
-                  <span className={CONN_PILL[c.status]}>{c.status}</span>
-                  {c.capabilities.map((cap) => (
-                    <span key={cap} className="badge">{cap}</span>
-                  ))}
-                </div>
-                <div className="flex gap-2">
+          {connectors?.map((c) => {
+            const st = connectorStatus(c.status)
+            const activity = connectorActivity(c)
+            const pushAddress = c.type === 'generic-webhook' ? ingestUrlFor(c.id) : c.type === 'stripe' ? stripeUrlFor(c.id) : null
+            return (
+              <li key={c.id} className="rounded-2xl border border-line bg-surface p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`status-dot ${st.dot}`} aria-hidden="true" />
+                    <span className="text-sm font-semibold">
+                      {c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Generic Webhook'}
+                    </span>
+                  </div>
                   {(c.type === 'firebase' || c.type === 'stripe' || c.type === 'supabase') && (
                     <button className="btn-ghost text-sm" disabled={healthBusy === c.id} onClick={() => void runHealthcheck(c.id)}>
-                      {healthBusy === c.id ? 'Checking…' : 'Run health check'}
+                      {healthBusy === c.id ? 'Checking…' : 'Check again'}
                     </button>
                   )}
                 </div>
-              </div>
-              <p className="mt-1 text-xs text-ink-muted">
-                {c.fetchMode === 'poll'
-                  ? `Polled ${timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)} · checked ${timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}`
-                  : `Last check ${timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}`}
-              </p>
-              {c.status === 'pending' && (
-                <p className="mt-2 text-sm text-ink-muted">
-                  Waiting for first data — send a signed POST to <code className="break-all">{ingestUrlFor(c.id)}</code>, then this flips to connected automatically.
-                </p>
-              )}
-              {c.status === 'connected' && c.fetchMode === 'poll' && keys.length === 0 && (
-                <p className="mt-2 text-sm text-ink-muted">Connected — waiting for the next poll (~30 min) to deliver the first points.</p>
-              )}
-              {c.status === 'connected' && c.type === 'stripe' && keys.length === 0 && (
-                <p className="mt-2 text-sm text-ink-muted">
-                  Connected — instant events arrive once the endpoint below is registered in Stripe;
-                  nightly totals reconcile automatically.
-                </p>
-              )}
-              {c.type === 'generic-webhook' && (
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <code className="break-all text-xs">{ingestUrlFor(c.id)}</code>
-                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => { void navigator.clipboard.writeText(ingestUrlFor(c.id)) }}>
-                    Copy URL
-                  </button>
-                </div>
-              )}
-            </li>
-          ))}
+                <p className="mt-1 text-sm font-medium">{st.headline}</p>
+                <p className="mt-1 text-xs text-ink-muted">Reporting · {reportingFor(c, keys)}</p>
+                {activity ? (
+                  <p className="mt-1 text-xs text-ink-muted">{activity}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-ink-muted">No updates yet</p>
+                )}
+                {c.status === 'pending' && (
+                  <p className="mt-2 text-sm text-ink-muted">
+                    {c.fetchMode === 'poll'
+                      ? 'Checks run about every 30 minutes — the first one will pick this up.'
+                      : 'Send your first update to the address below — this switches on by itself once it arrives.'}
+                  </p>
+                )}
+                {pushAddress && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <code className="break-all text-xs">{pushAddress}</code>
+                    <button className="btn-ghost px-2 py-1 text-xs" onClick={() => { void navigator.clipboard.writeText(pushAddress) }}>
+                      Copy address
+                    </button>
+                  </div>
+                )}
+                {c.type === 'stripe' && c.status === 'connected' && keys.length === 0 && (
+                  <p className="mt-2 text-sm text-ink-muted">
+                    Instant events arrive once the address above is registered in Stripe;
+                    totals land on their own every night.
+                  </p>
+                )}
+              </li>
+            )
+          })}
         </ul>
 
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-inset p-4">
             <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
+            <details className="mt-2 rounded-lg bg-surface p-3 text-sm">
+              <summary className="cursor-pointer font-medium text-ink">What is this?</summary>
+              <p className="mt-2 text-ink-muted">
+                A service account is like a read-only username your Firebase project issues
+                for tools like Stackduck. It can only look — it can't change or delete anything.
+              </p>
+            </details>
             <div className="mt-2">
               <SaJsonUpload
                 disabled={attachBusy}
@@ -593,7 +771,7 @@ export default function ProjectDetail() {
         {attach === 'stripe' && !stripeEndpoint && (
           <div className="mt-3 rounded-lg bg-inset p-4">
             <p className="text-sm font-medium">
-              Paste a <strong>restricted secret key</strong> from your Stripe dashboard
+              A restricted key can only read — it can't move money. Paste it from your Stripe dashboard
               (Developers → API keys, read access to charges, balance, payouts).{' '}
               <Link to="/docs/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link>
             </p>
@@ -647,7 +825,8 @@ export default function ProjectDetail() {
         {attach === 'supabase' && (
           <div className="mt-3 rounded-lg bg-inset p-4">
             <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
-              Use the <strong>service_role</strong> secret — never the anon key.{' '}
+              Use the <strong>service_role</strong> secret — never the anon key. Think of it
+              as a master key for your database: powerful, so keep it private.{' '}
               <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
             </div>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
@@ -706,21 +885,64 @@ export default function ProjectDetail() {
         )}
       </section>
 
-      {/* 4. Charts */}
+      {/* 4. Metrics */}
       <section className="card">
-        <div className="flex items-center justify-between">
-          <h2 className="font-inter text-lg font-semibold">Metrics</h2>
-          <select className="input w-auto" value={range} onChange={(e) => setRange(Number(e.target.value) as 7 | 30 | 90)}>
-            <option value={7}>7d</option>
-            <option value={30}>30d</option>
-            <option value={90}>90d</option>
-          </select>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-inter text-lg font-semibold">What the numbers say</h2>
+          <div role="group" aria-label="Time range" className="flex gap-1 rounded-lg bg-inset p-1">
+            {([
+              [24, '24h'],
+              [168, '7d'],
+              [720, '30d'],
+            ] as Array<[24 | 168 | 720, string]>).map(([hours, label]) => (
+              <button
+                key={hours}
+                onClick={() => setRangeHours(hours)}
+                aria-pressed={rangeHours === hours}
+                className={`rounded-md px-3 py-1 font-inter text-sm font-medium transition-colors duration-150 ${
+                  rangeHours === hours ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
+        {(() => {
+          const seen = new Set<string>()
+          const hero: Array<{ family: string; label: string; value: number }> = []
+          for (const k of keys) {
+            const family = metricFamilyLabel(k.metricType)
+            if (seen.has(family)) continue
+            const data = buckets[`${k.metricType}/${k.key}`] ?? []
+            const last = data.length ? data[data.length - 1].dailyAggregate?.last : undefined
+            if (last === undefined) continue
+            seen.add(family)
+            hero.push({ family, label: humanKeyLabel(k.key), value: last })
+          }
+          if (hero.length === 0) return null
+          return (
+            <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
+              {hero.map((h) => (
+                <div key={h.family}>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-ink-muted">{h.family}</dt>
+                  <dd className="font-inter text-3xl font-semibold">{h.value.toLocaleString()}</dd>
+                  <dd className="text-xs text-ink-muted">{h.label}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        })()}
         {keys.length === 0 && (
           <p className="mt-3 text-sm text-ink-muted">
-            {(connectors?.length ?? 0) === 0
-              ? 'Connect a data source above to see charts here.'
-              : 'Waiting for first data — charts appear automatically once events arrive.'}
+            {(connectors?.length ?? 0) === 0 ? (
+              <>
+                Connect a data source above to see charts here.{' '}
+                <a href="#connectors" className="text-link-emphasis text-link" onClick={(e) => { e.preventDefault(); document.getElementById('connectors')?.scrollIntoView({ behavior: 'smooth' }) }}>Go to connectors →</a>
+              </>
+            ) : (
+              'Charts appear here automatically once your first data arrives.'
+            )}
           </p>
         )}
         <div className="mt-3 grid gap-4 lg:grid-cols-2">
@@ -729,15 +951,16 @@ export default function ProjectDetail() {
             const data = buckets[id] ?? []
             const pts = data.flatMap((b) => b.points.map((pt) => ({ t: pt.time.slice(0, 10), v: pt.value })))
             const last = data.length ? data[data.length - 1].dailyAggregate?.last : undefined
+            const rangeLabel = rangeHours === 24 ? 'last 24 hours' : rangeHours === 168 ? 'last 7 days' : 'last 30 days'
             return (
               <div key={id} className="rounded-lg border border-line p-3">
                 <div className="flex items-baseline justify-between">
-                  <p className="text-sm font-semibold capitalize">{k.key.replace(/_/g, ' ')}</p>
+                  <p className="text-sm font-semibold">{humanKeyLabel(k.key)}</p>
                   {last !== undefined && <p className="text-xl font-semibold">{last.toLocaleString()}</p>}
                 </div>
-                <p className="text-xs text-ink-muted">{k.metricType}</p>
+                <p className="text-xs text-ink-muted">{metricFamilyLabel(k.metricType)}</p>
                 {pts.length === 0 ? (
-                  <p className="mt-2 text-sm text-ink-muted">No points in range.</p>
+                  <p className="mt-2 text-sm text-ink-muted">No {humanKeyLabel(k.key).toLowerCase()} in the {rangeLabel}.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={180}>
                     <LineChart data={pts}>
@@ -762,8 +985,7 @@ export default function ProjectDetail() {
       <section className="card">
         <h2 className="font-inter text-lg font-semibold">Alerts</h2>
         <p className="mt-1 text-sm text-ink-muted">
-          Rules saved here switch on automatically once scheduled evaluation ships —
-          nothing fires yet, but your thresholds will already be in place.
+          Rules you save here will start watching on their own.
         </p>
 
         {rules !== null && rules.length > 0 && (
@@ -771,13 +993,10 @@ export default function ProjectDetail() {
             {rules.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className={r.status === 'active' ? 'badge badge-success' : 'badge'}>{r.status}</span>
-                  <span className="font-medium">
-                    {r.key} {r.condition} {r.threshold}
+                  <span className={r.status === 'active' ? 'badge badge-success' : 'badge'}>
+                    {r.status === 'active' ? 'Active' : 'Paused'}
                   </span>
-                  <span className="text-ink-muted">
-                    over {r.windowMinutes >= 60 ? `${Math.floor(r.windowMinutes / 60)}h${r.windowMinutes % 60 ? ` ${r.windowMinutes % 60}m` : ''}` : `${r.windowMinutes}m`} → {r.channel} {r.channelTarget}
-                  </span>
+                  <span className="font-medium">{describeRule(r)}</span>
                 </div>
                 <div className="flex gap-2">
                   <button className="btn-ghost px-2 py-1 text-xs" onClick={() => void toggleRule(r)}>
@@ -792,8 +1011,14 @@ export default function ProjectDetail() {
           </ul>
         )}
 
+        <h3 className="mt-5 font-inter text-base font-semibold">Recent firings</h3>
+        <p className="mt-1 text-sm text-ink-muted">
+          No alerts have fired yet. When one does, you'll see what happened, when, and where
+          it was sent — right here.
+        </p>
+
         <div className="mt-4 rounded-lg bg-inset p-4">
-          <p className="text-sm font-medium">New rule{keys.length === 0 ? ' — connect a data source first so there’s a metric to watch' : ''}</p>
+          <p className="text-sm font-medium">New alert{keys.length === 0 ? ' — connect a data source first so there’s a metric to watch' : ''}</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm font-medium">
               Metric
@@ -801,7 +1026,7 @@ export default function ProjectDetail() {
                 <option value="">Choose…</option>
                 {keys.map((k) => (
                   <option key={`${k.metricType}/${k.key}`} value={`${k.metricType}/${k.key}`}>
-                    {k.metricType} / {k.key}
+                    {metricFamilyLabel(k.metricType)} — {humanKeyLabel(k.key)}
                   </option>
                 ))}
               </select>
@@ -862,28 +1087,47 @@ export default function ProjectDetail() {
             disabled={ruleBusy || !ruleKey || !ruleThreshold.trim() || !ruleTarget.trim() || ruleWindow < 1}
             onClick={() => void createRule()}
           >
-            {ruleBusy ? 'Saving…' : 'Save rule'}
+            {ruleBusy ? 'Saving…' : 'Save alert'}
           </button>
         </div>
       </section>
 
       {/* 6. Recent */}
       <section className="card">
-        <h2 className="font-inter text-lg font-semibold">Recent</h2>
+        <h2 className="font-inter text-lg font-semibold">Recent activity</h2>
         <ul className="mt-2 flex flex-col gap-1 text-sm">
-          {(connectors ?? []).map((c) => (
-            <li key={c.id} className="text-ink-muted">
-              {c.type} · {c.status}
-              {c.fetchMode === 'poll' && <> · polled {timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)}</>}
-              <> · checked {timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}</>
-            </li>
-          ))}
-          {(connectors?.length ?? 0) === 0 && <li className="text-ink-muted">Nothing yet — activity from polls and webhook receipts will show here.</li>}
+          {(connectors ?? []).map((c) => {
+            const st = connectorStatus(c.status)
+            const activity = connectorActivity(c)
+            const label = c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Webhook'
+            return (
+              <li key={c.id} className="text-ink-muted">
+                {label} — {st.headline.toLowerCase()}{activity ? ` · ${activity}` : ''}
+              </li>
+            )
+          })}
+          {(connectors?.length ?? 0) === 0 && <li className="text-ink-muted">Nothing yet — activity from your connectors will show here.</li>}
         </ul>
-        <p className="mt-2 text-xs text-ink-muted">Alert firings land here in Phase 2.</p>
       </section>
 
       <Link to="/portfolio" className="text-link text-sm">← Back to portfolio</Link>
+
+      {toast && (
+        <div
+          role="status"
+          className="fade-swap fixed bottom-6 left-1/2 z-50 flex max-w-sm -translate-x-1/2 items-center gap-3 rounded-2xl border border-line bg-elevated p-4 shadow-sm"
+        >
+          <span className="status-dot status-green shrink-0" aria-hidden="true" />
+          <p className="font-inter text-sm font-medium">{toast}</p>
+          <button
+            className="rounded-lg px-2 py-1 font-inter text-lg leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+            aria-label="Dismiss"
+            onClick={() => setToast(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   )
 }

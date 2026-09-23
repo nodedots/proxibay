@@ -25,15 +25,17 @@ service cloud.firestore {
       allow update: if signedIn()
         && resource.data.ownerId == request.auth.uid
         && request.resource.data.ownerId == resource.data.ownerId;
-      // Deletion with active connectors explicitly handled server-side (open item);
-      // client deletes blocked for now — use the deleteProject function.
-      allow delete: if false;
+      // Owner hard-delete (typed confirm in UI): project doc first in rule
+      // order, but clients delete children first so parent checks still pass.
+      allow delete: if signedIn()
+        && resource.data.ownerId == request.auth.uid;
 
       match /connectors/{connectorId} {
         allow read: if parentProjectOwner(projectId);
         // Connector creates/updates go through Cloud Functions (credential
-        // handling + healthCheck). Client writes blocked.
-        allow create, update, delete: if false;
+        // handling + healthCheck). Owner may delete (typed confirm in UI).
+        allow create, update: if false;
+        allow delete: if parentProjectOwner(projectId);
       }
 
       // Alert rules are owner-managed directly (no secrets involved).
@@ -62,12 +64,14 @@ service cloud.firestore {
     }
 
     // Time-series buckets — written by Functions (Admin SDK bypasses rules).
-    // Clients get owner-scoped reads via the parent project doc; no direct
-    // client writes. (MetricBucket has no ownerId by spec — see D2.)
+    // Clients get owner-scoped reads via the parent project doc; owner may
+    // delete (typed confirm in UI). (MetricBucket has no ownerId by spec — see D2.)
     match /metrics/{bucketId} {
       allow read: if signedIn()
         && get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.ownerId == request.auth.uid;
-      allow create, update, delete: if false;
+      allow create, update: if false;
+      allow delete: if signedIn()
+        && get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.ownerId == request.auth.uid;
     }
   }
 }
