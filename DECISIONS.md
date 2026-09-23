@@ -230,4 +230,11 @@ localStorage). Connect toasts fire on attach + on arrival from the Add flow via
 session flag. "Dashboard" now means Portfolio only; user-facing "alert", code
 "rule". No model changes. String audit saved as PLAIN_LANGUAGE_AUDIT.md.
 
+## D22 — Mobile pass: header cluster fix + touch hit areas
+Authed header action cluster overflowed 375px viewports by 41px; fixed with
+tighter mobile padding and hiding the GitHub icon below sm (still in footer +
+desktop header). Inline text links (nav/footer) gained vertical padding for
+touch. Pricing table scrolls inside its card by design; everything else fits
+with zero page-level overflow, verified by measurement on all primary views.
+
 

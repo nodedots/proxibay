@@ -343,6 +343,7 @@ body {
   color: var(--theme-ink-muted);
   transition: color 150ms cubic-bezier(0, 0, 0.2, 1);
   border-radius: 4px;
+  padding-block: 6px;
 }
 .nav-link:hover {
   color: var(--theme-ink);

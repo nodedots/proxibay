@@ -112,9 +112,9 @@ export default function Landing() {
       <header className="mx-auto max-w-[1200px] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
         <Reveal>
           <h1 className="mx-auto max-w-4xl font-display font-bold text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
-          Stop building dashboards. <span className="text-coral-emphasis">Plug</span> your{' '}
+          Stop Building Dashboards. <span className="text-coral-emphasis">Plug</span> your{' '}
           <span className="sm:whitespace-nowrap">
-            projects <span className="text-coral-emphasis">in.</span>
+            Projects <span className="text-coral-emphasis">in.</span>
           </span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-muted">
