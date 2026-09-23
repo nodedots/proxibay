@@ -39,7 +39,7 @@ export default function ConnectSupabase() {
           sign-ins from the last 30 days, so brand-new projects legitimately show zero.
         </Trouble>
       </div>
-      <p className="mt-8 text-body-sm text-slate">
+      <p className="mt-8 text-body-sm text-ink-muted">
         Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
       </p>
     </GuideShell>

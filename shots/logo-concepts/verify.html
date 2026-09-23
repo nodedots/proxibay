@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Orbit logo — verification sheet</title>
+<style>
+  :root { --navy: #151b31; --paper: #f2f2f2; --coral: #ff5858; }
+  * { margin: 0; box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, sans-serif; background: #fff; padding: 28px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #666; margin: 22px 0 10px; }
+  .row { display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .slot { text-align: center; }
+  .slot small { display: block; margin-top: 6px; font-size: 10px; color: #888; }
+  .dark-strip { background: #0d1122; padding: 14px 16px; border-radius: 10px; display: flex; gap: 20px; align-items: flex-end; }
+  .strip { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #555; }
+  .strip.dark { background: #2b2b2b; border-color: #444; color: #ccc; }
+  .zoom svg { width: 64px; height: 64px; image-rendering: pixelated; }
+  .avatar svg { border-radius: 50%; }
+  img { display: block; }
+</style>
+</head>
+<body>
+
+<h2>Wordmark lockups (light page / dark page)</h2>
+<div class="row">
+  <div class="slot"><img src="/logo-wordmark.svg" width="280" height="40" alt=""><small>logo-wordmark.svg</small></div>
+  <div class="dark-strip"><div class="slot"><img src="/logo-wordmark-dark.svg" width="280" height="40" alt=""><small style="color:#888">logo-wordmark-dark.svg</small></div></div>
+</div>
+
+<h2>App tiles &amp; bare dark mark</h2>
+<div class="row">
+  <div class="slot"><img src="/logo.svg" width="96" height="96" alt=""><small>logo.svg 96</small></div>
+  <div class="slot avatar"><img src="/logo.svg" width="48" height="48" alt=""><small>avatar 48</small></div>
+  <div class="dark-strip"><div class="slot"><img src="/logo-dark.svg" width="96" height="96" alt=""><small style="color:#888">logo-dark.svg bare 96</small></div></div>
+  <div class="dark-strip"><div class="slot"><img src="/logo-dark.svg" width="32" height="32" alt=""><small style="color:#888">bare 32</small></div></div>
+</div>
+
+<h2>Favicon at true sizes</h2>
+<div class="row">
+  <div class="slot"><span class="strip"><img src="/favicon.svg" width="16" height="16" alt=""><span>proxibay — tab</span></span><small>16 true size</small></div>
+  <div class="slot"><span class="strip dark"><img src="/favicon.svg" width="16" height="16" alt=""><span>proxibay — tab</span></span><small>16 on dark tab strip</small></div>
+  <div class="slot zoom"><img src="/favicon.svg" width="64" height="64" alt=""><small>16 zoomed ×4</small></div>
+  <div class="slot"><img src="/favicon.svg" width="32" height="32" alt=""><small>32</small></div>
+</div>
+
+</body>
+</html>

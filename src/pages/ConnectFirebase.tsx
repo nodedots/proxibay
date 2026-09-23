@@ -22,15 +22,15 @@ export default function ConnectFirebase() {
               new service account in the list. It looks like this (your random letters and
               project name will differ — that's normal):
             </p>
-            <div className="rounded-lg border border-warm-stone bg-paper-white p-3">
-              <code className="block break-all font-mono text-xs text-inkwell-navy">
+            <div className="rounded-lg border border-line bg-surface p-3">
+              <code className="block break-all font-mono text-xs text-ink">
                 firebase-adminsdk-a1b2c@my-project.iam.gserviceaccount.com
               </code>
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">Before — remove this</p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">Before — remove this</p>
               <p className="mt-1">
                 <span className="badge badge-alert">Editor ✕</span>
               </p>
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">After — add these two</p>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">After — add these two</p>
               <p className="mt-1 flex flex-wrap gap-1">
                 <span className="badge badge-success">Firebase Authentication Viewer</span>
                 <span className="badge badge-success">Logs Viewer</span>
@@ -43,7 +43,7 @@ export default function ConnectFirebase() {
               <strong>Logs Viewer</strong> (lets us read error logs). Save. Nothing else
               is needed — if you only see the email and the two green roles, you did it right.
             </p>
-            <figure className="overflow-hidden rounded-lg border border-warm-stone bg-paper-white">
+            <figure className="overflow-hidden rounded-lg border border-line bg-surface">
               <img
                 src="/iam-done-right.png"
                 alt="Example IAM setup done right: only Firebase Authentication Viewer and Logs Viewer assigned"
@@ -53,7 +53,7 @@ export default function ConnectFirebase() {
                   e.currentTarget.closest('figure')?.remove()
                 }}
               />
-              <figcaption className="px-3 py-2 font-inter text-xs text-slate">
+              <figcaption className="px-3 py-2 font-inter text-xs text-ink-muted">
                 Done right: two read-only roles, nothing else.
               </figcaption>
             </figure>
@@ -70,7 +70,7 @@ export default function ConnectFirebase() {
       </div>
       <div className="card mt-6">
         <h3 className="font-inter text-body font-semibold">Keep this key safe</h3>
-          <ul className="mt-1 list-disc pl-5 text-body-sm text-slate">
+          <ul className="mt-1 list-disc pl-5 text-body-sm text-ink-muted">
             <li>Never commit the JSON file to git or paste it into a chat.</li>
             <li>Use one key per project — and one per tool. Sharing a single key across
               instances means every instance inherits every permission (including dangerous
@@ -89,7 +89,7 @@ export default function ConnectFirebase() {
           Polling runs about every 30 minutes — give it one full cycle before worrying.
         </Trouble>
       </div>
-      <p className="mt-8 text-body-sm text-slate">
+      <p className="mt-8 text-body-sm text-ink-muted">
         Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
       </p>
     </GuideShell>

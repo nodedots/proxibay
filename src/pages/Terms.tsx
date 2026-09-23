@@ -4,8 +4,8 @@ import SiteFooter from '../components/SiteFooter'
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="font-inter text-subheading font-semibold text-inkwell-navy">{title}</h2>
-      <div className="mt-3 flex flex-col gap-3 font-inter text-sm leading-relaxed text-graphite">{children}</div>
+      <h2 className="font-inter text-subheading font-semibold text-ink">{title}</h2>
+      <div className="mt-3 flex flex-col gap-3 font-inter text-sm leading-relaxed text-ink-secondary">{children}</div>
     </section>
   )
 }
@@ -16,11 +16,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
  */
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <main className="mx-auto max-w-2xl px-6 pb-16 pt-8">
       <div className="card">
-        <h1 className="font-inter text-2xl font-semibold text-inkwell-navy">Terms of Service</h1>
-        <p className="mt-1 font-inter text-sm text-slate">Last updated: September 2026</p>
+        <h1 className="font-inter text-2xl font-semibold text-ink">Terms of Service</h1>
+        <p className="mt-1 font-inter text-sm text-ink-muted">Last updated: September 2026</p>
 
         <Section title="The service">
           <p>

@@ -18,13 +18,13 @@ const ENTRIES: Array<{ version: string; date: string; items: string[] }> = [
 /** Reverse-chronological changelog. Maintained going forward, not backfilled. */
 export default function Changelog() {
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           What <span className="text-coral-emphasis">changed.</span>
         </h1>
-        <p className="mt-4 text-body-lg text-slate">
+        <p className="mt-4 text-body-lg text-ink-muted">
           Every release, newest first. Short on purpose.
         </p>
         <div className="mt-8 flex flex-col gap-6">
@@ -32,9 +32,9 @@ export default function Changelog() {
             <div key={e.version} className="card">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-inter text-subheading font-semibold">{e.version}</h2>
-                <p className="font-inter text-sm text-slate">{e.date}</p>
+                <p className="font-inter text-sm text-ink-muted">{e.date}</p>
               </div>
-              <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-body-sm text-graphite">
+              <ul className="mt-3 flex list-disc flex-col gap-1 pl-5 text-body-sm text-ink-secondary">
                 {e.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}

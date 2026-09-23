@@ -17,8 +17,8 @@ function Section({
 }) {
   return (
     <section className="card" aria-label={title}>
-      <h2 className="font-inter text-lg font-semibold text-inkwell-navy">{title}</h2>
-      <p className="mt-1 font-inter text-sm font-normal text-slate">{blurb}</p>
+      <h2 className="font-inter text-lg font-semibold text-ink">{title}</h2>
+      <p className="mt-1 font-inter text-sm font-normal text-ink-muted">{blurb}</p>
       <div className="mt-5">{children}</div>
     </section>
   )
@@ -41,20 +41,20 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="flex w-full items-center justify-between gap-4 rounded-lg px-1 py-2 text-left focus-visible:outline-2 focus-visible:outline-inkwell-navy"
+      className="flex w-full items-center justify-between gap-4 rounded-lg px-1 py-2 text-left focus-visible:outline-2 focus-visible:outline-ring"
     >
       <span>
-        <span className="block font-inter text-sm font-medium text-inkwell-navy">{label}</span>
-        <span className="block font-inter text-xs font-normal text-slate">{hint}</span>
+        <span className="block font-inter text-sm font-medium text-ink">{label}</span>
+        <span className="block font-inter text-xs font-normal text-ink-muted">{hint}</span>
       </span>
       <span
         aria-hidden="true"
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150 ${
-          checked ? 'bg-inkwell-navy' : 'bg-warm-stone'
+          checked ? 'bg-primary' : 'bg-line'
         }`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-paper-white shadow-subtle transition-transform duration-150 ${
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-on-primary shadow-subtle transition-transform duration-150 ${
             checked ? 'translate-x-[22px]' : 'translate-x-0.5'
           }`}
         />
@@ -108,7 +108,7 @@ export default function Account() {
     })
   }, [user])
 
-  if (user === undefined) return <p className="p-8 text-slate">Loading…</p>
+  if (user === undefined) return <p className="p-8 text-ink-muted">Loading…</p>
   if (user === null) return null // RequireAuth owns the redirect
 
   async function saveProfile(u: User) {
@@ -158,8 +158,8 @@ export default function Account() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-6 pb-20 pt-10">
-      <h1 className="font-inter text-2xl font-semibold text-inkwell-navy">Account settings</h1>
-      <p className="mt-2 font-inter text-sm font-normal text-slate">
+      <h1 className="font-inter text-2xl font-semibold text-ink">Account settings</h1>
+      <p className="mt-2 font-inter text-sm font-normal text-ink-muted">
         Manage your profile, preferences, and sign-in security.
       </p>
 
@@ -168,8 +168,8 @@ export default function Account() {
           <div className="flex items-center gap-4">
             <UserAvatar user={{ displayName: name, email: user.email, photoURL: photoUrl }} size={56} />
             <div className="min-w-0">
-              <p className="truncate font-inter text-sm font-medium text-inkwell-navy">{user.email}</p>
-              <p className="font-inter text-xs font-normal text-slate">
+              <p className="truncate font-inter text-sm font-medium text-ink">{user.email}</p>
+              <p className="font-inter text-xs font-normal text-ink-muted">
                 {user.emailVerified ? 'Email verified' : 'Email not verified'}
               </p>
             </div>
@@ -182,7 +182,7 @@ export default function Account() {
             }}
           >
             <label className="block">
-              <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">Display name</span>
+              <span className="mb-1 block font-inter text-sm font-medium text-ink">Display name</span>
               <input
                 className="input"
                 value={name}
@@ -193,7 +193,7 @@ export default function Account() {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">Avatar photo URL</span>
+              <span className="mb-1 block font-inter text-sm font-medium text-ink">Avatar photo URL</span>
               <input
                 className="input"
                 type="url"
@@ -201,7 +201,7 @@ export default function Account() {
                 onChange={(e) => setPhotoUrl(e.target.value)}
                 placeholder="https://…"
               />
-              <span className="mt-1 block font-inter text-xs font-normal text-slate">
+              <span className="mt-1 block font-inter text-xs font-normal text-ink-muted">
                 Paste a link to a square image. Leave empty to use your initials.
               </span>
             </label>
@@ -210,7 +210,7 @@ export default function Account() {
                 {savingProfile ? 'Saving…' : 'Save profile'}
               </button>
               {profileMsg && (
-                <p className="font-inter text-sm font-normal text-slate" role="status">
+                <p className="font-inter text-sm font-normal text-ink-muted" role="status">
                   {profileMsg}
                 </p>
               )}
@@ -236,7 +236,7 @@ export default function Account() {
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
-                  <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">
+                  <span className="mb-1 block font-inter text-sm font-medium text-ink">
                     Default metrics window
                   </span>
                   <select
@@ -252,7 +252,7 @@ export default function Account() {
                   </select>
                 </label>
                 <label className="block">
-                  <span className="mb-1 block font-inter text-sm font-medium text-inkwell-navy">
+                  <span className="mb-1 block font-inter text-sm font-medium text-ink">
                     Portfolio sort order
                   </span>
                   <select
@@ -285,7 +285,7 @@ export default function Account() {
                   {savingPrefs ? 'Saving…' : 'Save preferences'}
                 </button>
                 {prefsMsg && (
-                  <p className="font-inter text-sm font-normal text-slate" role="status">
+                  <p className="font-inter text-sm font-normal text-ink-muted" role="status">
                     {prefsMsg}
                   </p>
                 )}
@@ -297,7 +297,7 @@ export default function Account() {
         <Section title="Security" blurb="How you sign in and when your account was created.">
           <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
             <div>
-              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Sign-in methods</dt>
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Sign-in methods</dt>
               <dd className="mt-1 flex flex-wrap gap-2">
                 {user.providerData.map((p) => (
                   <span key={p.providerId} className="badge">
@@ -307,14 +307,14 @@ export default function Account() {
               </dd>
             </div>
             <div>
-              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Member since</dt>
-              <dd className="mt-1 font-inter text-sm font-normal text-inkwell-navy">
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Member since</dt>
+              <dd className="mt-1 font-inter text-sm font-normal text-ink">
                 {fmtDate(user.metadata.creationTime)}
               </dd>
             </div>
             <div>
-              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-slate">Last sign-in</dt>
-              <dd className="mt-1 font-inter text-sm font-normal text-inkwell-navy">
+              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Last sign-in</dt>
+              <dd className="mt-1 font-inter text-sm font-normal text-ink">
                 {fmtDate(user.metadata.lastSignInTime)}
               </dd>
             </div>
@@ -329,8 +329,8 @@ export default function Account() {
         </Section>
 
         <section className="card border-coral-emphasis" aria-label="Danger zone">
-          <h2 className="font-inter text-lg font-semibold text-inkwell-navy">Danger zone</h2>
-          <p className="mt-1 font-inter text-sm font-normal text-slate">
+          <h2 className="font-inter text-lg font-semibold text-ink">Danger zone</h2>
+          <p className="mt-1 font-inter text-sm font-normal text-ink-muted">
             Deleting your account removes your sign-in immediately. Project data is retained per our{' '}
             <a href="/privacy" className="text-link text-link-emphasis">
               privacy policy
@@ -343,7 +343,7 @@ export default function Account() {
                 <button
                   type="button"
                   onClick={() => void handleDelete(user)}
-                  className="rounded-lg bg-coral-emphasis px-4 py-2.5 font-inter text-sm font-semibold text-paper-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-inkwell-navy"
+                  className="rounded-lg bg-coral-emphasis px-4 py-2.5 font-inter text-sm font-semibold text-paper-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   Yes, delete my account
                 </button>

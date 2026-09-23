@@ -4,15 +4,15 @@ import SiteFooter from '../components/SiteFooter'
 /** License page: plain-language MIT summary + pointer to the repo file. */
 export default function License() {
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
-        <p className="badge bg-paper-white">MIT License</p>
+        <p className="badge bg-surface">MIT License</p>
         <h1 className="mt-3 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Free as in <span className="text-coral-emphasis">actually free.</span>
         </h1>
         <div className="card mt-8">
-          <div className="flex flex-col gap-3 font-inter text-sm leading-relaxed text-graphite">
+          <div className="flex flex-col gap-3 font-inter text-sm leading-relaxed text-ink-secondary">
             <p>
               Proxibay is MIT licensed. In plain language: you can <strong>use it, modify
               it, self-host it, and build on it</strong> — including commercially — as long
@@ -31,7 +31,7 @@ export default function License() {
               </a>
               .
             </p>
-            <p className="text-slate">Copyright © 2026 Asterverse Integrated Solutions and Allied Services Ltd.</p>
+            <p className="text-ink-muted">Copyright © 2026 Asterverse Integrated Solutions and Allied Services Ltd.</p>
           </div>
         </div>
       </main>

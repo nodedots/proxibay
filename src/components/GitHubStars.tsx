@@ -76,7 +76,7 @@ export default function GitHubStars() {
       <span className="hidden font-inter font-medium md:inline">GitHub</span>
       {/* Hide the count until the repo has real stars — "★ 0" reads as a bug. */}
       {stars !== null && stars > 0 && (
-        <span className="flex items-center gap-1 border-l border-warm-stone pl-2 font-inter font-semibold text-inkwell-navy">
+        <span className="flex items-center gap-1 border-l border-line pl-2 font-inter font-semibold text-ink">
           <StarIcon />
           {formatCount(stars)}
         </span>

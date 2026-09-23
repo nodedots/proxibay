@@ -154,7 +154,7 @@ export default function AddProject() {
         <div className="card">
           <p className="badge badge-success">Project created</p>
           <h1 className="mt-3 font-inter text-2xl font-semibold">Want to connect live data?</h1>
-          <p className="mt-1 text-sm text-slate">
+          <p className="mt-1 text-sm text-ink-muted">
             {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.{' '}
             <Link to="/docs/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
           </p>
@@ -207,7 +207,7 @@ export default function AddProject() {
 
           {connectorChoice === 'stripe' && !stripeResult && (
             <div className="mt-6 flex flex-col gap-4">
-              <p className="text-sm text-slate">
+              <p className="text-sm text-ink-muted">
                 Paste a <strong>restricted secret key</strong> from your Stripe dashboard
                 (Developers → API keys → Create restricted key with <strong>read</strong> access
                 to charges, balance, and payouts).{' '}
@@ -225,7 +225,7 @@ export default function AddProject() {
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm font-medium">
-                Webhook signing secret <span className="font-normal text-slate">(optional — enables instant events)</span>
+                Webhook signing secret <span className="font-normal text-ink-muted">(optional — enables instant events)</span>
                 <input
                   className="input font-mono text-xs"
                   type="password"
@@ -247,8 +247,8 @@ export default function AddProject() {
 
           {stripeResult && (
             <div className="mt-6">
-              <div className="rounded-lg bg-ash-canvas p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate">Stripe webhook endpoint</p>
+              <div className="rounded-lg bg-inset p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Stripe webhook endpoint</p>
                 <code className="mt-1 block break-all text-sm">{stripeResult.stripeEndpoint}</code>
                 <button
                   className="btn-ghost mt-2"
@@ -259,7 +259,7 @@ export default function AddProject() {
                 >
                   {secretCopied ? 'Copied ✓' : 'Copy URL'}
                 </button>
-                <p className="mt-3 text-sm text-slate">
+                <p className="mt-3 text-sm text-ink-muted">
                   Register this URL under <strong>Stripe dashboard → Developers → Webhooks</strong> (listen
                   to charges + payouts) and paste that endpoint's signing secret when connecting — or leave
                   it out and Proxibay reconciles nightly totals instead.
@@ -310,13 +310,13 @@ export default function AddProject() {
 
           {(connectorChoice === 'webhook' || webhookResult) && (
             <div className="mt-6">
-              {step2Busy && !webhookResult && <p className="text-sm text-slate">Generating ingest URL…</p>}
+              {step2Busy && !webhookResult && <p className="text-sm text-ink-muted">Generating ingest URL…</p>}
               {webhookResult && (
                 <>
-                  <div className="rounded-lg bg-ash-canvas p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate">Ingest URL</p>
+                  <div className="rounded-lg bg-inset p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Ingest URL</p>
                     <code className="mt-1 block break-all text-sm">{webhookResult.ingestUrl}</code>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-slate">Signing secret — shown once</p>
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">Signing secret — shown once</p>
                     <code className="mt-1 block break-all text-sm">{webhookResult.signingSecret}</code>
                     <button
                       className="btn-ghost mt-2"
@@ -331,7 +331,7 @@ export default function AddProject() {
                   <pre className="mt-3 overflow-x-auto rounded-lg bg-inkwell-navy p-4 text-xs text-paper-white">
                     {webhookResult.snippet.node}
                   </pre>
-                  <p className="mt-2 text-sm text-slate">
+                  <p className="mt-2 text-sm text-ink-muted">
                     Status is <span className="badge">pending</span> until the first verified event arrives — then it flips to connected automatically.{' '}
                     <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
                   </p>
@@ -341,7 +341,7 @@ export default function AddProject() {
             </div>
           )}
 
-          <div className="mt-6 border-t border-warm-stone pt-4">
+          <div className="mt-6 border-t border-line pt-4">
             <Link to={project ? `/projects/${project.id}` : '/'} className="text-link">
               {webhookResult ? 'Done — open project dashboard →' : 'Skip for now — open project dashboard →'}
             </Link>
@@ -355,7 +355,7 @@ export default function AddProject() {
     <div className="mx-auto mt-8 max-w-xl">
       <div className="card">
         <h1 className="font-inter text-2xl font-semibold">Add project</h1>
-        <p className="mt-1 text-sm text-slate">Only the name is required. Everything else can be filled in later.</p>
+        <p className="mt-1 text-sm text-ink-muted">Only the name is required. Everything else can be filled in later.</p>
         <form onSubmit={(e) => void onCreate(e)} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium">
             Name *
@@ -403,7 +403,7 @@ export default function AddProject() {
           <button className="btn-primary" type="submit" disabled={busy || !name.trim()}>
             {busy ? 'Creating…' : 'Create project'}
           </button>
-          <p className="text-sm text-slate">
+          <p className="text-sm text-ink-muted">
             Not sure what to connect? <Link to="/docs/connect" className="text-link-emphasis text-link">How connecting works →</Link>
           </p>
         </form>

@@ -8,14 +8,14 @@ import DeveloperModal from '../components/DeveloperModal'
 export default function About() {
   const [devOpen, setDevOpen] = useState(false)
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="about" />
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Too many projects. <span className="text-coral-emphasis">Too many tabs.</span>
         </h1>
-        <div className="mt-6 flex flex-col gap-4 text-body text-graphite">
+        <div className="mt-6 flex flex-col gap-4 text-body text-ink-secondary">
           <p>
             Every project you ship comes with its own admin panels: users over here,
             errors over there, revenue somewhere else entirely. With one project that's
@@ -32,8 +32,8 @@ export default function About() {
         </div>
 
         <div className="card mt-10">
-          <p className="badge bg-paper-white">Founder note</p>
-          <div className="mt-3 flex flex-col gap-3 text-body text-graphite">
+          <p className="badge bg-surface">Founder note</p>
+          <div className="mt-3 flex flex-col gap-3 text-body text-ink-secondary">
             <p>
               I run a lot of projects — marketplaces, sign tools, lending experiments,
               learning apps. Each one small, each one mine, each one with its own corner
@@ -46,10 +46,10 @@ export default function About() {
               tour of admin panels, it was worth building — and I think it'll do the same
               for anyone else running more than one thing.
             </p>
-            <p className="font-medium text-inkwell-navy">
+            <p className="font-medium text-ink">
               —{' '}
               <button
-                className="text-link text-inkwell-navy"
+                className="text-link text-ink"
                 onClick={() => setDevOpen(true)}
                 title="About the developer"
               >

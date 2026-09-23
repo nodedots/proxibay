@@ -145,7 +145,7 @@ const DurationField = ({ value, onValueChange, max, isEditing, shouldReduceMotio
                 style={{ x, width: isEditing ? 44 : collapsedWidth }}
                 animate={{ width: isEditing ? 44 : collapsedWidth }}
                 transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', ...WIDTH_SPRING }}
-                className='h-full text-center font-semibold text-inkwell-navy outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                className='h-full text-center font-semibold text-ink outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
             />
             <span ref={measureRef} aria-hidden className="invisible absolute whitespace-pre font-semibold">{value || '0'}</span>
         </>
@@ -250,16 +250,16 @@ function DurationPicker({
             data-slot="duration-picker"
             data-editing={isEditing || undefined}
             data-disabled={disabled || undefined}
-            className={cn('flex flex-row items-center justify-center text-inkwell-navy', disabled && 'opacity-50', className)}
+            className={cn('flex flex-row items-center justify-center text-ink', disabled && 'opacity-50', className)}
             {...props}
         >
-            <SquircleSegment leftRadius={CORNER_RADIUS} rightRadius={innerRadius} style={{ paddingRight: innerPadRight }} className="bg-paper-white dark:bg-[#262626] h-12 flex items-center gap-1 pl-2">
+            <SquircleSegment leftRadius={CORNER_RADIUS} rightRadius={innerRadius} style={{ paddingRight: innerPadRight }} className="bg-elevated h-12 flex items-center gap-1 pl-2">
                 <DurationField value={hoursText} onValueChange={handleHoursChange} max={maxHours} isEditing={isEditing} shouldReduceMotion={!!shouldReduceMotion} disabled={disabled} swayX={swayX} inputRef={hoursInputRef} />
-                <motion.span style={{ x: swayX }} className='text-slate font-semibold font-inter'>{hoursLabel}</motion.span>
+                <motion.span style={{ x: swayX }} className='text-ink-muted font-semibold font-inter'>{hoursLabel}</motion.span>
             </SquircleSegment>
-            <SquircleSegment leftRadius={innerRadius} rightRadius={innerRadius} style={{ marginLeft: segmentSpacing, paddingLeft: innerPadLeft, paddingRight: innerPadRight }} className="bg-paper-white dark:bg-[#262626] h-12 flex items-center gap-1">
+            <SquircleSegment leftRadius={innerRadius} rightRadius={innerRadius} style={{ marginLeft: segmentSpacing, paddingLeft: innerPadLeft, paddingRight: innerPadRight }} className="bg-elevated h-12 flex items-center gap-1">
                 <DurationField value={minutesText} onValueChange={handleMinutesChange} max={maxMinutes} isEditing={isEditing} shouldReduceMotion={!!shouldReduceMotion} disabled={disabled} swayX={swayX} />
-                <motion.span style={{ x: swayX }} className='text-slate font-medium font-inter'>{minutesLabel}</motion.span>
+                <motion.span style={{ x: swayX }} className='text-ink-muted font-medium font-inter'>{minutesLabel}</motion.span>
             </SquircleSegment>
             <SquircleSegment asChild leftRadius={innerRadius} rightRadius={CORNER_RADIUS} style={{ marginLeft: segmentSpacing }}>
                 <button
@@ -268,11 +268,11 @@ function DurationPicker({
                     onClick={toggleEdit}
                     disabled={disabled}
                     aria-label={isEditing ? 'Save duration' : 'Edit duration'}
-                    className='w-12 h-12 bg-paper-white dark:bg-[#262626] flex justify-center items-center active:scale-90 transition-transform disabled:active:scale-100'
+                    className='w-12 h-12 bg-elevated flex justify-center items-center active:scale-90 transition-transform disabled:active:scale-100'
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                        <motion.path fill="#6d6f75" stroke="#6d6f75" strokeWidth={0} strokeLinejoin="round" strokeLinecap="round" style={{ strokeWidth: iconStrokeWidth, strokeOpacity: iconStrokeOpacity }} d={iconPath} />
-                        <motion.path d="M14 6L18 10" fill="none" strokeWidth={1.5} strokeLinecap="round" className="stroke-paper-white dark:stroke-[#262626]" style={{ opacity: iconDashOpacity }} />
+                        <motion.path fill="var(--color-ink-muted)" stroke="var(--color-ink-muted)" strokeWidth={0} strokeLinejoin="round" strokeLinecap="round" style={{ strokeWidth: iconStrokeWidth, strokeOpacity: iconStrokeOpacity }} d={iconPath} />
+                        <motion.path d="M14 6L18 10" fill="none" strokeWidth={1.5} strokeLinecap="round" className="stroke-elevated" style={{ opacity: iconDashOpacity }} />
                     </svg>
                 </button>
             </SquircleSegment>

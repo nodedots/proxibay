@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Proxibay — logo concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --navy:#151b31; --coral:#ff5858; --paper:#f2f2f2; --page-dark:#0d1122; }
+  * { box-sizing: border-box; margin: 0; }
+  body { font-family: Inter, system-ui, sans-serif; background: #e8e7e5; color: var(--navy); padding: 40px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .sub { font-size: 13px; opacity: .65; margin-bottom: 28px; }
+  .concept { background: #fff; border-radius: 16px; padding: 24px 28px 28px; margin-bottom: 28px; box-shadow: 0 2px 10px rgba(21,27,49,.08); }
+  .concept h2 { font-size: 17px; font-weight: 700; }
+  .concept .why { font-size: 13px; opacity: .65; margin: 2px 0 18px; }
+  .grid { display: grid; grid-template-columns: 90px 1fr 1fr; gap: 14px; align-items: start; }
+  .colhead { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .55; padding-bottom: 6px; }
+  .panel { border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+  .panel.light { background: var(--paper); }
+  .panel.dark { background: var(--page-dark); }
+  .panel h3 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 14px; }
+  .panel.light h3 { color: var(--navy); opacity: .55; }
+  .panel.dark h3 { color: var(--paper); opacity: .55; }
+  .row { display: flex; align-items: center; gap: 22px; margin-bottom: 16px; flex-wrap: wrap; }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .slot small { font-size: 10px; opacity: .5; font-weight: 600; }
+  .panel.dark .slot small { color: var(--paper); }
+  .navbar-mock { display: flex; align-items: center; gap: 10px; border-radius: 10px; padding: 10px 16px; width: max-content; }
+  .navbar-mock.light { background: #fff; border: 1px solid #e0dfdc; }
+  .navbar-mock.dark { background: var(--navy); }
+  .navbar-mock .word { font-size: 20px; font-weight: 600; }
+  .navbar-mock.light .word { color: var(--navy); }
+  .navbar-mock.dark .word { color: var(--paper); }
+  .favicon-strip { display: flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 3px 8px; font-size: 11px; color: #555; }
+  .favicon-strip.dark { background: #2b2b2b; border-color: #444; color: #ccc; }
+  .zoom svg { width: 64px; height: 64px; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<h1>Proxibay icon-mark concepts</h1>
+<p class="sub">Pure geometry, no gradients, 64×64 grid. Favicons shown at true 16px (plus ×4 zoom). Navy #151b31 · Coral #ff5858 · Paper #f2f2f2.</p>
+<div id="app"></div>
+<script src="marks.js"></script>
+</body>
+</html>

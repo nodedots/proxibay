@@ -75,7 +75,7 @@ curl -X POST "$PROXIBAY_INGEST_URL" \\
           response code.
         </Trouble>
       </div>
-      <p className="mt-8 text-body-sm text-slate">
+      <p className="mt-8 text-body-sm text-ink-muted">
         Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
       </p>
     </GuideShell>

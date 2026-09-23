@@ -1,5 +1,8 @@
 # Proxibay
 
+![Proxibay](public/logo-wordmark.svg#gh-light-mode-only)
+![Proxibay](public/logo-wordmark-dark.svg#gh-dark-mode-only)
+
 **Stop building dashboards. Plug your projects in.**
 
 Proxibay is portfolio monitoring for developers running multiple projects — part

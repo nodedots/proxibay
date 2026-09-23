@@ -169,6 +169,26 @@ fluid-orb (coral, 104px, ambient beside the hero snippet), duration-picker
 and added missing flubber types). Alert rules get a minimal save/list/mute/
 delete UI on the detail page (`projects/{id}/alertRules`, owner rules) with an
 honest "evaluation ships later" note — the picker needed a real form, and a
+
+## D21 — Theme switcher: Light/Dark/System, dark tokens derived from the feature card (2026-09-22)
+Dark theme derived from the one deliberately-dark component DESIGN.md already
+had (the Inkwell Navy feature card): page drops to Midnight Navy #0d1122,
+cards take Inkwell Navy #151b31, modals/menus a Raised Navy #222b4b, and the
+feature card bumps to Raised Navy so it stays distinct from the now-darker
+page. Text is Paper White at 100/70/55% (the card's existing opacity pattern);
+coral/mint/butter unchanged (5.5–13:1 on navy); slate idle-status dot
+brightened; primary buttons invert (paper fill, navy text) because a navy
+button would vanish on navy cards. Full token table + contrast checks in
+DARK_MODE.md. Mechanism: fixed palette tokens stay put; a semantic tier
+(`--color-canvas/surface/elevated/inset/feature/ink*/line*/primary/ring/…`)
+flips under `html[data-theme="dark"]`; `@custom-variant dark` is
+attribute-driven so `dark:` never fires from the OS alone. Choice persists in
+localStorage `proxibay-theme` (UI pref, not app data); default is Light —
+never System — with an inline index.html script applying it pre-paint;
+`system` follows a live prefers-color-scheme listener. Every page/component
+swept from palette utilities to semantic ones; butter/mint/coral surfaces keep
+navy text in both themes by pinning `text-inkwell-navy` there explicitly.
+
 dead-end demo widget would have been worse. CREDITS.md + Docs acknowledgment
 per the MIT attribution ask. `/license` route
 collides with the root LICENSE file only under vite-dev on case-insensitive

@@ -59,7 +59,7 @@ export default function ImportPicker(props: {
 
   return (
     <div
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-4"
       onClick={props.onClose}
       role="presentation"
     >
@@ -67,21 +67,21 @@ export default function ImportPicker(props: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-heading"
-        className="modal-pop flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-paper-white p-5 shadow-sm-2"
+        className="modal-pop flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-elevated p-5 shadow-sm-2"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={props.onClose}
           aria-label="Close"
           title="Close"
-          className="float-right -mr-1 -mt-1 self-end rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate transition-colors duration-150 hover:bg-ash-canvas hover:text-inkwell-navy"
+          className="float-right -mr-1 -mt-1 self-end rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
         >
           ×
         </button>
-        <h2 id="import-heading" className="font-inter text-2xl font-semibold text-inkwell-navy">
+        <h2 id="import-heading" className="font-inter text-2xl font-semibold text-ink">
           {props.title}
         </h2>
-        <p className="mt-1 font-inter text-sm font-normal text-slate">{props.subtitle}</p>
+        <p className="mt-1 font-inter text-sm font-normal text-ink-muted">{props.subtitle}</p>
 
         <div className="mt-4 flex gap-2">
           <input
@@ -96,7 +96,7 @@ export default function ImportPicker(props: {
           </button>
         </div>
 
-        <div className="mt-3 min-h-[120px] flex-1 overflow-y-auto rounded-lg border border-warm-stone">
+        <div className="mt-3 min-h-[120px] flex-1 overflow-y-auto rounded-lg border border-line">
           {props.loading && props.items.length === 0 && (
             <div className="flex flex-col gap-2 p-3" aria-label="Loading candidates">
               {[0, 1, 2].map((i) => (
@@ -105,32 +105,32 @@ export default function ImportPicker(props: {
             </div>
           )}
           {!props.loading && filtered.length === 0 && (
-            <p className="p-4 text-center font-inter text-sm text-slate">
+            <p className="p-4 text-center font-inter text-sm text-ink-muted">
               {props.error ?? 'Nothing found on this account.'}
             </p>
           )}
           {filtered.map((item) => (
             <label
               key={item.key}
-              className="flex cursor-pointer items-start gap-3 border-b border-warm-stone p-3 transition-colors duration-150 last:border-0 hover:bg-ash-canvas"
+              className="flex cursor-pointer items-start gap-3 border-b border-line p-3 transition-colors duration-150 last:border-0 hover:bg-inset"
             >
               <input
                 type="checkbox"
-                className="mt-1 h-[18px] w-[18px] shrink-0 accent-[#151b31]"
+                className="mt-1 h-[18px] w-[18px] shrink-0 accent-primary"
                 checked={checked.has(item.key)}
                 onChange={() => toggle(item.key)}
                 aria-label={`Import ${item.name}`}
               />
               <span className="min-w-0 flex-1">
                 <input
-                  className="input !border-0 !bg-transparent !p-0 font-inter text-sm font-semibold text-inkwell-navy focus:!bg-paper-white"
+                  className="input !border-0 !bg-transparent !p-0 font-inter text-sm font-semibold text-ink focus:!bg-elevated"
                   value={names[item.key] ?? item.name}
                   onChange={(e) => setNames((n) => ({ ...n, [item.key]: e.target.value }))}
                   onClick={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
                   aria-label="Project name"
                 />
-                <span className="block truncate font-inter text-xs text-slate">{item.subtitle}</span>
+                <span className="block truncate font-inter text-xs text-ink-muted">{item.subtitle}</span>
               </span>
             </label>
           ))}

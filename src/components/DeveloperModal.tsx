@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export default function DeveloperModal({ onClose }: { onClose: () => void }) {
   return (
     <div
-      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4"
+      className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-4"
       onClick={onClose}
       role="presentation"
     >
@@ -12,14 +12,14 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="dev-heading"
-        className="modal-pop relative w-full max-w-md rounded-2xl bg-paper-white p-6 text-center shadow-sm-2"
+        className="modal-pop relative w-full max-w-md rounded-2xl bg-elevated p-6 text-center shadow-sm-2"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Close"
           title="Close"
-          className="absolute right-4 top-4 rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate transition-colors duration-150 hover:bg-ash-canvas hover:text-inkwell-navy"
+          className="absolute right-4 top-4 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
         >
           ×
         </button>
@@ -29,14 +29,14 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
             alt="NodeDots avatar"
             width={72}
             height={72}
-            className="h-[72px] w-[72px] rounded-full object-cover ring-2 ring-warm-stone ring-offset-2 ring-offset-paper-white"
+            className="h-[72px] w-[72px] rounded-full object-cover ring-2 ring-line ring-offset-2 ring-offset-elevated"
           />
-          <p className="badge mt-3 bg-paper-white">Developer</p>
-          <h2 id="dev-heading" className="mt-1 font-inter text-2xl font-semibold text-inkwell-navy">
+          <p className="badge mt-3 bg-surface">Developer</p>
+          <h2 id="dev-heading" className="mt-1 font-inter text-2xl font-semibold text-ink">
             NodeDots
           </h2>
         </div>
-        <p className="mx-auto mt-3 max-w-sm font-inter text-sm font-normal leading-relaxed text-slate">
+        <p className="mx-auto mt-3 max-w-sm font-inter text-sm font-normal leading-relaxed text-ink-muted">
           Proxibay is designed and built by NodeDots — an indie developer who got
           tired of touring a dozen admin panels every morning and decided to fix it
           for good.
@@ -66,9 +66,9 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
           </a>
         </div>
         <div className="my-4 flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-warm-stone" />
-          <span className="font-inter text-xs font-medium text-slate">more</span>
-          <span className="h-px flex-1 bg-warm-stone" />
+          <span className="h-px flex-1 bg-line" />
+          <span className="font-inter text-xs font-medium text-ink-muted">more</span>
+          <span className="h-px flex-1 bg-line" />
         </div>
         <div className="flex gap-2">
           <Link to="/about" className="btn-primary flex-1" onClick={onClose}>

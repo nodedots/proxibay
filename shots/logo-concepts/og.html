@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px; height: 630px;
+    background: #151b31;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  /* faint oversized ring echo, bottom-right */
+  .echo {
+    position: absolute; right: -260px; bottom: -340px; z-index: 0;
+    width: 560px; height: 560px; border-radius: 50%;
+    border: 46px solid #222b4b;
+  }
+  .lockup { display: flex; align-items: center; gap: 36px; position: relative; z-index: 1; }
+  .word { color: #f2f2f2; font-size: 108px; font-weight: 600; letter-spacing: -0.02em; }
+  .tagline {
+    margin-top: 34px; color: #b9bbc1; font-size: 38px; font-weight: 400;
+    letter-spacing: -0.01em; position: relative; z-index: 1;
+  }
+  .tagline .coral { color: #ff5858; font-weight: 600; }
+  .domain {
+    position: absolute; left: 56px; bottom: 44px;
+    color: #9698a2; font-size: 24px; letter-spacing: 0.02em;
+  }
+</style>
+</head>
+<body>
+  <div class="echo"></div>
+  <div class="lockup">
+    <svg width="180" height="180" viewBox="0 0 64 64">
+      <path d="M49.4 28.3 A18 18 0 1 1 33.6 15.1" stroke="#f2f2f2" stroke-width="6.5" stroke-linecap="round" fill="none"/>
+      <circle cx="32" cy="33" r="8.5" fill="#f2f2f2"/>
+      <circle cx="43.6" cy="19.2" r="5" fill="#ff5858"/>
+    </svg>
+    <span class="word">Proxibay</span>
+  </div>
+  <p class="tagline">Give every project a home and a <span class="coral">heartbeat</span>.</p>
+  <span class="domain">proxibay.app</span>
+</body>
+</html>

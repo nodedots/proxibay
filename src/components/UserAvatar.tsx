@@ -31,7 +31,7 @@ export default function UserAvatar({
         height={size}
         referrerPolicy="no-referrer"
         onError={() => setImgFailed(true)}
-        className="rounded-full border border-warm-stone object-cover"
+        className="rounded-full border border-line object-cover"
         style={{ width: size, height: size }}
       />
     )
@@ -40,7 +40,7 @@ export default function UserAvatar({
     <span
       role="img"
       aria-label={label}
-      className="flex items-center justify-center rounded-full bg-inkwell-navy font-inter font-semibold text-paper-white"
+      className="flex items-center justify-center rounded-full bg-primary font-inter font-semibold text-on-primary"
       style={{ width: size, height: size, fontSize: Math.max(11, size * 0.36) }}
     >
       {userInitials(user)}

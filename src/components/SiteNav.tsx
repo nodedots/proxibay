@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import GitHubStars from './GitHubStars'
 import UserMenu from './UserMenu'
+import ThemeSwitcher from './ThemeSwitcher'
 import { useAuthUser } from '../lib/useAuthUser'
 
 export type SiteSection = 'about' | 'docs' | 'pricing'
@@ -46,6 +47,7 @@ export default function SiteNav({ active }: { active?: SiteSection }) {
               Sign in
             </Link>
           )}
+          <ThemeSwitcher />
           <GitHubStars />
         </div>
       </div>

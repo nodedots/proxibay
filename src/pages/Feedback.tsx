@@ -40,13 +40,13 @@ export default function Feedback() {
   }
 
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Tell us <span className="text-coral-emphasis">what's broken.</span>
         </h1>
-        <p className="mt-4 text-body-lg text-slate">
+        <p className="mt-4 text-body-lg text-ink-muted">
           Bugs, confusing copy, missing connectors — send it here. A human reads
           everything; the human is also the entire team.
         </p>
@@ -56,7 +56,7 @@ export default function Feedback() {
             <div className="text-center">
               <p className="badge badge-success">Received</p>
               <h2 className="mt-3 font-inter text-xl font-semibold">Thanks — it's in the pile.</h2>
-              <p className="mt-1 font-inter text-sm text-slate">
+              <p className="mt-1 font-inter text-sm text-ink-muted">
                 For anything urgent or trackable,{' '}
                 <a
                   href="https://github.com/nodedots/proxibay/issues"
@@ -73,7 +73,7 @@ export default function Feedback() {
             <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="flex flex-col gap-1 text-sm font-medium">
-                  Name <span className="font-normal text-slate">(optional)</span>
+                  Name <span className="font-normal text-ink-muted">(optional)</span>
                   <input
                     className="input"
                     value={name}
@@ -84,7 +84,7 @@ export default function Feedback() {
                   />
                 </label>
                 <label className="flex flex-col gap-1 text-sm font-medium">
-                  Email <span className="font-normal text-slate">(optional, for replies)</span>
+                  Email <span className="font-normal text-ink-muted">(optional, for replies)</span>
                   <input
                     className="input"
                     type="email"

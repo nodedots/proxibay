@@ -39,9 +39,9 @@ export default function ConnectGuide() {
       <div className="mt-8 flex flex-col gap-3">
         {GUIDES.map((g) => (
           <Link key={g.to} to={g.to} className="card card-hover">
-            <p className="badge bg-paper-white">{g.tag}</p>
+            <p className="badge bg-surface">{g.tag}</p>
             <h2 className="mt-2 font-inter text-subheading font-semibold">{g.title}</h2>
-            <p className="mt-1 text-body text-slate">{g.blurb}</p>
+            <p className="mt-1 text-body text-ink-muted">{g.blurb}</p>
             <p className="text-link-emphasis text-link mt-2 text-sm">Read the guide →</p>
           </Link>
         ))}

@@ -64,16 +64,16 @@ export default function ConnectorPicker(props: {
       {GROUPS.map((group) => {
         const isOpen = open[group.title] ?? true
         return (
-          <div key={group.title} className="overflow-hidden rounded-lg border border-warm-stone">
+          <div key={group.title} className="overflow-hidden rounded-lg border border-line">
             <button
               type="button"
               onClick={() => setOpen((o) => ({ ...o, [group.title]: !isOpen }))}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between gap-2 bg-paper-white px-4 py-3 text-left transition-colors duration-150 hover:bg-ash-canvas"
+              className="flex w-full items-center justify-between gap-2 bg-surface px-4 py-3 text-left transition-colors duration-150 hover:bg-inset"
             >
               <span>
-                <span className="block font-inter text-base font-semibold text-inkwell-navy">{group.title}</span>
-                <span className="block font-inter text-xs font-normal text-slate">{group.blurb}</span>
+                <span className="block font-inter text-base font-semibold text-ink">{group.title}</span>
+                <span className="block font-inter text-xs font-normal text-ink-muted">{group.blurb}</span>
               </span>
               <svg
                 width="16"
@@ -81,13 +81,13 @@ export default function ConnectorPicker(props: {
                 viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
-                className={`shrink-0 text-slate transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                className={`shrink-0 text-ink-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
               >
                 <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
             {isOpen && (
-              <ul className="flex flex-col gap-2 bg-ash-canvas p-2">
+              <ul className="flex flex-col gap-2 bg-inset p-2">
                 {group.items.map((item) => {
                   const connected = !!item.type && props.connectedTypes.includes(item.type)
                   const disabled = item.state === 'soon' || connected
@@ -97,13 +97,13 @@ export default function ConnectorPicker(props: {
                         type="button"
                         disabled={disabled}
                         onClick={() => item.type && props.onSelect(item.type)}
-                        className={`flex w-full items-center justify-between gap-3 rounded-lg bg-paper-white px-4 py-3 text-left transition-all duration-150 ${
+                        className={`flex w-full items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-left transition-all duration-150 ${
                           disabled ? 'cursor-default opacity-90' : 'card-hover'
                         }`}
                       >
                         <span>
-                          <span className="block font-inter text-sm font-semibold text-inkwell-navy">{item.name}</span>
-                          <span className="block font-inter text-xs font-normal text-slate">{item.blurb}</span>
+                          <span className="block font-inter text-sm font-semibold text-ink">{item.name}</span>
+                          <span className="block font-inter text-xs font-normal text-ink-muted">{item.blurb}</span>
                         </span>
                         {connected ? (
                           <span className="badge badge-success shrink-0">Connected</span>

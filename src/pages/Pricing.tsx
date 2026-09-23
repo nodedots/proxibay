@@ -42,7 +42,7 @@ export default function Pricing() {
   }
 
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="pricing" />
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10 text-center">
@@ -50,27 +50,27 @@ export default function Pricing() {
         <h1 className="mt-4 font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Free <span className="text-coral-emphasis">for now.</span>
         </h1>
-        <p className="mx-auto mt-4 max-w-lg text-body-lg text-slate">
+        <p className="mx-auto mt-4 max-w-lg text-body-lg text-ink-muted">
           Simple pricing is coming. Until then, everything Proxibay does is free —
           every project, every connector, every alert.
         </p>
 
         <div className="card mt-10 text-left">
           <h2 className="font-inter text-subheading font-semibold">What's included</h2>
-          <ul className="mt-3 flex flex-col gap-2 text-body text-graphite">
+          <ul className="mt-3 flex flex-col gap-2 text-body text-ink-secondary">
             <li>· Unlimited projects in your portfolio</li>
             <li>· Firebase and webhook connectors</li>
             <li>· Metric charts and history</li>
             <li>· Threshold alerts by email and webhook</li>
           </ul>
         </div>
-        <p className="mt-6 text-body-sm text-slate">
+        <p className="mt-6 text-body-sm text-ink-muted">
           When paid plans arrive, early users will keep a free tier that covers
           small portfolios. No surprises.
         </p>
 
         <h2 className="mt-14 font-inter text-heading-sm font-semibold">Pro — flat rate</h2>
-        <p className="mx-auto mt-2 max-w-lg text-body text-slate">
+        <p className="mx-auto mt-2 max-w-lg text-body text-ink-muted">
           For portfolios that have outgrown the free tier. Same product, higher
           limits, priority support.
         </p>
@@ -90,7 +90,7 @@ export default function Pricing() {
                   <span className="font-inter text-heading font-semibold">
                     {amount !== undefined ? `$${amount.toFixed(2)}` : '$—'}
                   </span>{' '}
-                  <span className="font-inter text-sm text-slate">
+                  <span className="font-inter text-sm text-ink-muted">
                     / {period === 'yearly' ? 'year' : 'month'}
                   </span>
                 </p>
@@ -110,9 +110,9 @@ export default function Pricing() {
           })}
         </div>
         {teamsNote ? (
-          <p className="mt-4 text-body-sm text-slate">{teamsNote}</p>
+          <p className="mt-4 text-body-sm text-ink-muted">{teamsNote}</p>
         ) : (
-          <p className="mt-4 text-body-sm text-slate">Teams and Enterprise plans are coming soon.</p>
+          <p className="mt-4 text-body-sm text-ink-muted">Teams and Enterprise plans are coming soon.</p>
         )}
         <Link to="/signin" className="btn-primary mt-8 inline-block">
           Add your first project

@@ -67,7 +67,7 @@ export default function SaJsonUpload(props: {
         Upload JSON file
       </button>
       {fileName ? (
-        <span className="font-inter text-sm text-slate">
+        <span className="font-inter text-sm text-ink-muted">
           {fileName} · loaded below
           <button
             type="button"
@@ -82,7 +82,7 @@ export default function SaJsonUpload(props: {
           </button>
         </span>
       ) : (
-        <span className="font-inter text-sm text-slate">or paste the contents below</span>
+        <span className="font-inter text-sm text-ink-muted">or paste the contents below</span>
       )}
     </div>
   )

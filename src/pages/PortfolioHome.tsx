@@ -126,22 +126,22 @@ export default function PortfolioHome() {
               Import ↓
             </button>
             {importMenu && (
-              <div role="menu" className="absolute right-0 z-30 mt-2 w-56 rounded-lg border border-warm-stone bg-paper-white p-1 shadow-sm">
+              <div role="menu" className="absolute right-0 z-30 mt-2 w-56 rounded-lg border border-line bg-elevated p-1 shadow-sm">
                 <button
                   role="menuitem"
-                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-inkwell-navy transition-colors duration-150 hover:bg-ash-canvas"
+                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset"
                   onClick={() => void openImporter('github')}
                 >
                   Import from GitHub
-                  <span className="block text-xs font-normal text-slate">Pick repos to add as projects</span>
+                  <span className="block text-xs font-normal text-ink-muted">Pick repos to add as projects</span>
                 </button>
                 <button
                   role="menuitem"
-                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-inkwell-navy transition-colors duration-150 hover:bg-ash-canvas"
+                  className="w-full rounded-lg px-3 py-2 text-left font-inter text-sm font-medium text-ink transition-colors duration-150 hover:bg-inset"
                   onClick={() => void openImporter('google')}
                 >
                   Import from Google Cloud
-                  <span className="block text-xs font-normal text-slate">Pick GCP projects to add</span>
+                  <span className="block text-xs font-normal text-ink-muted">Pick GCP projects to add</span>
                 </button>
               </div>
             )}
@@ -170,7 +170,7 @@ export default function PortfolioHome() {
       {error && (
         <div className="card mt-6 text-center">
           <p className="font-inter text-base font-semibold">Something went wrong loading your portfolio.</p>
-          <p className="mt-1 font-inter text-sm text-slate">{error}</p>
+          <p className="mt-1 font-inter text-sm text-ink-muted">{error}</p>
           <button className="btn-primary mt-4" onClick={() => setAttempt((a) => a + 1)}>
             Try again
           </button>
@@ -196,7 +196,7 @@ export default function PortfolioHome() {
       {entries !== null && entries.length === 0 && (
         <div className="card mt-6 text-center">
           <p className="text-lg font-medium">Register your first project</p>
-          <p className="mt-1 text-sm text-slate">Name-only is enough — you can connect live data right after.</p>
+          <p className="mt-1 text-sm text-ink-muted">Name-only is enough — you can connect live data right after.</p>
           <Link to="/projects/new" className="btn-primary mt-4 inline-block">
             Add project
           </Link>
@@ -204,7 +204,7 @@ export default function PortfolioHome() {
       )}
 
       {entries !== null && entries.length > 0 && filtered.length === 0 && (
-        <p className="card mt-6 text-sm text-slate">No projects match “{query}”. <button className="text-link" onClick={() => { setQuery(''); setStatusFilter('all') }}>Clear filters</button></p>
+        <p className="card mt-6 text-sm text-ink-muted">No projects match “{query}”. <button className="text-link" onClick={() => { setQuery(''); setStatusFilter('all') }}>Clear filters</button></p>
       )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -226,21 +226,21 @@ export default function PortfolioHome() {
             )}
             <div className="mt-3">
               {e.keyMetrics.length === 0 ? (
-                <p className="text-sm text-slate">
+                <p className="text-sm text-ink-muted">
                   No data connected. <span className="text-link-emphasis text-link">Connect →</span>
                 </p>
               ) : (
                 <dl className="flex flex-wrap gap-x-4 gap-y-1">
                   {e.keyMetrics.slice(0, 3).map((m) => (
                     <div key={`${m.metricType}/${m.key}`}>
-                      <dt className="text-xs text-slate">{m.key.replace(/_/g, ' ')}</dt>
+                      <dt className="text-xs text-ink-muted">{m.key.replace(/_/g, ' ')}</dt>
                       <dd className="text-lg font-semibold">{m.value.toLocaleString()}</dd>
                     </div>
                   ))}
                 </dl>
               )}
             </div>
-            <p className="mt-3 text-xs text-slate">
+            <p className="mt-3 text-xs text-ink-muted">
               Updated {timeAgo((e.project.updatedAt as unknown as { seconds: number }) ?? undefined)}
               {e.connectorStatuses.length > 0 && ` · ${e.connectorStatuses.join(', ')}`}
             </p>

@@ -42,7 +42,7 @@ export default function ConnectStripe() {
           be registered in your Stripe dashboard — pasting the key alone only enables polling.
         </Trouble>
       </div>
-      <p className="mt-8 text-body-sm text-slate">
+      <p className="mt-8 text-body-sm text-ink-muted">
         Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
       </p>
     </GuideShell>

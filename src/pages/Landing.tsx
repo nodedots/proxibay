@@ -64,16 +64,16 @@ function InstallSnippet() {
 
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
-      <div className="flex max-w-full items-center gap-2 rounded-lg border border-slate bg-paper-white py-2 pl-4 pr-2 shadow-subtle">
-        <code className="block min-w-0 select-all overflow-x-auto whitespace-nowrap font-mono text-sm text-inkwell-navy">
-          <span className="mr-2 select-none text-slate">$</span>
+      <div className="flex max-w-full items-center gap-2 rounded-lg border border-line-strong bg-surface py-2 pl-4 pr-2 shadow-subtle">
+        <code className="block min-w-0 select-all overflow-x-auto whitespace-nowrap font-mono text-sm text-ink">
+          <span className="mr-2 select-none text-ink-muted">$</span>
           {INSTALL_CMD}
         </code>
         <button
           onClick={() => void copy()}
           aria-label="Copy install command"
           title={copied ? 'Copied!' : 'Copy to clipboard'}
-          className="rounded-md p-1.5 text-slate transition-all duration-150 hover:bg-ash-canvas hover:text-inkwell-navy"
+          className="rounded-md p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
         >
           {copied ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -87,7 +87,7 @@ function InstallSnippet() {
           )}
         </button>
       </div>
-      <p aria-live="polite" className={`h-4 font-inter text-xs text-slate transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
+      <p aria-live="polite" className={`h-4 font-inter text-xs text-ink-muted transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
         Copied!
       </p>
       <Link to="/docs#quickstart" className="text-link-emphasis text-link text-sm">
@@ -104,7 +104,7 @@ function InstallSnippet() {
  */
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
 
       {/* HERO */}
@@ -115,7 +115,7 @@ export default function Landing() {
             projects <span className="text-coral-emphasis">in.</span>
           </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-xl text-body-lg text-slate">
+        <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-muted">
           Proxibay gives every project a home and a heartbeat. See health, users,
           and revenue across everything you run — in one place.
         </p>
@@ -127,7 +127,9 @@ export default function Landing() {
 
       {/* DARK FEATURE MOMENT */}
       <section className="mx-auto max-w-[1200px] px-6 pb-20">
-        <div className="relative overflow-hidden rounded-3xl bg-inkwell-navy p-10 shadow-sm-2 sm:p-12">
+        {/* bg-feature: Inkwell Navy in light; bumps to Raised Navy in dark so
+            the card stays distinct from the now-darker page (DARK_MODE.md). */}
+        <div className="relative overflow-hidden rounded-3xl bg-feature p-10 shadow-sm-2 sm:p-12">
           <div className="max-w-lg">
             <h2 className="font-grifter text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
@@ -156,12 +158,12 @@ export default function Landing() {
 
       {/* FEATURE BLURBS — Paper White band with Warm Stone hairlines for
           section depth; three-up on desktop, stacked on mobile. */}
-      <section id="features" className="border-y border-warm-stone bg-paper-white">
+      <section id="features" className="border-y border-line bg-surface">
         <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-20 md:grid-cols-3 md:gap-10">
           <div>
             <p className="badge">Catalog</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Register any project in seconds.</h3>
-            <p className="mt-2 text-body text-slate">
+            <p className="mt-2 text-body text-ink-muted">
               A name is enough to start. Add stack tags, repo links, and notes
               whenever you like — the catalog never gets in the way of monitoring.
             </p>
@@ -169,7 +171,7 @@ export default function Landing() {
           <div>
             <p className="badge">Connectors</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Plug in where your data already lives.</h3>
-            <p className="mt-2 text-body text-slate">
+            <p className="mt-2 text-body text-ink-muted">
               Firebase and Stripe connect directly, and a generic webhook covers
               everything else. Every source reports the same way, so all your
               projects read the same.
@@ -178,7 +180,7 @@ export default function Landing() {
           <div>
             <p className="badge">Alerts</p>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Know before you go looking.</h3>
-            <p className="mt-2 text-body text-slate">
+            <p className="mt-2 text-body text-ink-muted">
               Set a threshold on anything you track. When something breaks,
               Proxibay taps you on the shoulder — email or webhook, your call.
             </p>

@@ -64,14 +64,14 @@ function Editable(props: {
   if (!editing) {
     return (
       <div>
-        <dt className="text-xs font-medium uppercase tracking-wide text-slate">{props.label}</dt>
+        <dt className="text-xs font-medium uppercase tracking-wide text-ink-muted">{props.label}</dt>
         <dd>
           <button
             className="text-left text-sm hover:underline"
             title="Click to edit"
             onClick={() => { setDraft(props.value); setEditing(true) }}
           >
-            {props.value || <span className="text-slate">{props.placeholder ?? '+ add'}</span>}
+            {props.value || <span className="text-ink-muted">{props.placeholder ?? '+ add'}</span>}
           </button>
         </dd>
         {err && <p className="text-xs text-coral-emphasis">{err}</p>}
@@ -80,7 +80,7 @@ function Editable(props: {
   }
   return (
     <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate">{props.label}</dt>
+      <dt className="text-xs font-medium uppercase tracking-wide text-ink-muted">{props.label}</dt>
       <dd className="flex gap-2">
         {props.multiline ? (
           <textarea className="input" rows={2} value={draft} onChange={(e) => setDraft(e.target.value)}
@@ -380,7 +380,7 @@ export default function ProjectDetail() {
   if (error) return (
     <div className="card mt-8 text-center">
       <p className="font-inter text-base font-semibold">Something went wrong loading this project.</p>
-      <p className="mt-1 font-inter text-sm text-slate">{error}</p>
+      <p className="mt-1 font-inter text-sm text-ink-muted">{error}</p>
       <button className="btn-primary mt-4" onClick={() => void load()}>
         Try again
       </button>
@@ -411,9 +411,9 @@ export default function ProjectDetail() {
   return (
     <div className="mt-8 flex flex-col gap-4">
       {archived && (
-        <div className="card bg-butter-yellow">
+        <div className="card bg-butter-yellow text-inkwell-navy">
           <p className="text-sm font-medium">This project is archived. Ingest disabled (URLs return 410).</p>
-          <button className="btn-ghost mt-2 bg-paper-white" onClick={() => void patchProject({ status: 'active' }).then(load)}>
+          <button className="btn-ghost mt-2 !border-line-strong bg-paper-white text-inkwell-navy hover:!bg-paper-white" onClick={() => void patchProject({ status: 'active' }).then(load)}>
             Restore to active
           </button>
         </div>
@@ -475,7 +475,7 @@ export default function ProjectDetail() {
             <Editable label="Notes" value={p.notes ?? ''} multiline onSave={(v) => patchProject({ notes: v || null })} />
           </div>
         </dl>
-        <p className="mt-3 text-xs text-slate">Saved {timeAgo(p.updatedAt as unknown as { seconds: number })}</p>
+        <p className="mt-3 text-xs text-ink-muted">Saved {timeAgo(p.updatedAt as unknown as { seconds: number })}</p>
       </section>
 
       {/* 3. Connectors */}
@@ -499,10 +499,10 @@ export default function ProjectDetail() {
           )}
         </div>
 
-        {connectors === null && <p className="mt-3 text-sm text-slate">Loading connectors…</p>}
+        {connectors === null && <p className="mt-3 text-sm text-ink-muted">Loading connectors…</p>}
 
         {connectors !== null && connectors.length === 0 && attach === null && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+          <div className="mt-3 rounded-lg bg-inset p-4">
             <p className="text-sm font-medium">No live data yet — pick a source below. This page stays useful without it.</p>
             <div className="mt-3">
               <ConnectorPicker
@@ -519,7 +519,7 @@ export default function ProjectDetail() {
 
         <ul className="mt-3 flex flex-col gap-3">
           {connectors?.map((c) => (
-            <li key={c.id} className="rounded-lg border border-warm-stone p-3">
+            <li key={c.id} className="rounded-lg border border-line p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold">{c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Generic Webhook'}</span>
@@ -536,21 +536,21 @@ export default function ProjectDetail() {
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-slate">
+              <p className="mt-1 text-xs text-ink-muted">
                 {c.fetchMode === 'poll'
                   ? `Polled ${timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)} · checked ${timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}`
                   : `Last check ${timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}`}
               </p>
               {c.status === 'pending' && (
-                <p className="mt-2 text-sm text-slate">
+                <p className="mt-2 text-sm text-ink-muted">
                   Waiting for first data — send a signed POST to <code className="break-all">{ingestUrlFor(c.id)}</code>, then this flips to connected automatically.
                 </p>
               )}
               {c.status === 'connected' && c.fetchMode === 'poll' && keys.length === 0 && (
-                <p className="mt-2 text-sm text-slate">Connected — waiting for the next poll (~30 min) to deliver the first points.</p>
+                <p className="mt-2 text-sm text-ink-muted">Connected — waiting for the next poll (~30 min) to deliver the first points.</p>
               )}
               {c.status === 'connected' && c.type === 'stripe' && keys.length === 0 && (
-                <p className="mt-2 text-sm text-slate">
+                <p className="mt-2 text-sm text-ink-muted">
                   Connected — instant events arrive once the endpoint below is registered in Stripe;
                   nightly totals reconcile automatically.
                 </p>
@@ -568,7 +568,7 @@ export default function ProjectDetail() {
         </ul>
 
         {attach === 'firebase' && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+          <div className="mt-3 rounded-lg bg-inset p-4">
             <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
             <div className="mt-2">
               <SaJsonUpload
@@ -591,7 +591,7 @@ export default function ProjectDetail() {
           </div>
         )}
         {attach === 'stripe' && !stripeEndpoint && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+          <div className="mt-3 rounded-lg bg-inset p-4">
             <p className="text-sm font-medium">
               Paste a <strong>restricted secret key</strong> from your Stripe dashboard
               (Developers → API keys, read access to charges, balance, payouts).{' '}
@@ -609,7 +609,7 @@ export default function ProjectDetail() {
               />
             </label>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
-              Webhook signing secret <span className="font-normal text-slate">(optional — enables instant events)</span>
+              Webhook signing secret <span className="font-normal text-ink-muted">(optional — enables instant events)</span>
               <input
                 className="input font-mono text-xs"
                 type="password"
@@ -629,8 +629,8 @@ export default function ProjectDetail() {
           </div>
         )}
         {stripeEndpoint && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate">Stripe webhook endpoint</p>
+          <div className="mt-3 rounded-lg bg-inset p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Stripe webhook endpoint</p>
             <code className="mt-1 block break-all text-sm">{stripeEndpoint}</code>
             <div className="mt-2 flex gap-2">
               <button className="btn-ghost" onClick={() => { void navigator.clipboard.writeText(stripeEndpoint) }}>
@@ -638,14 +638,14 @@ export default function ProjectDetail() {
               </button>
               <button className="btn-ghost" onClick={() => { setAttach(null); setStripeEndpoint(null); setStripeKey(''); setStripeWhSecret('') }}>Done</button>
             </div>
-            <p className="mt-2 text-sm text-slate">
+            <p className="mt-2 text-sm text-ink-muted">
               Register this under <strong>Stripe dashboard → Developers → Webhooks</strong> for instant
               charge and payout events. Without it, nightly totals still reconcile.
             </p>
           </div>
         )}
         {attach === 'supabase' && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+          <div className="mt-3 rounded-lg bg-inset p-4">
             <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
               Use the <strong>service_role</strong> secret — never the anon key.{' '}
               <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
@@ -682,7 +682,7 @@ export default function ProjectDetail() {
           </div>
         )}
         {attach === 'webhook' && (
-          <div className="mt-3 rounded-lg bg-ash-canvas p-4">
+          <div className="mt-3 rounded-lg bg-inset p-4">
             {!webhookSecret ? (
               <>
                 <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
@@ -696,7 +696,7 @@ export default function ProjectDetail() {
               </>
             ) : (
               <>
-                <p className="text-xs font-semibold uppercase text-slate">Signing secret — shown once</p>
+                <p className="text-xs font-semibold uppercase text-ink-muted">Signing secret — shown once</p>
                 <code className="mt-1 block break-all text-sm">{webhookSecret}</code>
                 <button className="btn-ghost mt-2" onClick={() => { void navigator.clipboard.writeText(webhookSecret) }}>Copy secret</button>
                 <button className="btn-ghost ml-2" onClick={() => { setAttach(null); setWebhookSecret(null) }}>Done</button>
@@ -717,7 +717,7 @@ export default function ProjectDetail() {
           </select>
         </div>
         {keys.length === 0 && (
-          <p className="mt-3 text-sm text-slate">
+          <p className="mt-3 text-sm text-ink-muted">
             {(connectors?.length ?? 0) === 0
               ? 'Connect a data source above to see charts here.'
               : 'Waiting for first data — charts appear automatically once events arrive.'}
@@ -730,21 +730,25 @@ export default function ProjectDetail() {
             const pts = data.flatMap((b) => b.points.map((pt) => ({ t: pt.time.slice(0, 10), v: pt.value })))
             const last = data.length ? data[data.length - 1].dailyAggregate?.last : undefined
             return (
-              <div key={id} className="rounded-lg border border-warm-stone p-3">
+              <div key={id} className="rounded-lg border border-line p-3">
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-semibold capitalize">{k.key.replace(/_/g, ' ')}</p>
                   {last !== undefined && <p className="text-xl font-semibold">{last.toLocaleString()}</p>}
                 </div>
-                <p className="text-xs text-slate">{k.metricType}</p>
+                <p className="text-xs text-ink-muted">{k.metricType}</p>
                 {pts.length === 0 ? (
-                  <p className="mt-2 text-sm text-slate">No points in range.</p>
+                  <p className="mt-2 text-sm text-ink-muted">No points in range.</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={180}>
                     <LineChart data={pts}>
-                      <XAxis dataKey="t" tick={{ fontSize: 10 }} minTickGap={40} />
-                      <YAxis tick={{ fontSize: 10 }} width={40} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="v" stroke="#151b31" strokeWidth={2} dot={false} />
+                      <XAxis dataKey="t" tick={{ fontSize: 10, fill: 'var(--color-ink-muted)' }} stroke="var(--color-line)" minTickGap={40} />
+                      <YAxis tick={{ fontSize: 10, fill: 'var(--color-ink-muted)' }} stroke="var(--color-line)" width={40} />
+                      <Tooltip
+                        contentStyle={{ background: 'var(--color-elevated)', border: '1px solid var(--color-line)', borderRadius: 8, color: 'var(--color-ink)' }}
+                        labelStyle={{ color: 'var(--color-ink)' }}
+                        itemStyle={{ color: 'var(--color-ink-muted)' }}
+                      />
+                      <Line type="monotone" dataKey="v" stroke="var(--color-ink)" strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -757,7 +761,7 @@ export default function ProjectDetail() {
       {/* 5. Alerts */}
       <section className="card">
         <h2 className="font-inter text-lg font-semibold">Alerts</h2>
-        <p className="mt-1 text-sm text-slate">
+        <p className="mt-1 text-sm text-ink-muted">
           Rules saved here switch on automatically once scheduled evaluation ships —
           nothing fires yet, but your thresholds will already be in place.
         </p>
@@ -765,13 +769,13 @@ export default function ProjectDetail() {
         {rules !== null && rules.length > 0 && (
           <ul className="mt-3 flex flex-col gap-2">
             {rules.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-warm-stone p-3">
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3">
                 <div className="flex items-center gap-2 text-sm">
                   <span className={r.status === 'active' ? 'badge badge-success' : 'badge'}>{r.status}</span>
                   <span className="font-medium">
                     {r.key} {r.condition} {r.threshold}
                   </span>
-                  <span className="text-slate">
+                  <span className="text-ink-muted">
                     over {r.windowMinutes >= 60 ? `${Math.floor(r.windowMinutes / 60)}h${r.windowMinutes % 60 ? ` ${r.windowMinutes % 60}m` : ''}` : `${r.windowMinutes}m`} → {r.channel} {r.channelTarget}
                   </span>
                 </div>
@@ -788,7 +792,7 @@ export default function ProjectDetail() {
           </ul>
         )}
 
-        <div className="mt-4 rounded-lg bg-ash-canvas p-4">
+        <div className="mt-4 rounded-lg bg-inset p-4">
           <p className="text-sm font-medium">New rule{keys.length === 0 ? ' — connect a data source first so there’s a metric to watch' : ''}</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm font-medium">
@@ -868,15 +872,15 @@ export default function ProjectDetail() {
         <h2 className="font-inter text-lg font-semibold">Recent</h2>
         <ul className="mt-2 flex flex-col gap-1 text-sm">
           {(connectors ?? []).map((c) => (
-            <li key={c.id} className="text-slate">
+            <li key={c.id} className="text-ink-muted">
               {c.type} · {c.status}
               {c.fetchMode === 'poll' && <> · polled {timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)}</>}
               <> · checked {timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)}</>
             </li>
           ))}
-          {(connectors?.length ?? 0) === 0 && <li className="text-slate">Nothing yet — activity from polls and webhook receipts will show here.</li>}
+          {(connectors?.length ?? 0) === 0 && <li className="text-ink-muted">Nothing yet — activity from polls and webhook receipts will show here.</li>}
         </ul>
-        <p className="mt-2 text-xs text-slate">Alert firings land here in Phase 2.</p>
+        <p className="mt-2 text-xs text-ink-muted">Alert firings land here in Phase 2.</p>
       </section>
 
       <Link to="/portfolio" className="text-link text-sm">← Back to portfolio</Link>

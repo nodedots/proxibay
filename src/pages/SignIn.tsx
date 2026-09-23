@@ -231,32 +231,32 @@ export default function SignIn() {
 
   if (pendingConsent) {
     return (
-      <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
+      <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-4">
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="consent-heading"
-          className="modal-pop w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
+          className="modal-pop w-full max-w-md rounded-2xl bg-elevated p-5 shadow-sm-2"
         >
           <button
             onClick={() => void onDecline().then(() => navigate('/'))}
             aria-label="Close and sign out"
             title="Close"
-            className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate hover:bg-ash-canvas hover:text-inkwell-navy"
+            className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted hover:bg-inset hover:text-ink"
           >
             ×
           </button>
-          <h1 id="consent-heading" className="font-inter text-2xl font-semibold text-inkwell-navy">
+          <h1 id="consent-heading" className="font-inter text-2xl font-semibold text-ink">
             One more step
           </h1>
-          <p className="mt-2 font-inter text-sm font-normal text-slate">
+          <p className="mt-2 font-inter text-sm font-normal text-ink-muted">
             Before you continue, please agree to how Proxibay handles your data.
           </p>
-          <label className="mt-4 flex cursor-pointer items-start gap-2 font-inter text-sm font-normal text-slate" htmlFor="auth-consent-late">
+          <label className="mt-4 flex cursor-pointer items-start gap-2 font-inter text-sm font-normal text-ink-muted" htmlFor="auth-consent-late">
             <input
               id="auth-consent-late"
               type="checkbox"
-              className="mt-[1px] h-[18px] w-[18px] shrink-0 accent-[#151b31]"
+              className="mt-[1px] h-[18px] w-[18px] shrink-0 accent-primary"
               checked={consent}
               onChange={(e) => setConsent(e.target.checked)}
             />
@@ -279,7 +279,7 @@ export default function SignIn() {
           <button className="btn-primary mt-4 w-full" disabled={busy || !consent} onClick={() => void onInterstitialContinue()}>
             {busy ? 'Saving…' : 'Agree and continue'}
           </button>
-          <p className="mt-4 text-center font-inter text-sm font-normal text-slate">
+          <p className="mt-4 text-center font-inter text-sm font-normal text-ink-muted">
             Changed your mind? <button className="text-link" onClick={() => void onDecline()}>Sign out</button>
           </p>
         </div>
@@ -288,18 +288,18 @@ export default function SignIn() {
   }
 
   return (
-    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-inkwell-navy/45 p-4">
+    <div className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center bg-backdrop p-4">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-heading"
-        className="modal-pop w-full max-w-md rounded-2xl bg-paper-white p-5 shadow-sm-2"
+        className="modal-pop w-full max-w-md rounded-2xl bg-elevated p-5 shadow-sm-2"
       >
         <button
           onClick={closeToHome}
           aria-label="Close and go back"
           title="Close"
-          className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-slate hover:bg-ash-canvas hover:text-inkwell-navy"
+          className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted hover:bg-inset hover:text-ink"
         >
           ×
         </button>
@@ -312,8 +312,8 @@ export default function SignIn() {
               onClick={() => switchMode(m)}
               className={`pb-1 font-inter text-base font-medium ${
                 mode === m
-                  ? 'border-b-2 border-inkwell-navy text-inkwell-navy'
-                  : 'text-slate hover:text-inkwell-navy'
+                  ? 'border-b-2 border-ink text-ink'
+                  : 'text-ink-muted hover:text-ink'
               }`}
             >
               {m === 'signin' ? 'Sign in' : 'Create account'}
@@ -321,10 +321,10 @@ export default function SignIn() {
           ))}
         </div>
 
-        <h1 id="auth-heading" className="mt-3 font-inter text-2xl font-semibold text-inkwell-navy">
+        <h1 id="auth-heading" className="mt-3 font-inter text-2xl font-semibold text-ink">
           {isSignup ? 'Create your account' : 'Sign in to Proxibay'}
         </h1>
-        <p className="mt-2 font-inter text-sm font-normal text-slate">
+        <p className="mt-2 font-inter text-sm font-normal text-ink-muted">
           {isSignup
             ? 'One account for your whole portfolio. It takes less than a minute.'
             : 'Enter your email and password to continue.'}
@@ -350,13 +350,13 @@ export default function SignIn() {
             </div>
 
             <div className="my-4 flex items-center gap-3" aria-hidden="true">
-              <span className="h-px flex-1 bg-warm-stone" />
-              <span className="font-inter text-xs font-medium text-slate">or</span>
-              <span className="h-px flex-1 bg-warm-stone" />
+              <span className="h-px flex-1 bg-line" />
+              <span className="font-inter text-xs font-medium text-ink-muted">or</span>
+              <span className="h-px flex-1 bg-line" />
             </div>
 
             <form onSubmit={(e) => void onEmailSubmit(e)} className="flex flex-col gap-4">
-              <label className="flex flex-col gap-1 font-inter text-sm font-medium text-inkwell-navy" htmlFor="auth-email">
+              <label className="flex flex-col gap-1 font-inter text-sm font-medium text-ink" htmlFor="auth-email">
                 Email
                 <input
                   id="auth-email"
@@ -369,7 +369,7 @@ export default function SignIn() {
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </label>
-              <label className="flex flex-col gap-1 font-inter text-sm font-medium text-inkwell-navy" htmlFor="auth-password">
+              <label className="flex flex-col gap-1 font-inter text-sm font-medium text-ink" htmlFor="auth-password">
                 Password
                 <input
                   id="auth-password"
@@ -385,11 +385,11 @@ export default function SignIn() {
               </label>
 
               {isSignup && (
-                <label className="flex cursor-pointer items-start gap-2 font-inter text-sm font-normal text-slate" htmlFor="auth-consent">
+                <label className="flex cursor-pointer items-start gap-2 font-inter text-sm font-normal text-ink-muted" htmlFor="auth-consent">
                   <input
                     id="auth-consent"
                     type="checkbox"
-                    className="mt-[1px] h-[18px] w-[18px] shrink-0 accent-[#151b31]"
+                    className="mt-[1px] h-[18px] w-[18px] shrink-0 accent-primary"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
                   />
@@ -416,7 +416,7 @@ export default function SignIn() {
               </button>
             </form>
 
-            <p className="mt-4 text-center font-inter text-sm font-normal text-slate">
+            <p className="mt-4 text-center font-inter text-sm font-normal text-ink-muted">
               {isSignup ? (
                 <>Already have an account? <button className="text-link" onClick={() => switchMode('signin')}>Sign in</button></>
               ) : (

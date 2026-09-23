@@ -6,6 +6,11 @@
  *  only tokens / component rules are applied.)
  */
 
+/* Dark mode is attribute-driven, never OS-default: `dark:` utilities apply
+   only under <html data-theme="dark">, which src/lib/theme.ts sets from the
+   user's explicit Light/Dark/System choice (fresh visitors always get Light). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 @theme {
   /* Colors */
   --color-inkwell-navy: #151b31;
@@ -71,11 +76,53 @@
   --shadow-sm-2: rgba(138, 133, 125, 0.2) 0px 1px 4px 0px;
 }
 
+/* Semantic theme tier — flips under [data-theme="dark"] (values in :root and
+   html[data-theme="dark"] below; derivation + contrast checks: DARK_MODE.md).
+   Components reference THESE; the palette tokens above stay fixed. */
+@theme inline {
+  --color-canvas: var(--theme-canvas);
+  --color-surface: var(--theme-surface);
+  --color-elevated: var(--theme-elevated);
+  --color-inset: var(--theme-inset);
+  --color-feature: var(--theme-feature);
+  --color-ink: var(--theme-ink);
+  --color-ink-secondary: var(--theme-ink-secondary);
+  --color-ink-muted: var(--theme-ink-muted);
+  --color-line: var(--theme-line);
+  --color-line-strong: var(--theme-line-strong);
+  --color-primary: var(--theme-primary);
+  --color-on-primary: var(--theme-on-primary);
+  --color-ring: var(--theme-ring);
+  --color-backdrop: var(--theme-backdrop);
+  --color-status-idle: var(--theme-status-idle);
+  --color-skeleton: var(--theme-skeleton);
+}
+
 :root {
+  color-scheme: light;
   --page-max-width: 1200px;
   --section-gap: 80px;
   --card-padding: 20px;
   --element-gap: 16px;
+
+  /* Theme tier — light values (DESIGN.md). Dark overrides below. */
+  --theme-canvas: #f2f2f2;        /* Ash Canvas */
+  --theme-surface: #ffffff;       /* Paper White */
+  --theme-elevated: #ffffff;      /* modals / menus (same as surface in light) */
+  --theme-inset: #f2f2f2;         /* recessed washes inside cards */
+  --theme-feature: #151b31;       /* the deliberately-dark feature card */
+  --theme-ink: #151b31;           /* Inkwell Navy — primary text */
+  --theme-ink-secondary: #333333; /* Graphite */
+  --theme-ink-muted: #6d6f75;     /* Slate */
+  --theme-line: #e8e7e5;          /* Warm Stone hairlines */
+  --theme-line-strong: #6d6f75;   /* Slate borders */
+  --theme-primary: #151b31;       /* primary button / chip fill */
+  --theme-on-primary: #ffffff;    /* text on primary fill */
+  --theme-ring: #151b31;          /* focus outlines */
+  --theme-backdrop: rgb(21 27 49 / 0.45);
+  --theme-status-idle: #6d6f75;
+  --theme-skeleton: #e8e7e5;
+  --theme-skeleton-sheen: rgba(255, 255, 255, 0.65);
 
   /* DESIGN.md spacing tokens (plain vars — see @theme note above) */
   --spacing-4: 4px;
@@ -93,11 +140,39 @@
   --spacing-120: 120px;
 }
 
+/* Dark theme — derived from the existing Inkwell Navy feature card
+   (rationale + contrast checks: DARK_MODE.md). */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-canvas: #0d1122;        /* Midnight Navy — deeper than Inkwell, not #000 */
+  --theme-surface: #151b31;       /* Inkwell Navy — the dark card IS the card tier */
+  --theme-elevated: #222b4b;      /* Raised Navy — modals/menus above cards */
+  --theme-inset: #12172e;         /* Deep Inset — recessed washes */
+  --theme-feature: #222b4b;       /* feature card bumps up a tier to stay distinct */
+  --theme-ink: #ffffff;           /* Paper White */
+  --theme-ink-secondary: #b9bbc1; /* Paper @ 70% on Inkwell (matches dark-card pattern) */
+  --theme-ink-muted: #9698a2;     /* Paper @ 55% on Inkwell */
+  --theme-line: #31364a;          /* white @ 12% on navy */
+  --theme-line-strong: #494d5e;   /* white @ 22% on navy */
+  --theme-primary: #ffffff;       /* primary buttons invert: paper fill… */
+  --theme-on-primary: #151b31;    /* …with navy text (navy buttons would vanish) */
+  --theme-ring: #ffffff;
+  --theme-backdrop: rgb(0 0 0 / 0.6);
+  --theme-status-idle: #9698a2;   /* slate dots are only ~3:1 on navy — brighten */
+  --theme-skeleton: #222b4b;
+  --theme-skeleton-sheen: rgba(255, 255, 255, 0.08);
+  /* Warm-stone shadow tints vanish on navy — true black carries the depth. */
+  --shadow-subtle: rgba(0, 0, 0, 0.35) 0px 1px 3px 0px, rgba(0, 0, 0, 0.25) 0px 1px 2px 0px;
+  --shadow-sm: rgba(0, 0, 0, 0.4) 0px 4px 6px -1px, rgba(0, 0, 0, 0.3) 0px 2px 4px -1px;
+  --shadow-sm-2: rgba(0, 0, 0, 0.45) 0px 1px 4px 0px;
+}
+
 html {
   font-family: var(--font-inter);
-  background-color: var(--color-ash-canvas);
-  color: var(--color-inkwell-navy);
+  background-color: var(--theme-canvas);
+  color: var(--theme-ink);
   letter-spacing: -0.01em;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 body {
@@ -122,8 +197,8 @@ body {
    on a .badge) can still override them — unlayered CSS beats layered. */
 @layer components {
 .btn-primary {
-  background-color: var(--color-inkwell-navy);
-  color: var(--color-paper-white);
+  background-color: var(--theme-primary);
+  color: var(--theme-on-primary);
   font-size: 16px;
   font-weight: 500;
   border-radius: 8px;
@@ -149,8 +224,8 @@ body {
 
 .btn-ghost {
   background-color: transparent;
-  border: 1px solid var(--color-warm-stone);
-  color: var(--color-inkwell-navy);
+  border: 1px solid var(--theme-line);
+  color: var(--theme-ink);
   font-size: 16px;
   font-weight: 500;
   border-radius: 8px;
@@ -158,19 +233,19 @@ body {
   transition: border-color 150ms ease, background-color 150ms ease;
 }
 .btn-ghost:hover {
-  border-color: var(--color-slate);
-  background-color: var(--color-paper-white);
+  border-color: var(--theme-line-strong);
+  background-color: var(--theme-surface);
 }
 .btn-ghost:active {
   transform: translateY(1px);
 }
 .btn-ghost:focus-visible {
-  outline: 2px solid var(--color-inkwell-navy);
+  outline: 2px solid var(--theme-ring);
   outline-offset: 2px;
 }
 
 .card {
-  background-color: var(--color-paper-white);
+  background-color: var(--theme-surface);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-sm-2);
@@ -195,8 +270,8 @@ body {
   padding: 8px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-inkwell-navy);
-  background-color: var(--color-ash-canvas);
+  color: var(--theme-ink);
+  background-color: var(--theme-inset);
 }
 .badge-success {
   background-color: var(--color-mint-pulse);
@@ -208,24 +283,30 @@ body {
   background-color: var(--color-coral-emphasis);
   color: var(--color-paper-white);
 }
+/* Pastel fills keep navy text in BOTH themes — Paper White on Mint/Butter
+   would fail contrast once .badge's ink color flips white in dark mode. */
+.badge-success,
+.badge-highlight {
+  color: #151b31;
+}
 
 .input {
   width: 100%;
-  border: 1px solid var(--color-slate);
+  border: 1px solid var(--theme-line-strong);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 16px;
-  background: var(--color-paper-white);
-  color: var(--color-inkwell-navy);
+  background: var(--theme-elevated);
+  color: var(--theme-ink);
 }
 .input::placeholder {
-  color: var(--color-slate);
+  color: var(--theme-ink-muted);
   opacity: 0.7;
 }
 .input:focus {
-  outline: 2px solid var(--color-inkwell-navy);
+  outline: 2px solid var(--theme-ring);
   outline-offset: 1px;
-  border-color: var(--color-inkwell-navy);
+  border-color: var(--theme-ring);
 }
 .input {
   transition: border-color 150ms ease, box-shadow 150ms ease;
@@ -236,7 +317,7 @@ body {
 
 .text-link {
   font-weight: 500;
-  color: var(--color-inkwell-navy);
+  color: var(--theme-ink);
   transition: color 150ms ease;
   border-radius: 4px;
 }
@@ -244,7 +325,7 @@ body {
   text-decoration: underline;
 }
 .text-link:focus-visible {
-  outline: 2px solid var(--color-inkwell-navy);
+  outline: 2px solid var(--theme-ring);
   outline-offset: 2px;
 }
 .text-link-emphasis {
@@ -255,20 +336,20 @@ body {
    Inkwell Navy on hover, no underline. */
 .nav-link {
   font-weight: 500;
-  color: var(--color-slate);
+  color: var(--theme-ink-muted);
   transition: color 150ms ease;
   border-radius: 4px;
 }
 .nav-link:hover {
-  color: var(--color-inkwell-navy);
+  color: var(--theme-ink);
   text-decoration: none;
 }
 .nav-link:focus-visible {
-  outline: 2px solid var(--color-inkwell-navy);
+  outline: 2px solid var(--theme-ring);
   outline-offset: 2px;
 }
 .nav-link-active {
-  color: var(--color-inkwell-navy);
+  color: var(--theme-ink);
 }
 
 /* Proxibay status colors mapped onto system palette (no new hues):
@@ -289,21 +370,21 @@ body {
   background-color: var(--color-mint-pulse);
 }
 .status-gray {
-  background-color: var(--color-slate);
+  background-color: var(--theme-status-idle);
 }
 
 /* Loading skeletons: warm shimmer blocks. */
 .skeleton {
   position: relative;
   overflow: hidden;
-  background-color: var(--color-warm-stone);
+  background-color: var(--theme-skeleton);
   border-radius: 8px;
 }
 .skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.65) 50%, transparent 80%);
+  background: linear-gradient(100deg, transparent 20%, var(--theme-skeleton-sheen) 50%, transparent 80%);
   animation: shimmer 1.4s infinite;
 }
 @keyframes shimmer {

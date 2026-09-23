@@ -7,12 +7,12 @@ import { Code } from '../components/ConnectDocs'
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-4">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-inkwell-navy font-inter text-base font-semibold text-paper-white">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-inter text-base font-semibold text-on-primary">
         {n}
       </span>
       <div>
         <h3 className="font-inter text-subheading font-semibold">{title}</h3>
-        <div className="mt-1 flex flex-col gap-2 text-body text-slate">{children}</div>
+        <div className="mt-1 flex flex-col gap-2 text-body text-ink-muted">{children}</div>
       </div>
     </div>
   )
@@ -22,7 +22,7 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
     <div className="card">
       <h3 className="font-inter text-body font-semibold">{q}</h3>
-      <div className="mt-1 text-body-sm text-slate">{children}</div>
+      <div className="mt-1 text-body-sm text-ink-muted">{children}</div>
     </div>
   )
 }
@@ -37,19 +37,19 @@ export default function Docs() {
   }, [hash])
 
   return (
-    <div className="min-h-screen bg-ash-canvas font-inter text-inkwell-navy">
+    <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="docs" />
 
       <main className="mx-auto max-w-2xl px-6 pb-20 pt-10">
         <h1 className="font-grifter text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Up and running <span className="text-coral-emphasis">in minutes.</span>
         </h1>
-        <p className="mt-4 text-body-lg text-slate">
+        <p className="mt-4 text-body-lg text-ink-muted">
           Concepts first, then the three-step quickstart. No agents to install, no code to rewrite.
         </p>
 
         <nav aria-label="On this page" className="card mt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate">On this page</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">On this page</p>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 font-inter text-sm font-medium">
             <a href="#concepts" className="text-link">Core concepts</a>
             <a href="#quickstart" className="text-link">Quickstart</a>
@@ -63,7 +63,7 @@ export default function Docs() {
         <div className="mt-4 flex flex-col gap-3">
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Project — your catalog entry</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               A project is the thing you run: a name plus whatever context you care about —
               description, stack tags, repo and live links, environment. Only the name is
               required. The catalog never gates monitoring; it's the label everything else hangs off.
@@ -71,7 +71,7 @@ export default function Docs() {
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Connector — how data gets in</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               A connector authenticates against one of your backends and translates what it finds
               into a common shape. Poll connectors (Firebase, Stripe reconciliation, Supabase) fetch
               on a schedule; push connectors (generic webhook, Stripe events) receive data your
@@ -81,7 +81,7 @@ export default function Docs() {
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Metric — what you actually read</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               Every data point lands in one of five buckets: users, errors, revenue, uptime, or
               custom. Points are stored as daily aggregates per project, which is why a year of
               charts loads as fast as a week. Cards show the latest numbers; detail pages chart
@@ -93,7 +93,7 @@ export default function Docs() {
         <h2 id="quickstart" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Quickstart</h2>
 
         <h3 className="mt-6 font-inter text-body font-semibold">Run your own copy</h3>
-        <div className="mt-3 flex flex-col gap-3 text-body text-slate">
+        <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
           <p>
             Everything below runs on your machine. You need Node 20+ and a Firebase
             project with Authentication, Firestore, and Functions enabled.
@@ -105,7 +105,7 @@ cd my-proxibay
 npm install
 cp .env.example .env   # paste your Firebase web config`}</Code>
         </div>
-        <div className="mt-3 flex flex-col gap-3 text-body text-slate">
+        <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
           <p>
             Then point the app at your Firebase project: create it in the{' '}
             <strong>Firebase console</strong>, enable <strong>Email/Password</strong>{' '}
@@ -147,7 +147,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
         <div className="mt-4 flex flex-col gap-3">
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Firebase</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               Paste a service-account key. Proxibay checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
               keys. <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
@@ -155,7 +155,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Generic webhook</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               For anything else — Express, Django, Rails, a cron job. We give you a URL
               and a signing secret; your backend signs each event and posts it. The
               connector flips to connected on the first verified event. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
@@ -163,7 +163,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Stripe</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               Paste a restricted secret key and Proxibay checks it on the spot. Register
               the endpoint URL we give you in your Stripe dashboard for instant charge and
               payout events — or skip it and get nightly revenue totals instead.{' '}
@@ -172,7 +172,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Supabase</h3>
-            <p className="mt-1 text-body-sm text-slate">
+            <p className="mt-1 text-body-sm text-ink-muted">
               Paste your project URL plus the service_role secret and Proxibay checks it
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
@@ -183,7 +183,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
         </div>
 
         <h2 id="self-hosting" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Self-hosting & contributing</h2>
-        <div className="mt-4 flex flex-col gap-3 text-body text-slate">
+        <div className="mt-4 flex flex-col gap-3 text-body text-ink-muted">
           <p>
             Proxibay is MIT licensed and lives at{' '}
             <a

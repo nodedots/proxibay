@@ -84,19 +84,19 @@ export default function SiteFooter() {
 
   return (
     <>
-      <footer className="border-t border-warm-stone">
+      <footer className="border-t border-line">
         <div className="mx-auto max-w-[1200px] px-6 py-16">
           <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-10">
             {/* Brand block — more visual weight than the link columns. */}
             <div>
               <Logo />
-              <p className="mt-4 max-w-xs font-inter text-sm text-slate">
+              <p className="mt-4 max-w-xs font-inter text-sm text-ink-muted">
                 Give every project a home and a heartbeat — health, users, and
                 revenue in one place.
               </p>
               <button
                 onClick={() => setDevOpen(true)}
-                className="text-link mt-4 font-inter text-sm font-medium text-inkwell-navy"
+                className="text-link mt-4 font-inter text-sm font-medium text-ink"
                 title="About the developer"
               >
                 Developed by NodeDots
@@ -111,7 +111,7 @@ export default function SiteFooter() {
                     rel="noreferrer"
                     aria-label={`Proxibay on ${label}`}
                     title={`Proxibay on ${label}`}
-                    className="rounded-md p-2 text-slate transition-colors duration-150 hover:bg-paper-white hover:text-inkwell-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-inkwell-navy"
+                    className="rounded-md p-2 text-ink-muted transition-colors duration-150 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     <Icon size={16} />
                   </a>
@@ -121,7 +121,7 @@ export default function SiteFooter() {
 
             {GROUPS.map((group) => (
               <nav key={group.title} aria-label={`Footer — ${group.title}`}>
-                <p className="font-inter text-xs font-semibold uppercase tracking-wider text-slate">
+                <p className="font-inter text-xs font-semibold uppercase tracking-wider text-ink-muted">
                   {group.title}
                 </p>
                 <ul className="mt-4 flex flex-col gap-3">
