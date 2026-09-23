@@ -1,6 +1,6 @@
 import { auth } from '../firebase'
 
-const PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'proxibay-dev'
+const PROJECT = import.meta.env.VITE_FIREBASE_PROJECT_ID ?? 'stackduck-dev'
 const BASE =
   import.meta.env.VITE_FUNCTIONS_BASE ??
   `http://localhost:5001/${PROJECT}/europe-west1/api`
@@ -28,7 +28,7 @@ export function connectErrorMessage(err: unknown): string {
   if (err instanceof ApiError) {
     return err.message
   }
-  return 'Couldn’t reach Proxibay’s servers. Check your connection and try again — if you self-host, the API backend must be deployed first (Auth + database alone aren’t enough for connectors).'
+  return 'Couldn’t reach Stackduck’s servers. Check your connection and try again — if you self-host, the API backend must be deployed first (Auth + database alone aren’t enough for connectors).'
 }
 
 async function token(): Promise<string> {

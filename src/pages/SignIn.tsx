@@ -44,7 +44,7 @@ function GitHubIcon() {
 /** Friendly copy for auth failures — never leaks provider internals. */
 function friendlyError(code: string, mode: Mode, detail = ''): string {
   if (/invalid.scope/i.test(code) || /invalid.scope/i.test(detail)) {
-    return 'Google hasn’t enabled this level of access for Proxibay yet (verification is pending). Sign in with email or GitHub instead — importing can wait.'
+    return 'Google hasn’t enabled this level of access for Stackduck yet (verification is pending). Sign in with email or GitHub instead — importing can wait.'
   }
   switch (code) {
     case 'auth/email-already-in-use':
@@ -250,7 +250,7 @@ export default function SignIn() {
             One more step
           </h1>
           <p className="mt-2 font-inter text-sm font-normal text-ink-muted">
-            Before you continue, please agree to how Proxibay handles your data.
+            Before you continue, please agree to how Stackduck handles your data.
           </p>
           <label className="mt-4 flex cursor-pointer items-start gap-2 font-inter text-sm font-normal text-ink-muted" htmlFor="auth-consent-late">
             <input
@@ -322,7 +322,7 @@ export default function SignIn() {
         </div>
 
         <h1 id="auth-heading" className="mt-3 font-inter text-2xl font-semibold text-ink">
-          {isSignup ? 'Create your account' : 'Sign in to Proxibay'}
+          {isSignup ? 'Create your account' : 'Sign in to Stackduck'}
         </h1>
         <p className="mt-2 font-inter text-sm font-normal text-ink-muted">
           {isSignup

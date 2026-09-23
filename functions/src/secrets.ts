@@ -12,29 +12,29 @@ const client = new SecretManagerServiceClient()
 const isEmulator = !!process.env.FIRESTORE_EMULATOR_HOST
 
 function secretName(connectorId: string, version = 'latest'): string {
-  const project = process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'proxibay-dev'
-  return `projects/${project}/secrets/proxibay-${connectorId}/versions/${version}`
+  const project = process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'stackduck-dev'
+  return `projects/${project}/secrets/stackduck-${connectorId}/versions/${version}`
 }
 
 function emulatorRef(connectorId: string): string {
-  return `emulator:_secrets/proxibay-${connectorId}`
+  return `emulator:_secrets/stackduck-${connectorId}`
 }
 
 export async function storeSecret(connectorId: string, payload: string): Promise<string> {
   if (isEmulator) {
     const ref = emulatorRef(connectorId)
-    await getFirestore().doc(`_secrets/proxibay-${connectorId}`).set({
+    await getFirestore().doc(`_secrets/stackduck-${connectorId}`).set({
       payload,
       updatedAt: new Date(),
     })
     return ref
   }
-  const project = process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'proxibay-dev'
+  const project = process.env.GCLOUD_PROJECT ?? process.env.GCP_PROJECT ?? 'stackduck-dev'
   const parent = `projects/${project}`
   try {
     await client.createSecret({
       parent,
-      secretId: `proxibay-${connectorId}`,
+      secretId: `stackduck-${connectorId}`,
       secret: { replication: { automatic: {} } },
     })
   } catch (e: unknown) {
@@ -42,7 +42,7 @@ export async function storeSecret(connectorId: string, payload: string): Promise
     if (typeof e !== 'object' || (e as { code?: number }).code !== 6) throw e
   }
   const [version] = await client.addSecretVersion({
-    parent: `${parent}/secrets/proxibay-${connectorId}`,
+    parent: `${parent}/secrets/stackduck-${connectorId}`,
     payload: { data: Buffer.from(payload, 'utf8') },
   })
   return version.name as string
@@ -64,7 +64,7 @@ export function generateSigningSecret(): string {
   return `whsec_${crypto.randomBytes(32).toString('hex')}`
 }
 
-/** HMAC-SHA256 hex of raw body — must match X-Proxibay-Signature (timing-safe). */
+/** HMAC-SHA256 hex of raw body — must match X-Stackduck-Signature (timing-safe). */
 export function verifySignature(rawBody: Buffer, secret: string, signature: string): boolean {
   const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
   const a = Buffer.from(expected, 'utf8')

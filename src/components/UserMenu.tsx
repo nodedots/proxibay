@@ -65,7 +65,7 @@ export default function UserMenu({ user }: { user: User }) {
             <UserAvatar user={user} size={36} />
             <div className="min-w-0">
               <p className="truncate font-inter text-sm font-semibold text-ink">
-                {user.displayName || 'Proxibay user'}
+                {user.displayName || 'Stackduck user'}
               </p>
               <p className="truncate font-inter text-xs text-ink-muted">{user.email}</p>
             </div>

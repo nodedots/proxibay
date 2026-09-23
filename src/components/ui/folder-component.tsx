@@ -44,9 +44,22 @@ const themes = {
     cardLineFill: "#D4D4D4",
     cardInsetColor: "0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0",
   },
-  // Proxibay re-skin (DESIGN.md): paper-white body, inkwell-navy flap,
+  // Stackduck theme (DESIGN.md): paper-white body, inkwell-navy flap,
   // warm-stone strokes, slate card lines. Pair with the `accent` prop for
   // the status dot — the single Coral-or-state accent per visual zone.
+  stackduck: {
+    backFill: "#ffffff",
+    backInsetColor: "0 0 0 0 0.43 0 0 0 0 0.44 0 0 0 0 0.46 0 0 0 0.25 0",
+    backInsetShadow: "inset 0 0 6px 2px rgba(109,111,117,0.25)",
+    flapFill: "#151b31",
+    flapFillOpacity: 0.94,
+    flapStroke: "#e8e7e5",
+    flapInsetColor: "0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.12 0",
+    cardFill: "#ffffff",
+    cardStroke: "#e8e7e5",
+    cardLineFill: "#6d6f75",
+    cardInsetColor: "0 0 0 0 0.91 0 0 0 0 0.9 0 0 0 0 0.89 0 0 0 0.35 0",
+  },
   proxibay: {
     backFill: "#ffffff",
     backInsetColor: "0 0 0 0 0.43 0 0 0 0 0.44 0 0 0 0 0.46 0 0 0 0.25 0",
@@ -69,7 +82,7 @@ const sizeScales = {
 } as const;
 
 type FolderComponentProps = Omit<React.ComponentProps<"div">, "color"> & {
-  color?: "black" | "white" | "blue" | "proxibay";
+  color?: "black" | "white" | "blue" | "stackduck" | "proxibay";
   size?: "sm" | "md" | "lg";
   /** Optional status-dot fill (e.g. a project health color) drawn on the flap. */
   accent?: string;

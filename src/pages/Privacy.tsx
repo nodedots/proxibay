@@ -11,7 +11,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /**
- * Standard-form Privacy Policy for Proxibay (early-stage SaaS).
+ * Standard-form Privacy Policy for Stackduck (early-stage SaaS).
  * Starting template — have it reviewed by a lawyer before real users sign up.
  */
 export default function Privacy() {
@@ -22,9 +22,9 @@ export default function Privacy() {
         <h1 className="font-inter text-2xl font-semibold text-ink">Privacy Policy</h1>
         <p className="mt-1 font-inter text-sm text-ink-muted">Last updated: September 2026</p>
 
-        <Section title="What Proxibay is">
+        <Section title="What Stackduck is">
           <p>
-            Proxibay is a monitoring and catalog service for software projects. You register
+            Stackduck is a monitoring and catalog service for software projects. You register
             the projects you run, optionally connect them to data sources, and view their
             health, usage, and revenue in one portfolio. This policy explains what data we
             collect, why, and what we never do with it.
@@ -102,7 +102,7 @@ export default function Privacy() {
           <p>
             If this policy changes in a way that affects your rights, we will update the
             date above and, where practical, notify you in the product. Continued use of
-            Proxibay after a change takes effect means you accept the updated policy.
+            Stackduck after a change takes effect means you accept the updated policy.
           </p>
         </Section>
 

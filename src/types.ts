@@ -1,5 +1,5 @@
 /**
- * Proxibay data layer — mirrors Data Model & Schema Spec exactly.
+ * Stackduck data layer — mirrors Data Model & Schema Spec exactly.
  * Single source of truth shared by frontend + Cloud Functions
  * (functions/ has its own copy until a monorepo workspace is set up).
  */

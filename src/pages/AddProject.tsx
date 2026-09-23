@@ -262,7 +262,7 @@ export default function AddProject() {
                 <p className="mt-3 text-sm text-ink-muted">
                   Register this URL under <strong>Stripe dashboard → Developers → Webhooks</strong> (listen
                   to charges + payouts) and paste that endpoint's signing secret when connecting — or leave
-                  it out and Proxibay reconciles nightly totals instead.
+                  it out and Stackduck reconciles nightly totals instead.
                 </p>
               </div>
               {step2Error && <p className="mt-2 text-sm text-coral-emphasis">{step2Error}</p>}

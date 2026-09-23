@@ -11,7 +11,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /**
- * Standard-form Terms of Service for Proxibay (early-stage SaaS).
+ * Standard-form Terms of Service for Stackduck (early-stage SaaS).
  * Starting template — have it reviewed by a lawyer before real users sign up.
  */
 export default function Terms() {
@@ -24,7 +24,7 @@ export default function Terms() {
 
         <Section title="The service">
           <p>
-            Proxibay provides project cataloging, metric collection through connectors,
+            Stackduck provides project cataloging, metric collection through connectors,
             dashboards, and alerting. The service is under active development: features may
             change, and metrics are informational — they are not a substitute for your own
             monitoring, backups, or incident response.
@@ -33,14 +33,14 @@ export default function Terms() {
 
         <Section title="Your account">
           <p>
-            You need an account to use Proxibay. Keep your credentials private and do not
+            You need an account to use Stackduck. Keep your credentials private and do not
             share your account. You are responsible for everything done under your account,
             including projects registered and connectors attached with it.
           </p>
         </Section>
 
         <Section title="Acceptable use">
-          <p>Connect only services you own or are authorized to access. Do not use Proxibay to:</p>
+          <p>Connect only services you own or are authorized to access. Do not use Stackduck to:</p>
           <ul className="list-disc pl-5">
             <li>collect data you have no right to collect;</li>
             <li>probe, disrupt, or abuse third-party services through connectors or webhooks;</li>
@@ -51,7 +51,7 @@ export default function Terms() {
 
         <Section title="Your content">
           <p>
-            You keep ownership of everything you put into Proxibay — project details, metrics,
+            You keep ownership of everything you put into Stackduck — project details, metrics,
             and credentials. You grant us only the limited right to store and process that
             content in order to operate the service (for example, running scheduled metric
             polls you configured, or sending alerts you set up).
@@ -70,7 +70,7 @@ export default function Terms() {
         <Section title="Availability and liability">
           <p>
             We aim for reliable service but make no guarantees about uptime, data freshness,
-            or alert delivery. To the maximum extent permitted by law, Proxibay is provided
+            or alert delivery. To the maximum extent permitted by law, Stackduck is provided
             “as is,” and we are not liable for indirect or consequential losses — including
             downtime, missed alerts, or decisions made on the basis of displayed metrics.
           </p>
@@ -79,7 +79,7 @@ export default function Terms() {
         <Section title="Changes and termination">
           <p>
             We may update these terms; material changes take effect after notice in the
-            product, and continued use means acceptance. You may stop using Proxibay at any
+            product, and continued use means acceptance. You may stop using Stackduck at any
             time. We may suspend or terminate accounts for violations of these terms.
           </p>
         </Section>

@@ -14,7 +14,7 @@ export default function License() {
         <div className="card mt-8">
           <div className="flex flex-col gap-3 font-inter text-sm leading-relaxed text-ink-secondary">
             <p>
-              Proxibay is MIT licensed. In plain language: you can <strong>use it, modify
+              Stackduck is MIT licensed. In plain language: you can <strong>use it, modify
               it, self-host it, and build on it</strong> — including commercially — as long
               as you keep the copyright notice in copies of the code.
             </p>
@@ -22,7 +22,7 @@ export default function License() {
               No warranty, as open-source licenses go: the software is provided as-is. Read
               the full text in the repo:{' '}
               <a
-                href="https://github.com/nodedots/proxibay/blob/main/LICENSE"
+                href="https://github.com/nodedots/stackduck/blob/main/LICENSE"
                 target="_blank"
                 rel="noreferrer"
                 className="text-link-emphasis text-link"

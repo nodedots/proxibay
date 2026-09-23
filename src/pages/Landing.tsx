@@ -4,7 +4,7 @@ import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import Folder from '../components/ui/folder-component'
 
-const INSTALL_CMD = 'npx degit nodedots/proxibay my-proxibay'
+const INSTALL_CMD = 'npx degit nodedots/stackduck my-stackduck'
 
 /** Demo projects cycled through the landing folder demo. */
 const DEMO_PROJECTS = [
@@ -33,7 +33,7 @@ function PortfolioFolderDemo() {
 
   return (
     <div className="flex w-60 flex-col items-center gap-6">
-      <Folder color="proxibay" size="sm" autoPlay accent={project.accent} />
+      <Folder color="stackduck" size="sm" autoPlay accent={project.accent} />
       <div
         key={active}
         className="fade-swap flex items-center gap-2 rounded-full bg-paper-white py-1.5 pl-3 pr-4 shadow-sm-2"
@@ -116,7 +116,7 @@ export default function Landing() {
           </span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-muted">
-          Proxibay gives every project a home and a heartbeat. See health, users,
+          Stackduck gives every project a home and a heartbeat. See health, users,
           and revenue across everything you run — in one place.
         </p>
         <Link to="/signin" className="btn-primary mt-8 inline-block">
@@ -182,7 +182,7 @@ export default function Landing() {
             <h3 className="mt-3 font-inter text-subheading font-semibold">Know before you go looking.</h3>
             <p className="mt-2 text-body text-ink-muted">
               Set a threshold on anything you track. When something breaks,
-              Proxibay taps you on the shoulder — email or webhook, your call.
+              Stackduck taps you on the shoulder — email or webhook, your call.
             </p>
           </div>
         </div>

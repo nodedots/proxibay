@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { deleteUser, signOut, updateProfile, type User } from 'firebase/auth'
 import { auth } from '../firebase'
@@ -164,7 +164,7 @@ export default function Account() {
       </p>
 
       <div className="mt-8 flex flex-col gap-6">
-        <Section title="Profile" blurb="How you appear across Proxibay. Your email comes from your sign-in provider and can’t be changed here.">
+        <Section title="Profile" blurb="How you appear across Stackduck. Your email comes from your sign-in provider and can’t be changed here.">
           <div className="flex items-center gap-4">
             <UserAvatar user={{ displayName: name, email: user.email, photoURL: photoUrl }} size={56} />
             <div className="min-w-0">
@@ -269,7 +269,7 @@ export default function Account() {
                 <legend className="sr-only">Email notifications</legend>
                 <Toggle
                   label="Product updates"
-                  hint="Occasional announcements about new Proxibay features."
+                  hint="Occasional announcements about new Stackduck features."
                   checked={prefs.emailProductUpdates}
                   onChange={(v) => setPrefs((p) => ({ ...p, emailProductUpdates: v }))}
                 />

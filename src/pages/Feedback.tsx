@@ -59,7 +59,7 @@ export default function Feedback() {
               <p className="mt-1 font-inter text-sm text-ink-muted">
                 For anything urgent or trackable,{' '}
                 <a
-                  href="https://github.com/nodedots/proxibay/issues"
+                  href="https://github.com/nodedots/stackduck/issues"
                   target="_blank"
                   rel="noreferrer"
                   className="text-link-emphasis text-link"

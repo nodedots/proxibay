@@ -11,7 +11,7 @@ export default function Support() {
           Help, <span className="text-coral-emphasis">human included.</span>
         </h1>
         <p className="mt-4 text-body-lg text-ink-muted">
-          Proxibay is built and maintained by one person. No support tiers, no bots —
+          Stackduck is built and maintained by one person. No support tiers, no bots —
           here's how to actually reach help.
         </p>
 
@@ -20,7 +20,7 @@ export default function Support() {
             <h2 className="font-inter text-body font-semibold">Found a bug? Open an issue.</h2>
             <p className="mt-1 text-body-sm text-ink-muted">
               <a
-                href="https://github.com/nodedots/proxibay/issues"
+                href="https://github.com/nodedots/stackduck/issues"
                 target="_blank"
                 rel="noreferrer"
                 className="text-link-emphasis text-link"

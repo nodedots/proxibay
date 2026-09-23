@@ -125,11 +125,11 @@ connectorsRouter.post('/supabase', async (req: AuthedRequest, res) => {
     createdAt: now,
   }
   await projectRef.collection('connectors').doc(id).set(connector)
-  const base = process.env.PUBLIC_API_BASE ?? 'https://europe-west1-proxibay-dev.cloudfunctions.net/api'
+  const base = process.env.PUBLIC_API_BASE ?? 'https://europe-west1-stackduck-dev.cloudfunctions.net/api'
   const ingestUrl = `${base}/v1/ingest/${id}`
   const snippet = {
-    node: `const crypto = require('crypto');\nconst body = JSON.stringify({ metricType: 'user_metrics', key: 'signups', value: 3 });\nconst sig = crypto.createHmac('sha256', '${signingSecret}').update(body).digest('hex');\nawait fetch('${ingestUrl}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Proxibay-Signature': sig }, body });`,
-    curl: `curl -X POST ${ingestUrl} -H 'Content-Type: application/json' -H "X-Proxibay-Signature: $(echo -n '<body>' | openssl dgst -sha256 -hmac '${signingSecret}')" -d '<body>'`,
+    node: `const crypto = require('crypto');\nconst body = JSON.stringify({ metricType: 'user_metrics', key: 'signups', value: 3 });\nconst sig = crypto.createHmac('sha256', '${signingSecret}').update(body).digest('hex');\nawait fetch('${ingestUrl}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Stackduck-Signature': sig }, body });`,
+    curl: `curl -X POST ${ingestUrl} -H 'Content-Type: application/json' -H "X-Stackduck-Signature: $(echo -n '<body>' | openssl dgst -sha256 -hmac '${signingSecret}')" -d '<body>'`,
   }
   return res.status(201).json({ connector, ingestUrl, signingSecret, snippet })
 })
@@ -169,7 +169,7 @@ connectorsRouter.post('/stripe', async (req: AuthedRequest, res) => {
     createdAt: now,
   }
   await projectRef.collection('connectors').doc(id).set(connector)
-  const base = process.env.PUBLIC_API_BASE ?? 'https://europe-west1-proxibay-dev.cloudfunctions.net/api'
+  const base = process.env.PUBLIC_API_BASE ?? 'https://europe-west1-stackduck-dev.cloudfunctions.net/api'
   const stripeEndpoint = `${base}/v1/stripe/${id}`
   if (!healthCheck.ok) {
     return res.status(422).json({

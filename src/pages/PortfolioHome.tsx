@@ -78,7 +78,7 @@ export default function PortfolioHome() {
           code === 'no-token'
             ? 'We couldn’t read your account list from that sign-in. Try again.'
             : /invalid.scope/i.test(code) || /invalid.scope/i.test(detail)
-              ? 'Google hasn’t enabled this level of access for Proxibay yet (verification is pending). Email or GitHub sign-in still works — importing can wait.'
+              ? 'Google hasn’t enabled this level of access for Stackduck yet (verification is pending). Email or GitHub sign-in still works — importing can wait.'
               : 'Couldn’t load anything to import. Check the connection and try again.',
       })
     }
@@ -211,7 +211,7 @@ export default function PortfolioHome() {
         {filtered.map((e) => (
           <Link key={e.project.id} to={`/projects/${e.project.id}`} className="card card-hover" aria-label={`${e.project.name} — status ${e.homeStatus}`}>
             <div className="flex justify-center" aria-hidden="true">
-              <Folder color="proxibay" size="sm" accent={STATUS_FILL[e.homeStatus]} />
+              <Folder color="stackduck" size="sm" accent={STATUS_FILL[e.homeStatus]} />
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span className={STATUS_DOT[e.homeStatus]} title={e.homeStatus} />

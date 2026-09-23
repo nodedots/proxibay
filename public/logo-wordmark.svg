@@ -1,7 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 40" fill="none">
   <rect width="40" height="40" rx="10" fill="#151b31"/>
-  <path d="M30.875 17.6875 A11.25 11.25 0 1 1 21 9.4375" stroke="#f2f2f2" stroke-width="4.0625" stroke-linecap="round" fill="none"/>
-  <circle cx="20" cy="20.625" r="5.3125" fill="#f2f2f2"/>
-  <circle cx="27.25" cy="12" r="3.125" fill="#ff5858"/>
-  <text x="52" y="27" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600" fill="#151b31" letter-spacing="-0.01em">Proxibay</text>
+  <g transform="scale(0.625)">
+    <path d="M15 44C15 44 14 36 21 34C24 33 25 30 25 25C25 18 29 14 35 14C41 14 43 18 43 21C47 21 52 22 53 24C52 27 47 27 43 27C43 32 46 36 50 37C46 41 40 44 32 44Z" fill="#f2f2f2"/>
+    <line x1="14" y1="50" x2="50" y2="50" stroke="#f2f2f2" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="34" cy="20" r="3.5" fill="#ff5858"/>
+  </g>
+  <text x="52" y="27" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="22" font-weight="600" fill="#151b31" letter-spacing="-0.02em">Stackduck</text>
 </svg>

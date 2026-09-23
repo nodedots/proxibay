@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-const REPO = 'nodedots/proxibay'
-const CACHE_KEY = 'proxibay:gh-stars'
+const REPO = 'nodedots/stackduck'
+const CACHE_KEY = 'stackduck:gh-stars'
 const CACHE_TTL_MS = 60 * 60 * 1000
 
 function formatCount(n: number): string {
@@ -68,8 +68,8 @@ export default function GitHubStars() {
       href={`https://github.com/${REPO}`}
       target="_blank"
       rel="noreferrer"
-      aria-label="Proxibay on GitHub"
-      title="Proxibay on GitHub"
+      aria-label="Stackduck on GitHub"
+      title="Stackduck on GitHub"
       className="btn-ghost flex items-center gap-2 !py-2 text-sm"
     >
       <GitHubMark />

@@ -7,7 +7,7 @@ export default function ConnectFirebase() {
     <GuideShell
       badge="Connection guide · Firebase"
       title={<>Firebase: the <span className="text-coral-emphasis">service-account key.</span></>}
-      intro="A service account is like a read-only username your Firebase project issues for tools like Proxibay. It arrives as a JSON file — you paste its contents into Proxibay once, and we use it to count users and read error logs. We never write or delete anything with it."
+      intro="A service account is like a read-only username your Firebase project issues for tools like Stackduck. It arrives as a JSON file — you paste its contents into Stackduck once, and we use it to count users and read error logs. We never write or delete anything with it."
     >
       <div className="mt-8 flex flex-col gap-8">
         <Step n="1" title="Open your Firebase project settings">
@@ -16,7 +16,7 @@ export default function ConnectFirebase() {
         </Step>
           <Step n="2" title="Lock the key down to read-only (recommended)">
             <p>
-              Fresh keys arrive with the powerful <strong>Editor</strong> role. Proxibay only
+              Fresh keys arrive with the powerful <strong>Editor</strong> role. Stackduck only
               reads, so shrink it: open{' '}
               <strong>console.cloud.google.com → IAM &amp; Admin → IAM</strong> and find the
               new service account in the list. It looks like this (your random letters and
@@ -58,11 +58,11 @@ export default function ConnectFirebase() {
               </figcaption>
             </figure>
           </Step>
-        <Step n="3" title="Paste it into Proxibay">
+        <Step n="3" title="Paste it into Stackduck">
           <p>
             Open the JSON file in any text editor, copy everything, and paste it into the
             Firebase connector box — or use the <strong>Upload JSON file</strong> button to
-            load it straight from disk. Proxibay runs a <strong>health check on the spot</strong> —
+            load it straight from disk. Stackduck runs a <strong>health check on the spot</strong> —
             if the key works you'll see it connect immediately; if not, you'll get a plain
             explanation and can retry without losing your place.
           </p>

@@ -4,29 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Proxibay — plug your project in</title>
+    <title>Stackduck — plug your project in</title>
     <meta
       name="description"
       content="Give every project a home and a heartbeat — health, users, and revenue in one calm dashboard."
     />
     <meta name="theme-color" content="#151b31" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://proxibay.app/" />
-    <meta property="og:title" content="Proxibay — plug your project in" />
+    <meta property="og:url" content="https://stackduck.app/" />
+    <meta property="og:title" content="Stackduck — plug your project in" />
     <meta
       property="og:description"
       content="Give every project a home and a heartbeat — health, users, and revenue in one calm dashboard."
     />
-    <meta property="og:image" content="https://proxibay.app/og-image.png" />
+    <meta property="og:image" content="https://stackduck.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Proxibay — plug your project in" />
+    <meta name="twitter:title" content="Stackduck — plug your project in" />
     <meta
       name="twitter:description"
       content="Give every project a home and a heartbeat — health, users, and revenue in one calm dashboard."
     />
-    <meta name="twitter:image" content="https://proxibay.app/og-image.png" />
+    <meta name="twitter:image" content="https://stackduck.app/og-image.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,7 +38,7 @@
       // see a light flash. Mirrors src/lib/theme.ts — default is Light.
       (function () {
         try {
-          var t = localStorage.getItem('proxibay-theme') || 'light'
+          var t = localStorage.getItem('stackduck-theme') || localStorage.getItem('proxibay-theme') || 'light'
           var dark =
             t === 'dark' ||
             (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)

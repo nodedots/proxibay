@@ -30,8 +30,8 @@ function checkRate(connectorId: string): boolean {
 ingestRouter.post('/:connectorId', async (req, res) => {
   const connectorId = req.params.connectorId
   const raw = req.body as Buffer
-  const signature = req.header('X-Proxibay-Signature') ?? ''
-  if (!signature) return err(res, 401, 'bad_signature', 'Missing X-Proxibay-Signature header.')
+  const signature = req.header('X-Stackduck-Signature') ?? req.header('X-Proxibay-Signature') ?? ''
+  if (!signature) return err(res, 401, 'bad_signature', 'Missing X-Stackduck-Signature header.')
 
   // Resolve owning project via collection-group lookup (1:1 in v1).
   const db = getFirestore()

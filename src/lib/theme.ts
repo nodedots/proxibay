@@ -9,11 +9,11 @@ import { useCallback, useEffect, useState } from 'react'
 export type ThemeChoice = 'light' | 'dark' | 'system'
 export type ResolvedTheme = 'light' | 'dark'
 
-const STORAGE_KEY = 'proxibay-theme'
+const STORAGE_KEY = 'stackduck-theme'
 
 export function readThemeChoice(): ThemeChoice {
   try {
-    const v = localStorage.getItem(STORAGE_KEY)
+    const v = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('proxibay-theme')
     if (v === 'light' || v === 'dark' || v === 'system') return v
   } catch {
     // Storage unavailable (private mode) — fall through to the default.

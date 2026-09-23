@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Proxibay base theme — design tokens from DESIGN.md
+ * Stackduck base theme — design tokens from DESIGN.md
  * (product-name references like "Tracky" intentionally ignored;
  *  only tokens / component rules are applied.)
  */
@@ -352,7 +352,7 @@ body {
   color: var(--theme-ink);
 }
 
-/* Proxibay status colors mapped onto system palette (no new hues):
+/* Stackduck status colors mapped onto system palette (no new hues):
    red -> coral, amber -> butter, green -> mint, gray/pending -> ash/slate */
 .status-dot {
   width: 10px;

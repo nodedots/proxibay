@@ -51,7 +51,7 @@ export default function Pricing() {
           Free <span className="text-coral-emphasis">for now.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-body-lg text-ink-muted">
-          Simple pricing is coming. Until then, everything Proxibay does is free —
+          Simple pricing is coming. Until then, everything Stackduck does is free —
           every project, every connector, every alert.
         </p>
 

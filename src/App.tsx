@@ -61,11 +61,11 @@ function Header({ user }: { user: User | null }) {
                 Docs
               </Link>
               <a
-                href="https://github.com/nodedots/proxibay"
+                href="https://github.com/nodedots/stackduck"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Proxibay on GitHub"
-                title="Proxibay on GitHub"
+                aria-label="Stackduck on GitHub"
+                title="Stackduck on GitHub"
                 className="rounded-lg border border-line p-2 text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface"
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" className="block">

@@ -1,5 +1,5 @@
 /**
- * Proxibay Cloud Functions — Phase 1 + Stripe revenue + Supabase users.
+ * Stackduck Cloud Functions — Phase 1 + Stripe revenue + Supabase users.
  * Deferred: Alerting (Phase 2+).
  */
 import { setGlobalOptions } from 'firebase-functions/v2'

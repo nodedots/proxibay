@@ -1,11 +1,11 @@
-# Proxibay
+# Stackduck
 
-![Proxibay](public/logo-wordmark.svg#gh-light-mode-only)
-![Proxibay](public/logo-wordmark-dark.svg#gh-dark-mode-only)
+![Stackduck](public/logo-wordmark.svg#gh-light-mode-only)
+![Stackduck](public/logo-wordmark-dark.svg#gh-dark-mode-only)
 
 **Stop building dashboards. Plug your projects in.**
 
-Proxibay is portfolio monitoring for developers running multiple projects — part
+Stackduck is portfolio monitoring for developers running multiple projects — part
 Datadog for indie devs, part Backstage for solo founders. Register a project once,
 attach a connector, and see health, users, and revenue across everything you run.
 
@@ -41,9 +41,9 @@ Key docs in-repo: `API_CONTRACT.md` (Cloud Functions surface), `DECISIONS.md`
 ## Contributing
 
 Issues and pull requests are welcome at
-[github.com/nodedots/proxibay](https://github.com/nodedots/proxibay). See
+[github.com/nodedots/stackduck](https://github.com/nodedots/stackduck). See
 `/docs` in the app (self-hosting + connector walkthroughs) and
-[Support](https://github.com/nodedots/proxibay/issues) for help.
+[Support](https://github.com/nodedots/stackduck/issues) for help.
 
 ## License
 

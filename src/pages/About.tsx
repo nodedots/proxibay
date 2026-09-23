@@ -4,7 +4,7 @@ import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import DeveloperModal from '../components/DeveloperModal'
 
-/** Why Proxibay exists — human, not corporate. */
+/** Why Stackduck exists — human, not corporate. */
 export default function About() {
   const [devOpen, setDevOpen] = useState(false)
   return (
@@ -23,7 +23,7 @@ export default function About() {
             most of which you built yourself, one copy-pasted admin page at a time.
           </p>
           <p>
-            Proxibay is the fix I wanted: part Datadog for indie devs, part Backstage
+            Stackduck is the fix I wanted: part Datadog for indie devs, part Backstage
             for solo founders. Every project gets one entry — what it is, where it lives —
             and that same entry fills with live health, users, and revenue once you plug
             in a connector. Registering a project and monitoring it are the same action,
@@ -42,7 +42,7 @@ export default function About() {
               register the project once, plug in its data, and see everything side by side.
             </p>
             <p>
-              I use Proxibay every day on my own portfolio. If it saves me one morning
+              I use Stackduck every day on my own portfolio. If it saves me one morning
               tour of admin panels, it was worth building — and I think it'll do the same
               for anyone else running more than one thing.
             </p>

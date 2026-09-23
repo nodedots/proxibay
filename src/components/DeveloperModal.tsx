@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-/** Credit modal: who designs and builds Proxibay. Shared by footer + founder note. */
+/** Credit modal: who designs and builds Stackduck. Shared by footer + founder note. */
 export default function DeveloperModal({ onClose }: { onClose: () => void }) {
   return (
     <div
@@ -37,7 +37,7 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
           </h2>
         </div>
         <p className="mx-auto mt-3 max-w-sm font-inter text-sm font-normal leading-relaxed text-ink-muted">
-          Proxibay is designed and built by NodeDots — an indie developer who got
+          Stackduck is designed and built by NodeDots — an indie developer who got
           tired of touring a dozen admin panels every morning and decided to fix it
           for good.
         </p>

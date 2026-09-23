@@ -41,10 +41,10 @@ const SOCIALS: Array<{
   label: string
   Icon: (props: { size?: number }) => React.ReactElement
 }> = [
-  { href: 'https://github.com/nodedots/proxibay', label: 'GitHub', Icon: GitHubIcon },
-  { href: 'https://x.com/proxibay', label: 'X', Icon: XIcon },
-  { href: 'https://www.linkedin.com/company/proxibay', label: 'LinkedIn', Icon: LinkedInIcon },
-  { href: 'https://discord.gg/proxibay', label: 'Discord', Icon: DiscordIcon },
+  { href: 'https://github.com/nodedots/stackduck', label: 'GitHub', Icon: GitHubIcon },
+  { href: 'https://x.com/stackduck', label: 'X', Icon: XIcon },
+  { href: 'https://www.linkedin.com/company/stackduck', label: 'LinkedIn', Icon: LinkedInIcon },
+  { href: 'https://discord.gg/stackduck', label: 'Discord', Icon: DiscordIcon },
 ]
 
 const GROUPS: Array<{
@@ -65,7 +65,7 @@ const GROUPS: Array<{
       { to: '/support', label: 'Support' },
       { to: '/feedback', label: 'Feedback' },
       { to: '/changelog', label: 'Changelog' },
-      { to: 'https://github.com/nodedots/proxibay', label: 'GitHub', external: true },
+      { to: 'https://github.com/nodedots/stackduck', label: 'GitHub', external: true },
     ],
   },
   {
@@ -109,8 +109,8 @@ export default function SiteFooter() {
                     href={href}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={`Proxibay on ${label}`}
-                    title={`Proxibay on ${label}`}
+                    aria-label={`Stackduck on ${label}`}
+                    title={`Stackduck on ${label}`}
                     className="rounded-md p-2 text-ink-muted transition-colors duration-150 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     <Icon size={16} />
@@ -133,7 +133,7 @@ export default function SiteFooter() {
                           target="_blank"
                           rel="noreferrer"
                           className="nav-link flex items-center gap-1.5 text-sm"
-                          aria-label="Proxibay on GitHub"
+                          aria-label="Stackduck on GitHub"
                         >
                           <GitHubIcon />
                           {l.label}

@@ -74,8 +74,8 @@ export async function recordConsent(uid: string, email: string | null) {
   )
 }
 
-const sessionKey = (kind: OAuthKind) => `proxibay:oauth:${kind}`
-const consentGivenKey = 'proxibay:consent-given'
+const sessionKey = (kind: OAuthKind) => `stackduck:oauth:${kind}`
+const consentGivenKey = 'stackduck:consent-given'
 
 /** Marked before a signup-mode redirect so the return handler may record consent. */
 export function markConsentGiven() {
@@ -83,11 +83,14 @@ export function markConsentGiven() {
 }
 /** Consumed once by the redirect-result handler. */
 export function consumeConsentGiven(): boolean {
-  const v = sessionStorage.getItem(consentGivenKey) === '1'
+  const v =
+    sessionStorage.getItem(consentGivenKey) === '1' ||
+    sessionStorage.getItem('proxibay:consent-given') === '1'
   sessionStorage.removeItem(consentGivenKey)
+  sessionStorage.removeItem('proxibay:consent-given')
   return v
 }
-const importFlagKey = 'proxibay:import-after-login'
+const importFlagKey = 'stackduck:import-after-login'
 
 /**
  * Token storage. Prefers the backend (Secret Manager + reference in

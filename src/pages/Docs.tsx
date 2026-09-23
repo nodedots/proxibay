@@ -100,8 +100,8 @@ export default function Docs() {
           </p>
         </div>
         <div className="mt-3">
-          <Code>{`npx degit nodedots/proxibay my-proxibay
-cd my-proxibay
+          <Code>{`npx degit nodedots/stackduck my-stackduck
+cd my-stackduck
 npm install
 cp .env.example .env   # paste your Firebase web config`}</Code>
         </div>
@@ -148,7 +148,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Firebase</h3>
             <p className="mt-1 text-body-sm text-ink-muted">
-              Paste a service-account key. Proxibay checks the connection immediately,
+              Paste a service-account key. Stackduck checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
               keys. <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
             </p>
@@ -164,7 +164,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Stripe</h3>
             <p className="mt-1 text-body-sm text-ink-muted">
-              Paste a restricted secret key and Proxibay checks it on the spot. Register
+              Paste a restricted secret key and Stackduck checks it on the spot. Register
               the endpoint URL we give you in your Stripe dashboard for instant charge and
               payout events — or skip it and get nightly revenue totals instead.{' '}
               <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
@@ -173,7 +173,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Supabase</h3>
             <p className="mt-1 text-body-sm text-ink-muted">
-              Paste your project URL plus the service_role secret and Proxibay checks it
+              Paste your project URL plus the service_role secret and Stackduck checks it
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
               pasted the wrong one.{' '}
@@ -185,14 +185,14 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
         <h2 id="self-hosting" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Self-hosting & contributing</h2>
         <div className="mt-4 flex flex-col gap-3 text-body text-ink-muted">
           <p>
-            Proxibay is MIT licensed and lives at{' '}
+            Stackduck is MIT licensed and lives at{' '}
             <a
-              href="https://github.com/nodedots/proxibay"
+              href="https://github.com/nodedots/stackduck"
               target="_blank"
               rel="noreferrer"
               className="text-link-emphasis text-link"
             >
-              github.com/nodedots/proxibay
+              github.com/nodedots/stackduck
             </a>
             . To run your own copy, follow <a href="#quickstart" className="text-link-emphasis text-link">Quickstart</a> above;
             a few notes that only matter once you're running it: deploying{' '}
@@ -204,7 +204,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <p>
             Bugs and ideas belong in{' '}
             <a
-              href="https://github.com/nodedots/proxibay/issues"
+              href="https://github.com/nodedots/stackduck/issues"
               target="_blank"
               rel="noreferrer"
               className="text-link-emphasis text-link"
