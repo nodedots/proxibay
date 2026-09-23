@@ -1,4 +1,4 @@
-# DECISIONS.md — Proxibay Phase 1 working log
+# DECISIONS.md — Stackduck Phase 1 working log
 
 Per instructions: reasonable calls on PRD open items are logged here and we keep
 moving. Full-stop questions (contradictions / expensive-to-reverse) go to the user.

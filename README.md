@@ -44,8 +44,3 @@ Issues and pull requests are welcome at
 [github.com/nodedots/stackduck](https://github.com/nodedots/stackduck). See
 `/docs` in the app (self-hosting + connector walkthroughs) and
 [Support](https://github.com/nodedots/stackduck/issues) for help.
-
-## License
-
-MIT — see [LICENSE](./LICENSE). Free to use, modify, and self-host.
-Copyright © 2026 Saviour Ukobong (nodedots).

@@ -1,4 +1,4 @@
-# API_CONTRACT.md — Proxibay Phase 1 (DRAFT for review — no implementation yet)
+# API_CONTRACT.md — Stackduck Phase 1 (DRAFT for review — no implementation yet)
 
 Scope: everything needed for the **Add Project flow** + **Firebase** + **Generic Webhook**
 connectors. Stripe / Supabase / Alerting are NOT in this contract (later phases).
@@ -131,7 +131,7 @@ Flow step 3b. No credentials in — secret generated server-side.
     "status": "pending", "createdAt": "…" },
   "ingestUrl": "https://…/v1/ingest/conn_…",
   "signingSecret": "whsec_…",
-  "snippet": { "curl": "curl -X POST $URL -H 'X-Proxibay-Signature: …' …",
+  "snippet": { "curl": "curl -X POST $URL -H 'X-Stackduck-Signature: …' …",
                "node": "crypto.createHmac('sha256', SECRET).update(body)…" } }
 ```
 `capabilities` starts empty (dev can push any of the 5 metric types); server records
@@ -141,7 +141,7 @@ observed types. Status flips `pending → connected` on first verified event.
 ```http
 POST /v1/ingest/conn_abc
 Content-Type: application/json
-X-Proxibay-Signature: <hmac-sha256 hex of RAW body with signing secret>
+X-Stackduck-Signature: <hmac-sha256 hex of RAW body with signing secret>
 ```
 ```json
 // single event

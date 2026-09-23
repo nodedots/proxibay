@@ -112,15 +112,28 @@ export default function Landing() {
       <header className="mx-auto max-w-[1200px] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
         <Reveal>
           <h1 className="mx-auto max-w-4xl font-display font-bold text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
-          Stop Building Dashboards. <span className="text-coral-emphasis">Plug</span> your{' '}
-          <span className="sm:whitespace-nowrap">
-            Projects <span className="text-coral-emphasis">in.</span>
-          </span>
+          Stop Building Dashboards.
+          <span className="mt-1 block text-coral-emphasis">Just Plug In.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-muted">
-          Stackduck gives every project a home and a heartbeat. See health, users,
-          and revenue across everything you run — in one place.
+          Connect your projects and get a live view of health, users, revenue,
+          deployments, and more — without building another admin dashboard.
         </p>
+        <div aria-hidden="true" className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          {[
+            { name: 'Shop', dot: 'status-green' },
+            { name: 'Blog', dot: 'status-green' },
+            { name: 'API', dot: 'status-amber' },
+            { name: 'Side project', dot: 'status-gray' },
+          ].map((p) => (
+            <span key={p.name} className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 font-inter text-xs font-medium text-ink">
+              <span className={`status-dot ${p.dot}`} />
+              {p.name}
+            </span>
+          ))}
+          <span className="font-inter text-sm font-semibold text-ink-muted">→</span>
+          <span className="badge badge-success !text-sm">One dashboard</span>
+        </div>
         <Link to="/signin" className="btn-primary mt-8 inline-block">
           Add your first project
         </Link>

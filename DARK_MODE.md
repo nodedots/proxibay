@@ -1,4 +1,4 @@
-# Proxibay — Dark Mode Tokens
+# Stackduck — Dark Mode Tokens
 
 Companion to `proxybay docs/DESIGN.md`. DESIGN.md fully specifies the light theme
 plus one deliberately-dark component (the Inkwell Navy feature card). This doc
