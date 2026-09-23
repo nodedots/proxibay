@@ -149,6 +149,9 @@ export default function SiteFooter() {
               </nav>
             ))}
           </div>
+          <div className="mt-12 border-t border-line pt-6">
+            <p className="font-inter text-xs text-ink-muted">© 2026 Stackduck</p>
+          </div>
         </div>
       </footer>
       {devOpen && <DeveloperModal onClose={() => setDevOpen(false)} />}
