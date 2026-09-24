@@ -94,13 +94,6 @@ export default function SiteFooter() {
                 Give every project a home and a heartbeat — health, users, and
                 revenue in one place.
               </p>
-              <button
-                onClick={() => setDevOpen(true)}
-                className="text-link mt-4 font-inter text-sm font-medium text-ink"
-                title="About the developer"
-              >
-                Developed by NodeDots
-              </button>
               {/* Socials — icon row with placeholder destinations. */}
               <div className="mt-6 flex items-center gap-1">
                 {SOCIALS.map(({ href, label, Icon }) => (
@@ -149,8 +142,15 @@ export default function SiteFooter() {
               </nav>
             ))}
           </div>
-          <div className="mt-12 border-t border-line pt-6">
+          <div className="mt-12 flex items-center justify-between gap-4 border-t border-line pt-6">
             <p className="font-inter text-xs text-ink-muted">© 2026 Stackduck</p>
+            <button
+              onClick={() => setDevOpen(true)}
+              className="text-link shrink-0 text-right font-inter text-xs font-medium text-ink-muted hover:text-ink"
+              title="About the developer"
+            >
+              Developed by NodeDots
+            </button>
           </div>
         </div>
       </footer>

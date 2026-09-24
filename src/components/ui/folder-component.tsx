@@ -118,7 +118,7 @@ const FolderComponent = ({
       setAutoOpen(true);
       return;
     }
-    const id = window.setInterval(() => setAutoOpen((v) => !v), 2400);
+    const id = window.setInterval(() => setAutoOpen((v) => !v), 3200);
     return () => window.clearInterval(id);
   }, [autoPlay]);
 
@@ -173,7 +173,7 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: open ? -160 : isHovered ? -30 : -10,
+                y: open ? (autoPlay ? -120 : -160) : isHovered ? -30 : -10,
                 x: open ? 70 : 40,
                 rotate: open ? 18 : isHovered ? 14 : 10,
               }}
@@ -189,7 +189,7 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: open ? -180 : isHovered ? -35 : -20,
+                y: open ? (autoPlay ? -135 : -180) : isHovered ? -35 : -20,
                 x: open ? 0 : 3,
                 rotate: open ? -3 : isHovered ? -1 : 2,
               }}
@@ -205,7 +205,7 @@ const FolderComponent = ({
             <motion.div
               className="absolute"
               animate={{
-                y: open ? -170 : isHovered ? -44 : -22,
+                y: open ? (autoPlay ? -128 : -170) : isHovered ? -44 : -22,
                 x: open ? -65 : -40,
                 rotate: open ? -14 : isHovered ? -9 : -5,
               }}

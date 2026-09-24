@@ -26,7 +26,7 @@ function PortfolioFolderDemo() {
   useEffect(() => {
     const id = window.setInterval(
       () => setActive((i) => (i + 1) % DEMO_PROJECTS.length),
-      2400,
+      3200,
     )
     return () => window.clearInterval(id)
   }, [])
@@ -34,17 +34,23 @@ function PortfolioFolderDemo() {
   const project = DEMO_PROJECTS[active]
 
   return (
-    <div className="flex w-60 flex-col items-center gap-6">
-      <Folder color="stackduck" size="sm" autoPlay accent={project.accent} />
+    <div className="relative mx-auto h-[320px] w-full max-w-[280px]">
+      <Folder
+        color="stackduck"
+        size="sm"
+        autoPlay
+        accent={project.accent}
+        className="absolute bottom-12 left-1/2 h-[176px] w-[209px] -translate-x-1/2"
+      />
       <div
         key={active}
-        className="fade-swap flex items-center gap-2 rounded-full bg-paper-white py-1.5 pl-3 pr-4"
+        className="fade-swap absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 border-t border-white/20 py-3"
       >
         <span className={`status-dot ${project.dot}`} />
-        <span className="font-inter text-xs font-semibold text-inkwell-navy">
+        <span className="font-inter text-xs font-semibold text-paper-white">
           {project.name}
         </span>
-        <span className="font-inter text-xs text-slate">added to portfolio</span>
+        <span className="font-inter text-xs text-paper-white/70">added to portfolio</span>
       </div>
     </div>
   )
@@ -138,27 +144,31 @@ export default function Landing() {
         <Reveal>
         {/* bg-feature: Inkwell Navy in light; bumps to Raised Navy in dark so
             the card stays distinct from the now-darker page (DARK_MODE.md). */}
-        <div className="relative overflow-hidden rounded-3xl bg-feature p-10 sm:p-12">
-          <div className="max-w-lg">
-            <h2 className="font-display font-bold text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
+        <div className="relative grid overflow-hidden rounded-3xl bg-feature p-8 sm:p-10 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-center lg:gap-8 lg:p-12">
+          <div className="relative z-10 max-w-2xl">
+            <p className="flex items-center gap-2 font-inter text-xs font-semibold uppercase text-paper-white/70">
+              <span className="h-2 w-2 rounded-full bg-coral-emphasis" />
+              Your projects, in one view
+            </p>
+            <h2 className="mt-4 max-w-xl font-display font-bold text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
             </h2>
-            <p className="mt-4 text-body text-paper-white/70">
+            <p className="mt-4 max-w-xl text-body leading-relaxed text-paper-white/80">
               Every project gets a catalog entry — what it is, where it lives.
               Attach a connector and the same entry fills with live users, errors,
               and revenue. No second setup, no separate dashboard.
             </p>
             <a
               href="#features"
-              className="mt-6 inline-block rounded-lg bg-paper-white px-6 py-3 font-inter text-base font-medium text-inkwell-navy"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-paper-white px-5 py-3 font-inter text-base font-medium text-inkwell-navy transition-colors duration-150 hover:bg-ash-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-paper-white"
             >
               See how it works
+              <ArrowRight size={16} aria-hidden="true" />
             </a>
           </div>
-          {/* Ambient portfolio demo — folder fills as projects are "added" */}
           <div
             aria-hidden="true"
-            className="mt-12 flex justify-center md:absolute md:right-10 md:top-1/2 md:mt-0 md:w-60 md:-translate-y-1/2"
+            className="mt-8 min-w-0 lg:mt-0"
           >
             <PortfolioFolderDemo />
           </div>
