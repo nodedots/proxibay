@@ -32,6 +32,7 @@ import Support from './pages/Support'
 import Feedback from './pages/Feedback'
 import BillingSuccess from './pages/BillingSuccess'
 import Account from './pages/Account'
+import ChartPreview from './components/ChartPreview'
 import NotFound from './pages/NotFound'
 import UserMenu from './components/UserMenu'
 import ThemeSwitcher from './components/ThemeSwitcher'
@@ -201,6 +202,7 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            <Route path="/chart-preview" element={<ChartPreview />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Shell>

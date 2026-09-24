@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp, writeBatch, type QuerySnapshot, type DocumentData } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import UserMetricChart from '../components/UserMetricChart'
 import DurationPicker from '../components/ui/duration-picker'
 import { api, ingestUrlFor, stripeUrlFor, ApiError, connectErrorMessage, loadErrorMessage } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
@@ -949,6 +950,18 @@ export default function ProjectDetail() {
           {keys.map((k) => {
             const id = `${k.metricType}/${k.key}`
             const data = buckets[id] ?? []
+            if (k.metricType === 'user_metrics') {
+              return (
+                <UserMetricChart
+                  key={id}
+                  metricType={k.metricType}
+                  metricKey={k.key}
+                  buckets={data}
+                  rangeHours={rangeHours}
+                  rules={rules ?? []}
+                />
+              )
+            }
             const pts = data.flatMap((b) => b.points.map((pt) => ({ t: pt.time.slice(0, 10), v: pt.value })))
             const last = data.length ? data[data.length - 1].dailyAggregate?.last : undefined
             const rangeLabel = rangeHours === 24 ? 'last 24 hours' : rangeHours === 168 ? 'last 7 days' : 'last 30 days'
