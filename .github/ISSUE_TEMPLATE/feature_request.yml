@@ -1,0 +1,30 @@
+name: Feature request
+description: Suggest a user problem Stackduck could solve.
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. Focus on the problem and outcome; avoid sharing private project data or secrets.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Who is affected, and what is difficult or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would a good solution look like?
+      description: Describe the outcome or workflow you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or additional context
+      description: Other approaches considered, examples, or relevant constraints.
+    validations:
+      required: false

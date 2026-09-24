@@ -1,0 +1,47 @@
+name: Bug report
+description: Report a reproducible problem in Stackduck.
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues first. Never include credentials, tokens, webhook secrets, service-account files, or private user data.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear description of the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the page, action, and any relevant setup.
+      placeholder: |
+        1. Open ...
+        2. Choose ...
+        3. See the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser and version, operating system, and whether this is local or deployed.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Remove secrets and personal data before sharing. Include only relevant excerpts.
+    validations:
+      required: false

@@ -40,7 +40,7 @@ Key docs in-repo: `API_CONTRACT.md` (Cloud Functions surface), `DECISIONS.md`
 
 ## Contributing
 
-Issues and pull requests are welcome at
-[github.com/nodedots/stackduck](https://github.com/nodedots/stackduck). See
-`/docs` in the app (self-hosting + connector walkthroughs) and
-[Support](https://github.com/nodedots/stackduck/issues) for help.
+Issues and pull requests are welcome. Start with the [contribution guide](CONTRIBUTING.md),
+report bugs with the [bug report form](https://github.com/nodedots/stackduck/issues/new?template=bug_report.yml),
+or suggest improvements with the [feature request form](https://github.com/nodedots/stackduck/issues/new?template=feature_request.yml).
+See `/docs` in the app for self-hosting and connector walkthroughs.
