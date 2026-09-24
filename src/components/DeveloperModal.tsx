@@ -13,7 +13,7 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="dev-heading"
-        className="modal-pop relative w-full max-w-md rounded-2xl bg-elevated p-6 text-center shadow-sm-2"
+        className="modal-pop relative max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-elevated p-5 text-center shadow-sm-2 sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <button

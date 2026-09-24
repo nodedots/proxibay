@@ -224,7 +224,7 @@ export default function PortfolioHome() {
         </div>
       </div>
 
-      <div className="mt-7 grid grid-cols-3 divide-x divide-line border-y border-line py-4">
+      <div className="portfolio-stats mt-7 grid grid-cols-3 divide-x divide-line border-y border-line py-4">
         <div className="px-3 first:pl-0"><p className="font-display text-2xl font-semibold">{entries?.length ?? '—'}</p><p className="mt-1 text-xs text-ink-muted">Projects</p></div>
         <div className="px-4 sm:px-6"><p className="flex items-center gap-2 font-display text-2xl font-semibold"><span className="status-dot status-green" />{entries ? healthyCount : '—'}</p><p className="mt-1 text-xs text-ink-muted">Healthy</p></div>
         <div className="px-4 sm:px-6"><p className="flex items-center gap-2 font-display text-2xl font-semibold"><span className="status-dot status-amber" />{entries ? attentionCount : '—'}</p><p className="mt-1 text-xs text-ink-muted">Need attention</p></div>

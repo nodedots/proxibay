@@ -51,7 +51,7 @@ export default function ThemeSwitcher() {
         aria-expanded={open}
         aria-label={`Theme: ${current.label}`}
         title={`Theme: ${current.label}`}
-        className="rounded-lg border border-line p-2 text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface focus-visible:outline-2 focus-visible:outline-ring"
+        className="grid size-11 place-items-center rounded-lg border border-line text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface focus-visible:outline-2 focus-visible:outline-ring"
       >
         <current.Icon />
       </button>

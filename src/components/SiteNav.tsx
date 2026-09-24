@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Menu, X } from 'lucide-react'
 import Logo from './Logo'
 import GitHubStars from './GitHubStars'
 import UserMenu from './UserMenu'
@@ -17,11 +19,12 @@ const LINKS: Array<{ to: string; label: string; key: SiteSection }> = [
  *  Signed-in users get their avatar menu here too, landing page included. */
 export default function SiteNav({ active }: { active?: SiteSection }) {
   const user = useAuthUser()
+  const [mobileOpen, setMobileOpen] = useState(false)
   return (
-    <nav className="bg-transparent">
-      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between px-6 py-4">
+    <nav className="relative z-30 bg-transparent">
+      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <Logo />
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           <div className="hidden items-center gap-5 text-sm sm:flex">
             {LINKS.map((l) => (
               <Link
@@ -48,9 +51,41 @@ export default function SiteNav({ active }: { active?: SiteSection }) {
             </Link>
           )}
           <ThemeSwitcher />
-          <GitHubStars />
+          <span className="hidden sm:block"><GitHubStars /></span>
+          <button
+            type="button"
+            className="grid size-10 place-items-center rounded-lg border border-line text-ink transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-ring sm:hidden"
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileOpen}
+            aria-controls="site-mobile-navigation"
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            {mobileOpen ? <X size={19} aria-hidden="true" /> : <Menu size={19} aria-hidden="true" />}
+          </button>
         </div>
       </div>
+      {mobileOpen && (
+        <div id="site-mobile-navigation" className="border-t border-line bg-canvas px-4 py-3 sm:hidden">
+          <div className="mx-auto flex max-w-[var(--page-max-width)] flex-col gap-1">
+            {LINKS.map((link) => (
+              <Link
+                key={link.key}
+                to={link.to}
+                aria-current={active === link.key ? 'page' : undefined}
+                onClick={() => setMobileOpen(false)}
+                className={`min-h-11 rounded-lg px-3 py-2.5 text-sm font-medium ${active === link.key ? 'bg-inset text-ink' : 'text-ink-secondary hover:bg-inset'}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {user && (
+              <Link to="/portfolio" onClick={() => setMobileOpen(false)} className="min-h-11 rounded-lg px-3 py-2.5 text-sm font-medium text-ink-secondary hover:bg-inset">
+                Portfolio
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   )
 }

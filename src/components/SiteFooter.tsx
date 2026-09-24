@@ -85,8 +85,8 @@ export default function SiteFooter() {
   return (
     <>
       <footer className="border-t border-line">
-        <div className="mx-auto max-w-[1200px] px-6 py-16">
-          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-10">
+        <div className="mx-auto max-w-[1200px] px-5 py-12 sm:px-6 sm:py-16">
+          <div className="grid gap-8 sm:grid-cols-2 sm:gap-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-10">
             {/* Brand block — more visual weight than the link columns. */}
             <div>
               <Logo />
@@ -142,11 +142,11 @@ export default function SiteFooter() {
               </nav>
             ))}
           </div>
-          <div className="mt-12 flex items-center justify-between gap-4 border-t border-line pt-6">
+          <div className="mt-10 flex flex-col items-start gap-2 border-t border-line pt-5 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-6">
             <p className="font-inter text-xs text-ink-muted">© 2026 Stackduck</p>
             <button
               onClick={() => setDevOpen(true)}
-              className="text-link shrink-0 text-right font-inter text-xs font-medium text-ink-muted hover:text-ink"
+              className="text-link shrink-0 text-left font-inter text-xs font-medium text-ink-muted hover:text-ink sm:text-right"
               title="About the developer"
             >
               Developed by NodeDots

@@ -434,7 +434,7 @@ export default function SignIn() {
               role="tab"
               aria-selected={mode === m}
               onClick={() => switchMode(m)}
-              className={`min-h-10 flex-1 rounded-md px-3 font-inter text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              className={`min-h-11 flex-1 rounded-md px-3 font-inter text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                 mode === m
                   ? 'bg-elevated text-ink'
                   : 'text-ink-muted hover:text-ink'

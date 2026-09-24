@@ -14,7 +14,7 @@ export default function LegalNav({ active }: { active: (typeof PAGES)[number]['k
           key={page.key}
           to={page.to}
           aria-current={active === page.key ? 'page' : undefined}
-          className={`border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${active === page.key ? 'border-ink text-ink' : 'border-transparent text-ink-muted hover:text-ink'}`}
+          className={`flex min-h-11 items-center border-b-2 px-1 text-sm font-medium transition-colors ${active === page.key ? 'border-ink text-ink' : 'border-transparent text-ink-muted hover:text-ink'}`}
         >
           {page.label}
         </Link>

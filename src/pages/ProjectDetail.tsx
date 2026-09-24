@@ -519,9 +519,9 @@ export default function ProjectDetail() {
         <div className="min-w-0">
           <Link to="/portfolio" className="mb-3 inline-flex items-center gap-1.5 font-inter text-sm text-ink-muted hover:text-ink"><ArrowLeft size={15} aria-hidden="true" />Portfolio</Link>
           {nameEditing ? (
-            <div className="flex items-center gap-2">
-              <input
-                className="input max-w-xs !text-2xl font-semibold"
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                className="input min-w-0 w-full max-w-xs !text-xl font-semibold sm:!text-2xl"
                 value={nameDraft}
                 autoFocus
                 aria-label="Project name"
@@ -542,7 +542,7 @@ export default function ProjectDetail() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-4xl font-semibold text-ink">{p.name}</h1>
+              <h1 className="min-w-0 [overflow-wrap:anywhere] font-display text-3xl font-semibold text-ink sm:text-4xl">{p.name}</h1>
               <button
                 className="rounded-lg p-1.5 text-sm text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
                 title="Rename project"
@@ -634,7 +634,7 @@ export default function ProjectDetail() {
           ['metrics', 'Metrics'],
           ['alerts', 'Alerts'],
           ['activity', 'Activity'],
-        ].map(([id, label]) => <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-lg px-3 py-2 font-inter text-sm font-medium text-ink-muted transition-colors hover:bg-inset hover:text-ink">{label}</a>)}
+        ].map(([id, label]) => <a key={id} href={`#${id}`} className="min-h-11 whitespace-nowrap rounded-lg px-3 py-2.5 font-inter text-sm font-medium text-ink-muted transition-colors hover:bg-inset hover:text-ink">{label}</a>)}
       </nav>
 
       {/* 2. About */}

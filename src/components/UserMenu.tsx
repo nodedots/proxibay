@@ -48,7 +48,7 @@ export default function UserMenu({ user }: { user: User }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`Account menu for ${user.displayName || user.email || 'you'}`}
-        className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-2.5 transition-colors duration-150 hover:border-line-strong focus-visible:outline-2 focus-visible:outline-ring"
+        className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-2.5 transition-colors duration-150 hover:border-line-strong focus-visible:outline-2 focus-visible:outline-ring"
       >
         <UserAvatar user={user} size={28} />
         <ChevronDown size={14} aria-hidden="true" className={`text-ink-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
@@ -80,6 +80,9 @@ export default function UserMenu({ user }: { user: User }) {
           <div className="pt-2">
             <Link role="menuitem" to="/portfolio" className={ITEM_CLASS} onClick={() => setOpen(false)}>
               Portfolio
+            </Link>
+            <Link role="menuitem" to="/docs" className={ITEM_CLASS} onClick={() => setOpen(false)}>
+              Guides
             </Link>
             <Link role="menuitem" to="/account" className={ITEM_CLASS} onClick={() => setOpen(false)}>
               Account settings
