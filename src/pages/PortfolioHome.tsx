@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check } from 'lucide-react'
+import { Activity, ArrowRight, Check, Plus, Search, Upload } from 'lucide-react'
 import { motion } from 'motion/react'
 import { api, loadErrorMessage } from '../lib/api'
 import { auth } from '../firebase'
 import { listProjectsDirect, withFallback } from '../lib/store'
 import { homeStatusLabel, humanKeyLabel } from '../lib/format'
-import Folder from '../components/ui/folder-component'
 import {
   consumeImportPrompt,
   importSelected,
@@ -33,14 +32,6 @@ const STATUS_DOT: Record<string, string> = {
   amber: 'status-dot status-amber',
   gray: 'status-dot status-gray',
   green: 'status-dot status-green',
-}
-
-/** Flap-dot fills mirror the home-status logic (DESIGN.md tokens only). */
-const STATUS_FILL: Record<string, string> = {
-  red: '#ff5858',
-  amber: '#fedf89',
-  gray: '#6b6d73',
-  green: '#86e0c1',
 }
 
 const MotionLink = motion(Link)
@@ -156,6 +147,9 @@ export default function PortfolioHome() {
     })
   }, [entries, query, statusFilter])
 
+  const healthyCount = entries?.filter((e) => e.homeStatus === 'green').length ?? 0
+  const attentionCount = entries?.filter((e) => e.homeStatus === 'red' || e.homeStatus === 'amber').length ?? 0
+
   // Guided first run: shown until all three steps are done (or dismissed).
   // Returning users with live projects never see it.
   const onboarding = useMemo(() => {
@@ -182,11 +176,16 @@ export default function PortfolioHome() {
 
   return (
     <div className="mt-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-inter text-3xl font-semibold">Portfolio</h1>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Workspace</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Portfolio</h1>
+          <p className="mt-1 font-inter text-sm text-ink-muted">A live view of every project you’re tracking.</p>
+        </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <button className="btn-ghost" onClick={() => setImportMenu((m) => !m)} aria-haspopup="menu" aria-expanded={importMenu}>
+            <button className="btn-ghost inline-flex items-center gap-2" onClick={() => setImportMenu((m) => !m)} aria-haspopup="menu" aria-expanded={importMenu}>
+              <Upload size={16} aria-hidden="true" />
               Import ↓
             </button>
             {importMenu && (
@@ -210,25 +209,36 @@ export default function PortfolioHome() {
               </div>
             )}
           </div>
-          <Link to="/projects/new" className="btn-primary">
+          <Link to="/projects/new" className="btn-primary inline-flex items-center gap-2">
+            <Plus size={17} aria-hidden="true" />
             Add project
           </Link>
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="mt-7 grid grid-cols-3 divide-x divide-line border-y border-line py-4">
+        <div className="px-3 first:pl-0"><p className="font-display text-2xl font-semibold">{entries?.length ?? '—'}</p><p className="mt-1 text-xs text-ink-muted">Projects</p></div>
+        <div className="px-4 sm:px-6"><p className="flex items-center gap-2 font-display text-2xl font-semibold"><span className="status-dot status-green" />{entries ? healthyCount : '—'}</p><p className="mt-1 text-xs text-ink-muted">Healthy</p></div>
+        <div className="px-4 sm:px-6"><p className="flex items-center gap-2 font-display text-2xl font-semibold"><span className="status-dot status-amber" />{entries ? attentionCount : '—'}</p><p className="mt-1 text-xs text-ink-muted">Need attention</p></div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <label className="relative w-full max-w-sm">
+        <Search size={16} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
         <input
-          className="input max-w-sm"
+          aria-label="Search projects"
+          className="input pl-10"
           placeholder="Search by name, stack tag, or status…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select className="input max-w-[200px]" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}>
-          <option value="all">All statuses</option>
-          <option value="active">active</option>
-          <option value="paused">paused</option>
-          <option value="archived">archived</option>
-        </select>
+        </label>
+        <div role="group" aria-label="Filter projects by status" className="flex max-w-full gap-1 overflow-x-auto rounded-lg bg-inset p-1">
+          {(['all', 'active', 'paused', 'archived'] as const).map((status) => (
+            <button key={status} aria-pressed={statusFilter === status} onClick={() => setStatusFilter(status)} className={`whitespace-nowrap rounded-md px-3 py-2 font-inter text-sm font-medium transition-colors ${statusFilter === status ? 'bg-surface text-ink' : 'text-ink-muted hover:text-ink'}`}>
+              {status === 'all' ? 'All' : status[0].toUpperCase() + status.slice(1)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {error && (
@@ -324,12 +334,12 @@ export default function PortfolioHome() {
             viewport={{ once: true, margin: '-40px' }}
             transition={{ duration: 0.6, delay: Math.min(i * 0.05, 0.3), ease: [0, 0, 0.2, 1] }}
           >
-            <div className="flex justify-center" aria-hidden="true">
-              <Folder color="stackduck" size="sm" accent={STATUS_FILL[e.homeStatus]} />
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />
-              <h2 className="font-inter text-lg font-semibold">{e.project.name}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-inset text-ink-muted"><Activity size={18} aria-hidden="true" /></span>
+                <div className="min-w-0"><h2 className="truncate font-inter text-base font-semibold">{e.project.name}</h2><p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted"><span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />{homeStatusLabel(e.homeStatus)}</p></div>
+              </div>
+              <ArrowRight size={16} className="mt-1 shrink-0 text-ink-muted" aria-hidden="true" />
             </div>
             {(e.project.stackTags?.length ?? 0) > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
@@ -338,7 +348,7 @@ export default function PortfolioHome() {
                 ))}
               </div>
             )}
-            <div className="mt-3">
+            <div className="mt-4 min-h-14 border-t border-line pt-3">
               {e.keyMetrics.length === 0 ? (
                 <p className="text-sm text-ink-muted">
                   No data connected. <span className="text-link-emphasis text-link">Connect <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></span>

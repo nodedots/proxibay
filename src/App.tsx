@@ -35,8 +35,10 @@ import Account from './pages/Account'
 import NotFound from './pages/NotFound'
 import UserMenu from './components/UserMenu'
 import ThemeSwitcher from './components/ThemeSwitcher'
+import LogoStudies from './pages/LogoStudies'
+import { LayoutDashboard } from 'lucide-react'
 
-const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license']
+const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/logo-studies']
 
 /** Marketing + docs pages own their chrome — match exact or nested paths. */
 function isMarketing(pathname: string): boolean {
@@ -48,18 +50,20 @@ function Header({ user }: { user: User | null }) {
   // Marketing pages bring their own nav — app chrome stays off them.
   if (isMarketing(pathname) || pathname === '/signin') return null
   return (
-    <header className="bg-canvas">
-      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between gap-4 px-5 py-3 sm:px-6">
         <Logo />
+        {user && (
+          <nav aria-label="Workspace" className="hidden items-center gap-1 sm:flex">
+            <Link to="/portfolio" aria-current={pathname === '/portfolio' ? 'page' : undefined} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 font-inter text-sm font-medium transition-colors ${pathname === '/portfolio' ? 'bg-inset text-ink' : 'text-ink-muted hover:bg-inset hover:text-ink'}`}>
+              <LayoutDashboard size={16} aria-hidden="true" />Portfolio
+            </Link>
+            <Link to="/docs" className="rounded-lg px-3 py-2 font-inter text-sm font-medium text-ink-muted transition-colors hover:bg-inset hover:text-ink">Guides</Link>
+          </nav>
+        )}
         <div className="flex items-center gap-2 sm:gap-3">
           {user ? (
             <>
-              <Link to="/portfolio" className="btn-ghost whitespace-nowrap">
-                Portfolio
-              </Link>
-              <Link to="/docs" className="hidden text-link text-sm text-ink-muted sm:inline">
-                Docs
-              </Link>
               <a
                 href="https://github.com/nodedots/stackduck"
                 target="_blank"
@@ -156,6 +160,7 @@ export default function App() {
         <Shell>
           <Routes>
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/logo-studies" element={<LogoStudies />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/about" element={<About />} />

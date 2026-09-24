@@ -139,6 +139,7 @@ export default function ProjectDetail() {
   const [nameDraft, setNameDraft] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
   const [attach, setAttach] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
+  const [showConnectorPicker, setShowConnectorPicker] = useState(false)
   const [stripeKey, setStripeKey] = useState('')
   const [stripeWhSecret, setStripeWhSecret] = useState('')
   const [stripeEndpoint, setStripeEndpoint] = useState<string | null>(null)
@@ -514,8 +515,9 @@ export default function ProjectDetail() {
       )}
 
       {/* 1. Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
+          <Link to="/portfolio" className="mb-3 inline-flex items-center gap-1.5 font-inter text-sm text-ink-muted hover:text-ink"><ArrowLeft size={15} aria-hidden="true" />Portfolio</Link>
           {nameEditing ? (
             <div className="flex items-center gap-2">
               <input
@@ -540,7 +542,7 @@ export default function ProjectDetail() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <h1 className="font-inter text-3xl font-semibold">{p.name}</h1>
+              <h1 className="font-display text-4xl font-semibold text-ink">{p.name}</h1>
               <button
                 className="rounded-lg p-1.5 text-sm text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
                 title="Rename project"
@@ -557,6 +559,8 @@ export default function ProjectDetail() {
               {titleCase(p.status)}
             </span>
           </div>
+          {p.description && <p className="mt-3 max-w-2xl text-sm text-ink-secondary">{p.description}</p>}
+          {p.repoUrl && <a href={p.repoUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex max-w-full items-center gap-1.5 truncate text-sm text-link-emphasis hover:underline">{p.repoUrl}<ArrowRight size={14} aria-hidden="true" /></a>}
         </div>
         <div className="relative">
           <button
@@ -623,9 +627,21 @@ export default function ProjectDetail() {
         </div>
       </div>
 
+      <nav aria-label="Project sections" className="order-1 -mx-1 flex gap-1 overflow-x-auto border-b border-line px-1 pb-2">
+        {[
+          ['about', 'Details'],
+          ['connectors', 'Data sources'],
+          ['metrics', 'Metrics'],
+          ['alerts', 'Alerts'],
+          ['activity', 'Activity'],
+        ].map(([id, label]) => <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-lg px-3 py-2 font-inter text-sm font-medium text-ink-muted transition-colors hover:bg-inset hover:text-ink">{label}</a>)}
+      </nav>
+
       {/* 2. About */}
-      <section className="card">
-        <h2 className="font-inter text-lg font-semibold">About</h2>
+      <details className="card order-6 scroll-mt-24" id="about">
+        <summary className="cursor-pointer list-none font-inter text-base font-semibold text-ink marker:hidden">
+          <span className="flex items-center justify-between gap-3">Project details <span className="text-xs font-normal text-ink-muted">Edit catalog fields</span></span>
+        </summary>
         <dl className="mt-3 grid gap-4 sm:grid-cols-2">
           <Editable label="Name" value={p.name} onSave={(v) => patchProject({ name: v })} />
           <Editable label="Description" value={p.description ?? ''} multiline onSave={(v) => patchProject({ description: v || null })} />
@@ -645,33 +661,37 @@ export default function ProjectDetail() {
             return t ? `Saved ${t}` : 'Not saved yet'
           })()}
         </p>
-      </section>
+      </details>
 
       {/* 3. Connectors */}
-      <section className="card" id="connectors">
+      <section className="card order-2 scroll-mt-24" id="connectors">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-inter text-lg font-semibold">Live data</h2>
+            <h2 className="font-inter text-lg font-semibold">Data sources</h2>
             <Link to="/docs/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
           </div>
           {(connectors?.length ?? 0) > 0 && (
-            <div className="mt-3">
-              <ConnectorPicker
-                connectedTypes={(connectors ?? []).map((c) => c.type)}
-                onSelect={(type: ConnectableType) => {
-                  setAttach(type === 'generic-webhook' ? 'webhook' : type)
-                  setWebhookSecret(null)
-                  setStripeEndpoint(null)
-                }}
-              />
-            </div>
+            <button className="btn-ghost shrink-0 text-sm" onClick={() => setShowConnectorPicker((shown) => !shown)} aria-expanded={showConnectorPicker}>
+              {showConnectorPicker ? 'Close chooser' : 'Add source'}
+            </button>
           )}
         </div>
+
+        {showConnectorPicker && (connectors?.length ?? 0) > 0 && (
+          <div className="mt-4 border-t border-line pt-4">
+            <ConnectorPicker connectedTypes={(connectors ?? []).map((c) => c.type)} onSelect={(type) => {
+              setAttach(type === 'generic-webhook' ? 'webhook' : type)
+              setWebhookSecret(null)
+              setStripeEndpoint(null)
+              setShowConnectorPicker(false)
+            }} />
+          </div>
+        )}
 
         {connectors === null && <p className="mt-3 text-sm text-ink-muted">Loading connectors…</p>}
 
         {connectors !== null && connectors.length === 0 && attach === null && (
-          <div className="mt-3 rounded-lg bg-inset p-4">
+          <div className="mt-5 rounded-lg border border-line p-4">
             <p className="text-sm font-medium">No live data yet — pick a source below. This page stays useful without it.</p>
             <div className="mt-3">
               <ConnectorPicker
@@ -887,9 +907,9 @@ export default function ProjectDetail() {
       </section>
 
       {/* 4. Metrics */}
-      <section className="card">
+      <section className="card order-3 scroll-mt-24" id="metrics">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-inter text-lg font-semibold">What the numbers say</h2>
+          <div><h2 className="font-inter text-lg font-semibold">Metrics</h2><p className="mt-1 text-sm text-ink-muted">Changes in your project over time.</p></div>
           <div role="group" aria-label="Time range" className="flex gap-1 rounded-lg bg-inset p-1">
             {([
               [24, '24h'],
@@ -983,7 +1003,7 @@ export default function ProjectDetail() {
       </section>
 
       {/* 5. Alerts */}
-      <section className="card">
+      <section className="card order-4 scroll-mt-24" id="alerts">
         <h2 className="font-inter text-lg font-semibold">Alerts</h2>
         <p className="mt-1 text-sm text-ink-muted">
           Rules you save here will start watching on their own.
@@ -1094,7 +1114,7 @@ export default function ProjectDetail() {
       </section>
 
       {/* 6. Recent */}
-      <section className="card">
+      <section className="card order-5 scroll-mt-24" id="activity">
         <h2 className="font-inter text-lg font-semibold">Recent activity</h2>
         <ul className="mt-2 flex flex-col gap-1 text-sm">
           {(connectors ?? []).map((c) => {
@@ -1111,7 +1131,7 @@ export default function ProjectDetail() {
         </ul>
       </section>
 
-      <Link to="/portfolio" className="text-link text-sm"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back to portfolio</Link>
+      <Link to="/portfolio" className="order-7 text-link text-sm"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back to portfolio</Link>
 
       {toast && (
         <div

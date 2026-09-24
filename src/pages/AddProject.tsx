@@ -15,19 +15,19 @@ function FlowSteps({ phase, done }: { phase: Phase; done: boolean }) {
   const steps = ['Name', 'Connect', 'Done']
   const active = phase === 'create' ? 0 : done ? 2 : 1
   return (
-    <ol className="flex items-center gap-2" aria-label="Progress">
+    <ol className="flex w-full items-center gap-2" aria-label="Setup progress">
       {steps.map((label, i) => (
         <li key={label} className="flex items-center gap-2">
           <span
             aria-current={i === active ? 'step' : undefined}
-            className={`flex h-6 w-6 items-center justify-center rounded-full font-inter text-xs font-semibold transition-colors duration-150 ${
+            className={`flex h-8 w-8 items-center justify-center rounded-full font-inter text-xs font-semibold transition-colors duration-150 ${
               i < active ? 'bg-mint-pulse text-inkwell-navy' : i === active ? 'bg-inkwell-navy text-paper-white' : 'bg-inset text-ink-muted'
             }`}
           >
             {i < active ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : i + 1}
           </span>
-          <span className={`font-inter text-xs font-medium ${i === active ? 'text-ink' : 'text-ink-muted'}`}>{label}</span>
-          {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-line" aria-hidden="true" />}
+          <span className={`font-inter text-sm font-medium ${i === active ? 'text-ink' : 'text-ink-muted'}`}>{label}</span>
+          {i < steps.length - 1 && <span className={`mx-1 h-px min-w-4 flex-1 ${i < active ? 'bg-mint-pulse' : 'bg-line'}`} aria-hidden="true" />}
         </li>
       ))}
     </ol>
@@ -403,15 +403,16 @@ export default function AddProject() {
   return (
     <div className="mx-auto mt-8 max-w-xl">
       <FlowSteps phase={phase} done={false} />
-      <div className="card mt-4">
-        <h1 className="font-inter text-2xl font-semibold">Add project</h1>
+      <div className="card mt-5">
+        <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Step 1 of 3 · Catalog</p>
+        <h1 className="mt-2 font-display text-2xl font-semibold">Add a project</h1>
         <p className="mt-1 text-sm text-ink-muted">Only the name is required. Everything else can be filled in later.</p>
         <form onSubmit={(e) => void onCreate(e)} className="mt-6 flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-sm font-medium">
             Name *
             <input className="input" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Tabmeet" />
           </label>
-          <button type="button" className="text-link self-start text-sm" onClick={() => setShowOptional((s) => !s)}>
+          <button type="button" aria-expanded={showOptional} className="text-link self-start text-sm" onClick={() => setShowOptional((s) => !s)}>
             {showOptional ? 'Hide optional fields −' : 'Add details (optional) +'}
           </button>
           {showOptional && (
