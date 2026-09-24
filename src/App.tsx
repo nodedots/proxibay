@@ -46,7 +46,7 @@ function isMarketing(pathname: string): boolean {
 function Header({ user }: { user: User | null }) {
   const { pathname } = useLocation()
   // Marketing pages bring their own nav — app chrome stays off them.
-  if (isMarketing(pathname)) return null
+  if (isMarketing(pathname) || pathname === '/signin') return null
   return (
     <header className="bg-canvas">
       <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between px-6 py-4">
@@ -93,6 +93,9 @@ import { PageFade } from './components/Reveal'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
+  if (pathname === '/signin') {
+    return <PageFade routeKey={pathname}>{children}</PageFade>
+  }
   // Marketing pages own their full layout (incl. <main>) — don't nest landmarks.
   if (isMarketing(pathname)) {
     return <PageFade routeKey={pathname}>{children}</PageFade>

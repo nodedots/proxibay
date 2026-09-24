@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, BellRing, Check, Copy, FolderKanban, ShieldCheck, Webhook } from 'lucide-react'
+import { ArrowRight, BellRing, Check, Copy, FolderKanban, LayoutDashboard, ShieldCheck, Webhook } from 'lucide-react'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import Folder from '../components/ui/folder-component'
@@ -71,27 +71,25 @@ function InstallSnippet() {
   }
 
   return (
-    <div className="mt-8 flex flex-col items-center gap-2">
-      <div className="flex max-w-full items-center gap-2 rounded-lg border border-line-strong bg-surface py-2 pl-4 pr-2">
-        <code className="block min-w-0 select-all overflow-x-auto whitespace-nowrap font-mono text-sm text-ink">
+    <div className="mx-auto mt-6 flex w-full max-w-lg flex-col items-center gap-2">
+      <p className="font-inter text-xs font-medium text-ink-muted">Or start from the CLI</p>
+      <div className="flex w-full min-w-0 items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2">
+        <code className="block min-w-0 flex-1 truncate text-left font-mono text-xs text-ink sm:text-sm" title={INSTALL_CMD}>
           <span className="mr-2 select-none text-ink-muted">$</span>
           {INSTALL_CMD}
         </code>
+        <span aria-live="polite" className={`shrink-0 font-inter text-xs text-ink-muted transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
+          Copied!
+        </span>
         <button
           onClick={() => void copy()}
-          aria-label="Copy install command"
+          aria-label={copied ? 'Command copied' : 'Copy install command'}
           title={copied ? 'Copied!' : 'Copy to clipboard'}
           className="rounded-lg p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
         >
           {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
         </button>
       </div>
-      <p aria-live="polite" className={`h-4 font-inter text-xs text-ink-muted transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
-        Copied!
-      </p>
-      <Link to="/docs#quickstart" className="text-link-emphasis text-link text-sm">
-        Quick Start <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
-      </Link>
     </div>
   )
 }
@@ -107,35 +105,44 @@ export default function Landing() {
       <SiteNav />
 
       {/* HERO */}
-      <header className="mx-auto max-w-[var(--page-max-width)] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
+      <header className="mx-auto max-w-[var(--page-max-width)] px-6 pb-16 pt-14 text-center sm:pb-20 sm:pt-20">
         <Reveal>
           <h1 className="mx-auto max-w-4xl font-display font-bold text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
-          Stop Building Dashboards.
-          <span className="mt-1 block text-coral-emphasis">Just Plug In.</span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-xl text-body-lg text-ink-muted">
-          Connect your projects and get a live view of health, users, revenue,
-          deployments, and more — without building another admin dashboard.
-        </p>
-        <div aria-hidden="true" className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          {[
-            { name: 'Shop', dot: 'status-green' },
-            { name: 'Blog', dot: 'status-green' },
-            { name: 'API', dot: 'status-amber' },
-            { name: 'Side project', dot: 'status-gray' },
-          ].map((p) => (
-            <span key={p.name} className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1 font-inter text-xs font-medium text-ink">
-              <span className={`status-dot ${p.dot}`} />
-              {p.name}
+            Stop Building Dashboards.
+            <span className="mt-1 block text-coral-emphasis">Just Plug In.</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-body-lg text-ink-muted">
+            Connect your projects and get a live view of health, users, revenue,
+            deployments, and more — without building another admin dashboard.
+          </p>
+          <div aria-hidden="true" className="mx-auto mt-8 flex max-w-4xl flex-wrap items-center justify-center gap-2">
+            {[
+              { name: 'Shop', dot: 'status-green' },
+              { name: 'Blog', dot: 'status-green' },
+              { name: 'API', dot: 'status-amber' },
+              { name: 'Side project', dot: 'status-gray' },
+            ].map((p) => (
+              <span key={p.name} className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 font-inter text-xs font-medium text-ink">
+                <span className={`status-dot ${p.dot}`} />
+                {p.name}
+              </span>
+            ))}
+            <ArrowRight size={16} className="mx-1 text-ink-muted" />
+            <span className="flex items-center gap-2 rounded-lg bg-feature px-3 py-2 font-inter text-xs font-semibold text-paper-white">
+              <LayoutDashboard size={16} />
+              One dashboard
             </span>
-          ))}
-          <ArrowRight size={16} className="text-ink-muted" aria-hidden="true" />
-          <span className="badge badge-success !text-sm">One dashboard</span>
-        </div>
-        <Link to="/signin" className="btn-primary mt-8 inline-block">
-          Add your first project
-        </Link>
-        <InstallSnippet />
+          </div>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-5">
+            <Link to="/signin" className="btn-primary inline-flex items-center gap-2">
+              Add your first project
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link to="/docs#quickstart" className="text-link-emphasis text-link inline-flex items-center gap-1 text-sm">
+              Quick Start <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
+          <InstallSnippet />
         </Reveal>
       </header>
 
