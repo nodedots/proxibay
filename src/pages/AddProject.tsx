@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { ArrowRight, Check } from 'lucide-react'
 import { api, ApiError, connectErrorMessage } from '../lib/api'
 import { createProjectDirect, withFallback } from '../lib/store'
 import SaJsonUpload from '../components/SaJsonUpload'
@@ -23,7 +24,7 @@ function FlowSteps({ phase, done }: { phase: Phase; done: boolean }) {
               i < active ? 'bg-mint-pulse text-inkwell-navy' : i === active ? 'bg-inkwell-navy text-paper-white' : 'bg-inset text-ink-muted'
             }`}
           >
-            {i < active ? '✓' : i + 1}
+            {i < active ? <Check size={14} strokeWidth={3} aria-hidden="true" /> : i + 1}
           </span>
           <span className={`font-inter text-xs font-medium ${i === active ? 'text-ink' : 'text-ink-muted'}`}>{label}</span>
           {i < steps.length - 1 && <span className="mx-1 h-px w-6 bg-line" aria-hidden="true" />}
@@ -184,7 +185,7 @@ export default function AddProject() {
           <h1 className="mt-3 font-inter text-2xl font-semibold">Want to connect live data?</h1>
           <p className="mt-1 text-sm text-ink-muted">
             {project.name} is registered. Attach a connector now, or do it later — name-only is a valid end state.{' '}
-            <Link to="/docs/connect" className="text-link-emphasis text-link">Where do the credentials come from? →</Link>
+            <Link to="/docs/connect" className="text-link-emphasis text-link">Where do the credentials come from? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
           </p>
           <ul className="mt-4 flex flex-col gap-1.5 text-sm text-ink-muted">
             <li><strong className="font-medium text-ink">Firebase</strong> — for apps built on Firebase. We read your user counts and error logs.</li>
@@ -223,14 +224,14 @@ export default function AddProject() {
                   for tools like Stackduck. It can only look — it can't change or delete
                   anything. You create it in your Firebase settings in under a minute:{' '}
                   <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">
-                    step-by-step guide →
+                    step-by-step guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
                   </Link>
                 </p>
               </details>
               <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
                 Service-account JSON (read-only roles recommended){' '}
                 <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">
-                  Where do I find this? →
+                  Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
                 </Link>
                 <textarea
                   className="input font-mono text-xs"
@@ -257,7 +258,7 @@ export default function AddProject() {
                 Paste it from your Stripe dashboard
                 (Developers → API keys → Create restricted key with <strong>read</strong> access
                 to charges, balance, and payouts).{' '}
-                <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Where do I find this? →</Link>
+                <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
               </p>
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Restricted secret key *
@@ -303,7 +304,7 @@ export default function AddProject() {
                     setSecretCopied(true)
                   }}
                 >
-                  {secretCopied ? 'Copied ✓' : 'Copy URL'}
+                  {secretCopied ? <>Copied <Check size={14} className="ml-1 inline" aria-hidden="true" /></> : 'Copy URL'}
                 </button>
                 <p className="mt-3 text-sm text-ink-muted">
                   Register this URL under <strong>Stripe dashboard → Developers → Webhooks</strong> (listen
@@ -320,7 +321,7 @@ export default function AddProject() {
               <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
                 Use the <strong>service_role</strong> secret — never the anon key. Think of it
                 as a master key for your database: powerful, so keep it private. If it was ever
-                committed anywhere, reset it in Supabase first. <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+                committed anywhere, reset it in Supabase first. <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
               </div>
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Project URL *
@@ -371,7 +372,7 @@ export default function AddProject() {
                         setSecretCopied(true)
                       }}
                     >
-                      {secretCopied ? 'Copied ✓' : 'Copy secret'}
+                      {secretCopied ? <>Copied <Check size={14} className="ml-1 inline" aria-hidden="true" /></> : 'Copy secret'}
                     </button>
                   </div>
                   <pre className="mt-3 overflow-x-auto rounded-lg bg-inkwell-navy p-4 text-xs text-paper-white">
@@ -381,7 +382,7 @@ export default function AddProject() {
                     If you're not comfortable with this step, this connector needs a developer
                     to set up — the other options don't. Status is <span className="badge">Waiting for first update</span> until
                     the first verified event arrives — then it switches on by itself.{' '}
-                    <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link>
+                    <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
                   </p>
                 </>
               )}
@@ -391,7 +392,7 @@ export default function AddProject() {
 
           <div className="mt-6 border-t border-line pt-4">
             <Link to={project ? `/projects/${project.id}` : '/'} className="text-link">
-              {webhookResult ? 'Done — open project page →' : 'Skip for now — open project page →'}
+              {webhookResult ? 'Done — open project page' : 'Skip for now — open project page'} <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
             </Link>
           </div>
         </div>
@@ -453,7 +454,7 @@ export default function AddProject() {
             {busy ? 'Creating…' : 'Create project'}
           </button>
           <p className="text-sm text-ink-muted">
-            Not sure what to connect? <Link to="/docs/connect" className="text-link-emphasis text-link">How connecting works →</Link>
+            Not sure what to connect? <Link to="/docs/connect" className="text-link-emphasis text-link">How connecting works <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
           </p>
         </form>
       </div>

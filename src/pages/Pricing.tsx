@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Check as CheckIcon } from 'lucide-react'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import { Reveal } from '../components/Reveal'
@@ -19,11 +20,7 @@ function Faq({ q, children }: { q: string; children: React.ReactNode }) {
 }
 
 function Check() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="inline-block">
-      <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
+  return <CheckIcon size={16} aria-hidden="true" className="inline-block" />
 }
 
 /** Pricing: free during early access, Pro flat-rate cards, comparison, FAQ. */
@@ -178,7 +175,7 @@ export default function Pricing() {
             {teamsNote || 'Teams and Enterprise plans — shared portfolios, per-seat pricing — are coming soon.'}
           </p>
           <Link to="/feedback" className="text-link-emphasis text-link mt-3 inline-block text-sm">
-            Tell us what your team needs →
+            Tell us what your team needs <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
           </Link>
         </div>
         </Reveal>

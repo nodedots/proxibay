@@ -49,7 +49,7 @@ function Header({ user }: { user: User | null }) {
   if (isMarketing(pathname)) return null
   return (
     <header className="bg-canvas">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between px-4 py-4 sm:px-6">
+      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between px-6 py-4">
         <Logo />
         <div className="flex items-center gap-2 sm:gap-3">
           {user ? (
@@ -98,7 +98,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     return <PageFade routeKey={pathname}>{children}</PageFade>
   }
   return (
-    <main className="mx-auto max-w-[1200px] px-6 pb-20">
+    <main className="mx-auto max-w-[var(--page-max-width)] px-6 pb-20">
       <PageFade routeKey={pathname}>{children}</PageFade>
     </main>
   )

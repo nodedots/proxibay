@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp, writeBatch, type QuerySnapshot, type DocumentData } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -466,7 +467,7 @@ export default function ProjectDetail() {
     return (
       <div className="card mt-8 text-center">
         <p className="text-lg font-medium">Project not found</p>
-        <Link to="/portfolio" className="text-link-emphasis text-link mt-2 inline-block">← Back to portfolio</Link>
+        <Link to="/portfolio" className="text-link-emphasis text-link mt-2 inline-block"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back to portfolio</Link>
       </div>
     )
   }
@@ -651,7 +652,7 @@ export default function ProjectDetail() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-inter text-lg font-semibold">Live data</h2>
-            <Link to="/docs/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials →</Link>
+            <Link to="/docs/connect" target="_blank" rel="noreferrer" className="text-link-emphasis text-link text-sm">How to get your credentials <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
           </div>
           {(connectors?.length ?? 0) > 0 && (
             <div className="mt-3">
@@ -740,7 +741,7 @@ export default function ProjectDetail() {
 
         {attach === 'firebase' && (
           <div className="mt-3 rounded-lg bg-inset p-4">
-            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link></p>
+            <p className="text-sm font-medium">Paste the Firebase service-account JSON (read-only roles recommended). <Link to="/docs/connect/firebase" className="text-link-emphasis text-link font-normal">Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link></p>
             <details className="mt-2 rounded-lg bg-surface p-3 text-sm">
               <summary className="cursor-pointer font-medium text-ink">What is this?</summary>
               <p className="mt-2 text-ink-muted">
@@ -773,7 +774,7 @@ export default function ProjectDetail() {
             <p className="text-sm font-medium">
               A restricted key can only read — it can't move money. Paste it from your Stripe dashboard
               (Developers → API keys, read access to charges, balance, payouts).{' '}
-              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? →</Link>
+              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link font-normal">Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
               Restricted secret key *
@@ -827,7 +828,7 @@ export default function ProjectDetail() {
             <div className="rounded-lg bg-butter-yellow p-3 text-sm font-medium text-inkwell-navy">
               Use the <strong>service_role</strong> secret — never the anon key. Think of it
               as a master key for your database: powerful, so keep it private.{' '}
-              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? →</Link>
+              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Where do I find this? <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </div>
             <label className="mt-3 flex flex-col gap-1 text-sm font-medium">
               Project URL *
@@ -864,7 +865,7 @@ export default function ProjectDetail() {
           <div className="mt-3 rounded-lg bg-inset p-4">
             {!webhookSecret ? (
               <>
-                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events →</Link></p>
+                <p className="text-sm">Generate a unique ingest URL + signing secret for this project. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">How to sign events <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link></p>
                 {attachError && <p className="mt-2 text-sm text-coral-emphasis">{attachError}</p>}
                 <div className="mt-2 flex gap-2">
                   <button className="btn-primary" disabled={attachBusy} onClick={() => void attachWebhook()}>
@@ -899,8 +900,8 @@ export default function ProjectDetail() {
                 key={hours}
                 onClick={() => setRangeHours(hours)}
                 aria-pressed={rangeHours === hours}
-                className={`rounded-md px-3 py-1 font-inter text-sm font-medium transition-colors duration-150 ${
-                  rangeHours === hours ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
+                className={`rounded-lg px-3 py-1 font-inter text-sm font-medium transition-colors duration-150 ${
+                  rangeHours === hours ? 'bg-surface text-ink' : 'text-ink-muted hover:text-ink'
                 }`}
               >
                 {label}
@@ -938,7 +939,7 @@ export default function ProjectDetail() {
             {(connectors?.length ?? 0) === 0 ? (
               <>
                 Connect a data source above to see charts here.{' '}
-                <a href="#connectors" className="text-link-emphasis text-link" onClick={(e) => { e.preventDefault(); document.getElementById('connectors')?.scrollIntoView({ behavior: 'smooth' }) }}>Go to connectors →</a>
+                <a href="#connectors" className="text-link-emphasis text-link" onClick={(e) => { e.preventDefault(); document.getElementById('connectors')?.scrollIntoView({ behavior: 'smooth' }) }}>Go to connectors <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></a>
               </>
             ) : (
               'Charts appear here automatically once your first data arrives.'
@@ -1110,7 +1111,7 @@ export default function ProjectDetail() {
         </ul>
       </section>
 
-      <Link to="/portfolio" className="text-link text-sm">← Back to portfolio</Link>
+      <Link to="/portfolio" className="text-link text-sm"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back to portfolio</Link>
 
       {toast && (
         <div
@@ -1124,7 +1125,7 @@ export default function ProjectDetail() {
             aria-label="Dismiss"
             onClick={() => setToast(null)}
           >
-            ×
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
       )}

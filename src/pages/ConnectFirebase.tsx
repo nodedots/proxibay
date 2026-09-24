@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowRight, X } from 'lucide-react'
 import { GuideShell, Step, Path, Trouble } from '../components/ConnectDocs'
 
 /** Firebase service-account key: where it comes from, how to lock it down. */
@@ -11,7 +12,7 @@ export default function ConnectFirebase() {
     >
       <div className="mt-8 flex flex-col gap-8">
         <Step n="1" title="Open your Firebase project settings">
-          <Path>console.firebase.google.com → your project → ⚙️ Project settings → Service accounts tab</Path>
+          <Path>console.firebase.google.com → your project → Project settings → Service accounts tab</Path>
           <p>Click <strong>Generate new private key</strong> and confirm. A JSON file downloads to your computer.</p>
         </Step>
           <Step n="2" title="Lock the key down to read-only (recommended)">
@@ -28,7 +29,7 @@ export default function ConnectFirebase() {
               </code>
               <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">Before — remove this</p>
               <p className="mt-1">
-                <span className="badge badge-alert">Editor ✕</span>
+                <span className="badge badge-alert">Editor <X size={14} aria-hidden="true" /></span>
               </p>
               <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-ink-muted">After — add these two</p>
               <p className="mt-1 flex flex-wrap gap-1">
@@ -90,7 +91,7 @@ export default function ConnectFirebase() {
         </Trouble>
       </div>
       <p className="mt-8 text-body-sm text-ink-muted">
-        Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
+        Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
       </p>
     </GuideShell>
   )

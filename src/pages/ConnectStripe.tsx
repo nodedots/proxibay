@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { GuideShell, Step, Path, Trouble } from '../components/ConnectDocs'
 
 /** Stripe: restricted key, webhook registration, nightly fallback. */
@@ -43,7 +44,7 @@ export default function ConnectStripe() {
         </Trouble>
       </div>
       <p className="mt-8 text-body-sm text-ink-muted">
-        Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides →</Link>
+        Connecting something else? <Link to="/docs/connect" className="text-link-emphasis text-link">All connection guides <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
       </p>
     </GuideShell>
   )

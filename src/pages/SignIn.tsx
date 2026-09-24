@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { X } from 'lucide-react'
 import {
   createUserWithEmailAndPassword,
   getAdditionalUserInfo,
@@ -244,7 +245,7 @@ export default function SignIn() {
             title="Close"
             className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted hover:bg-inset hover:text-ink"
           >
-            ×
+            <X size={18} aria-hidden="true" />
           </button>
           <h1 id="consent-heading" className="font-inter text-2xl font-semibold text-ink">
             One more step
@@ -301,7 +302,7 @@ export default function SignIn() {
           title="Close"
           className="float-right -mr-1 -mt-1 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted hover:bg-inset hover:text-ink"
         >
-          ×
+          <X size={18} aria-hidden="true" />
         </button>
         <div className="flex gap-4" role="tablist" aria-label="Sign in or create account">
           {(['signin', 'signup'] as Mode[]).map((m) => (

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 
 export type ConnectableType = 'firebase' | 'stripe' | 'supabase' | 'generic-webhook'
 
@@ -75,16 +76,11 @@ export default function ConnectorPicker(props: {
                 <span className="block font-inter text-base font-semibold text-ink">{group.title}</span>
                 <span className="block font-inter text-xs font-normal text-ink-muted">{group.blurb}</span>
               </span>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden="true"
+              <ChevronDown
+                size={16}
                 className={`shrink-0 text-ink-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-              >
-                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+                aria-hidden="true"
+              />
             </button>
             {isOpen && (
               <ul className="flex flex-col gap-2 bg-inset p-2">
@@ -110,7 +106,7 @@ export default function ConnectorPicker(props: {
                         ) : item.state === 'soon' ? (
                           <span className="badge badge-highlight shrink-0">Soon</span>
                         ) : (
-                          <span className="shrink-0 font-inter text-sm font-medium text-coral-emphasis">Connect →</span>
+                          <span className="flex shrink-0 items-center gap-1 font-inter text-sm font-medium text-coral-emphasis">Connect <ArrowRight size={14} aria-hidden="true" /></span>
                         )}
                       </button>
                     </li>

@@ -111,7 +111,7 @@ export default function SiteFooter() {
                     rel="noreferrer"
                     aria-label={`Stackduck on ${label}`}
                     title={`Stackduck on ${label}`}
-                    className="rounded-md p-2 text-ink-muted transition-colors duration-150 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    className="rounded-lg p-2 text-ink-muted transition-colors duration-150 hover:bg-surface hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                   >
                     <Icon size={16} />
                   </a>

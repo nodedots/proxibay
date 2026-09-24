@@ -16,7 +16,7 @@ Tracky reads like a creative's bullet journal that became a product: a warm ligh
 | Mint Pulse | `#86e0c1` | `--color-mint-pulse` | Green state accent for badges, validation surfaces, and short status labels. |
 | Butter Yellow | `#fedf89` | `--color-butter-yellow` | Top announcement banner, highlight washes — warm pastel yellow for friendly alerts that don't shout |
 | Graphite | `#333333` | `--color-graphite` | Secondary text, hairline borders, icon strokes — sits between navy and pure black for less-load-bearing elements |
-| Slate | `#6d6f75` | `--color-slate` | Muted helper text, subdued borders, caption-level content — the cool gray for de-emphasized UI |
+| Slate | `#6b6d73` | `--color-slate` | Muted helper text, subdued borders, caption-level content — adjusted to exceed 4.5:1 contrast on Ash Canvas |
 | Ash Canvas | `#f2f2f2` | `--color-ash-canvas` | Page background — warm light gray that lifts white cards without the coldness of pure white |
 | Paper White | `#ffffff` | `--color-paper-white` | Card surfaces, button labels, overlapping panels — the surface layer above the Ash Canvas |
 | Pure Ink | `#000000` | `--color-pure-ink` | Maximum-emphasis icons, strongest borders, logo mark — used sparingly where absolute contrast is required |
@@ -114,7 +114,7 @@ Inkwell Navy (#151b31) background, Paper White (#ffffff) text, Inter 16px weight
 ### Outlined Ghost Button
 **Role:** Secondary action on light backgrounds (Login / Sign up)
 
-White or transparent background, 1px border in #e8e7e5 or Slate (#6d6f75), Inter 16px weight 500 in Inkwell Navy. 8px radius, 8px vertical / 16px horizontal padding. No shadow.
+White or transparent background, 1px border in #e8e7e5 or Slate (#6b6d73), Inter 16px weight 500 in Inkwell Navy. 8px radius, 8px vertical / 16px horizontal padding. No shadow.
 
 ### Inverse Button
 **Role:** Action on dark feature cards (Try me)
@@ -212,16 +212,16 @@ Single-column max-width contained flow at 1200px. Hero is full-width on Ash Canv
 
 **Quick Color Reference**
 - text (primary): #151b31 (Inkwell Navy)
-- text (muted): #6d6f75 (Slate)
+- text (muted): #6b6d73 (Slate)
 - background: #f2f2f2 (Ash Canvas)
 - surface (card): #ffffff (Paper White)
-- border: #333333 (Graphite) / #6d6f75 (Slate)
+- border: #333333 (Graphite) / #6b6d73 (Slate)
 - accent: #ff5858 (Coral Emphasis)
 - primary action: #151b31 (filled action)
 
 **Example Component Prompts**
 
-1. *Create a hero section:* Ash Canvas (#f2f2f2) full-width background. Centered headline at 64px GRIFTER weight 700, #151b31, letter-spacing 1.92px. The phrase 'actually love' set in #ff5858. Subtext at 18px Inter weight 400, #6d6f75. Primary button: #151b31 background, #ffffff text, Inter 16px weight 500, 8px radius, 13px vertical / 20px horizontal padding.
+1. *Create a hero section:* Ash Canvas (#f2f2f2) full-width background. Centered headline at 64px GRIFTER weight 700, #151b31, letter-spacing 1.92px. The phrase 'actually love' set in #ff5858. Subtext at 18px Inter weight 400, #6b6d73. Primary button: #151b31 background, #ffffff text, Inter 16px weight 500, 8px radius, 13px vertical / 20px horizontal padding.
 
 2. *Create a dark feature card:* #151b31 background, 16px radius, 48px padding. GRIFTER 36px weight 700 heading in #ffffff. Body at 16px Inter weight 400, #ffffff at 80% opacity. White Inverse Button: #ffffff background, #151b31 text, 8px radius, 16px / 24px padding. Overlap a Paper White card rotated -5 degrees, 16px radius, no border, positioned to bleed off the right edge.
 
@@ -251,7 +251,7 @@ Single-column max-width contained flow at 1200px. Hero is full-width on Ash Canv
   --color-mint-pulse: #86e0c1;
   --color-butter-yellow: #fedf89;
   --color-graphite: #333333;
-  --color-slate: #6d6f75;
+  --color-slate: #6b6d73;
   --color-ash-canvas: #f2f2f2;
   --color-paper-white: #ffffff;
   --color-pure-ink: #000000;
@@ -356,7 +356,7 @@ Single-column max-width contained flow at 1200px. Hero is full-width on Ash Canv
   --color-mint-pulse: #86e0c1;
   --color-butter-yellow: #fedf89;
   --color-graphite: #333333;
-  --color-slate: #6d6f75;
+  --color-slate: #6b6d73;
   --color-ash-canvas: #f2f2f2;
   --color-paper-white: #ffffff;
   --color-pure-ink: #000000;

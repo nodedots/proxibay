@@ -1,19 +1,15 @@
 import { Slot } from '@radix-ui/react-slot'
 import { getSvgPath } from 'figma-squircle'
-import { interpolate } from 'flubber'
+import { Check, Pencil } from 'lucide-react'
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform, useVelocity, type MotionStyle, type MotionValue } from 'motion/react'
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import useMeasure from 'react-use-measure'
 
 import { cn } from '@/lib/utils'
 
-const PEN_PATH = 'M3.78181 16.3092L3 21L7.69086 20.2182C8.50544 20.0825 9.25725 19.6956 9.84119 19.1116L20.4198 8.53288C21.1934 7.75922 21.1934 6.5049 20.4197 5.73126L18.2687 3.58024C17.495 2.80658 16.2406 2.80659 15.4669 3.58027L4.88841 14.159C4.30447 14.7429 3.91757 15.4947 3.78181 16.3092Z'
-const TICK_PATH = 'M7.959 20.513L1.592 12.872L3.128 11.592L8.041 17.487L20.947 3.587L22.413 4.948L7.959 20.513Z'
-
 const OPEN_GAP = 8
-const CORNER_RADIUS = 12
+const CORNER_RADIUS = 8
 const GAP_SPRING = { stiffness: 200, damping: 28, mass: 1 }
-const ICON_SPRING = { stiffness: 200, damping: 28 }
 const WIDTH_SPRING = { stiffness: 250, damping: 31 }
 const SWAY_SPRING = { stiffness: 200, damping: 24 }
 const ERROR_SPRING = { stiffness: 700, damping: 9 }
@@ -212,14 +208,6 @@ function DurationPicker({
     const gapVelocity = useVelocity(gap)
     const swayXRaw = useTransform(gapVelocity, [-70, 0, 70], [-3, 0, 3], { clamp: true })
     const swayX = useSpring(swayXRaw, SWAY_SPRING)
-    const iconProgress = useSpring(defaultEditing ? 1 : 0, ICON_SPRING)
-    const iconPath = useTransform(iconProgress, [0, 1], [PEN_PATH, TICK_PATH], {
-        clamp: true,
-        mixer: (from, to) => interpolate(from, to, { maxSegmentLength: 1 }),
-    })
-    const iconStrokeWidth = useTransform(iconProgress, [0, 1], [0, 2.5], { clamp: true })
-    const iconStrokeOpacity = useTransform(iconProgress, [0, 1], [0, 1], { clamp: true })
-    const iconDashOpacity = useTransform(iconProgress, [0, 0.4], [1, 0], { clamp: true })
     const hoursInputRef = useRef<HTMLInputElement>(null)
 
     const toggleEdit = () => {
@@ -228,13 +216,10 @@ function DurationPicker({
         }
         const next = !isEditing
         const targetGap = next ? OPEN_GAP : 0
-        const targetIcon = next ? 1 : 0
         if (shouldReduceMotion) {
             gap.jump(targetGap)
-            iconProgress.jump(targetIcon)
         } else {
             gap.set(targetGap)
-            iconProgress.set(targetIcon)
         }
         setIsEditing(next)
         onEditingChange?.(next)
@@ -270,10 +255,7 @@ function DurationPicker({
                     aria-label={isEditing ? 'Save duration' : 'Edit duration'}
                     className='w-12 h-12 bg-elevated flex justify-center items-center active:scale-90 transition-transform disabled:active:scale-100'
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18">
-                        <motion.path fill="var(--color-ink-muted)" stroke="var(--color-ink-muted)" strokeWidth={0} strokeLinejoin="round" strokeLinecap="round" style={{ strokeWidth: iconStrokeWidth, strokeOpacity: iconStrokeOpacity }} d={iconPath} />
-                        <motion.path d="M14 6L18 10" fill="none" strokeWidth={1.5} strokeLinecap="round" className="stroke-elevated" style={{ opacity: iconDashOpacity }} />
-                    </svg>
+                    {isEditing ? <Check size={18} aria-hidden="true" /> : <Pencil size={18} aria-hidden="true" />}
                 </button>
             </SquircleSegment>
         </motion.div>

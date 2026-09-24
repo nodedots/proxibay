@@ -57,7 +57,7 @@ const themes = {
     flapInsetColor: "0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.12 0",
     cardFill: "#ffffff",
     cardStroke: "#e8e7e5",
-    cardLineFill: "#6d6f75",
+    cardLineFill: "#6b6d73",
     cardInsetColor: "0 0 0 0 0.91 0 0 0 0 0.9 0 0 0 0 0.89 0 0 0 0.35 0",
   },
   proxibay: {
@@ -70,7 +70,7 @@ const themes = {
     flapInsetColor: "0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.12 0",
     cardFill: "#ffffff",
     cardStroke: "#e8e7e5",
-    cardLineFill: "#6d6f75",
+    cardLineFill: "#6b6d73",
     cardInsetColor: "0 0 0 0 0.91 0 0 0 0 0.9 0 0 0 0 0.89 0 0 0 0.35 0",
   },
 } as const;

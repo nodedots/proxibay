@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import { Code } from '../components/ConnectDocs'
@@ -150,7 +151,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p className="mt-1 text-body-sm text-ink-muted">
               Paste a service-account key. Stackduck checks the connection immediately,
               then polls user and error metrics on a schedule. Works best with read-only
-              keys. <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              keys. <Link to="/docs/connect/firebase" className="text-link-emphasis text-link">Step-by-step key guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
           </div>
           <div className="card">
@@ -158,7 +159,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p className="mt-1 text-body-sm text-ink-muted">
               For anything else — Express, Django, Rails, a cron job. We give you a URL
               and a signing secret; your backend signs each event and posts it. The
-              connector flips to connected on the first verified event. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough →</Link>
+              connector flips to connected on the first verified event. <Link to="/docs/connect/webhook" className="text-link-emphasis text-link">Signing walkthrough <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
           </div>
           <div className="card">
@@ -167,7 +168,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               Paste a restricted secret key and Stackduck checks it on the spot. Register
               the endpoint URL we give you in your Stripe dashboard for instant charge and
               payout events — or skip it and get nightly revenue totals instead.{' '}
-              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              <Link to="/docs/connect/stripe" className="text-link-emphasis text-link">Step-by-step key guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
           </div>
           <div className="card">
@@ -177,7 +178,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
               pasted the wrong one.{' '}
-              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
           </div>
         </div>

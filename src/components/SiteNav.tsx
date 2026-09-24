@@ -19,7 +19,7 @@ export default function SiteNav({ active }: { active?: SiteSection }) {
   const user = useAuthUser()
   return (
     <nav className="bg-transparent">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between px-6 py-4">
         <Logo />
         <div className="flex items-center gap-5">
           <div className="hidden items-center gap-5 text-sm sm:flex">

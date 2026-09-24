@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, Check } from 'lucide-react'
 import { motion } from 'motion/react'
 import { api, loadErrorMessage } from '../lib/api'
 import { auth } from '../firebase'
@@ -38,7 +39,7 @@ const STATUS_DOT: Record<string, string> = {
 const STATUS_FILL: Record<string, string> = {
   red: '#ff5858',
   amber: '#fedf89',
-  gray: '#6d6f75',
+  gray: '#6b6d73',
   green: '#86e0c1',
 }
 
@@ -59,7 +60,7 @@ function OnboardingStep(props: {
           props.done ? 'bg-mint-pulse text-inkwell-navy' : 'bg-inset text-ink-muted'
         }`}
       >
-        {props.done ? '✓' : ''}
+        {props.done ? <Check size={16} strokeWidth={3} aria-hidden="true" /> : ''}
       </span>
       <div className="min-w-0 flex-1">
         <p className={`font-inter text-sm font-medium ${props.done ? 'text-ink-muted line-through' : ''}`}>
@@ -340,7 +341,7 @@ export default function PortfolioHome() {
             <div className="mt-3">
               {e.keyMetrics.length === 0 ? (
                 <p className="text-sm text-ink-muted">
-                  No data connected. <span className="text-link-emphasis text-link">Connect →</span>
+                  No data connected. <span className="text-link-emphasis text-link">Connect <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></span>
                 </p>
               ) : (
                 <dl className="flex flex-wrap gap-x-4 gap-y-1">

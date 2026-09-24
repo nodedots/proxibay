@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, BellRing, Check, Copy, FolderKanban, ShieldCheck, Webhook } from 'lucide-react'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import Folder from '../components/ui/folder-component'
@@ -37,7 +38,7 @@ function PortfolioFolderDemo() {
       <Folder color="stackduck" size="sm" autoPlay accent={project.accent} />
       <div
         key={active}
-        className="fade-swap flex items-center gap-2 rounded-full bg-paper-white py-1.5 pl-3 pr-4 shadow-sm-2"
+        className="fade-swap flex items-center gap-2 rounded-full bg-paper-white py-1.5 pl-3 pr-4"
       >
         <span className={`status-dot ${project.dot}`} />
         <span className="font-inter text-xs font-semibold text-inkwell-navy">
@@ -65,7 +66,7 @@ function InstallSnippet() {
 
   return (
     <div className="mt-8 flex flex-col items-center gap-2">
-      <div className="flex max-w-full items-center gap-2 rounded-lg border border-line-strong bg-surface py-2 pl-4 pr-2 shadow-subtle">
+      <div className="flex max-w-full items-center gap-2 rounded-lg border border-line-strong bg-surface py-2 pl-4 pr-2">
         <code className="block min-w-0 select-all overflow-x-auto whitespace-nowrap font-mono text-sm text-ink">
           <span className="mr-2 select-none text-ink-muted">$</span>
           {INSTALL_CMD}
@@ -74,25 +75,16 @@ function InstallSnippet() {
           onClick={() => void copy()}
           aria-label="Copy install command"
           title={copied ? 'Copied!' : 'Copy to clipboard'}
-          className="rounded-md p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
+          className="rounded-lg p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
         >
-          {copied ? (
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="5.5" y="5.5" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M10.5 5.5v-2a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          )}
+          {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
         </button>
       </div>
       <p aria-live="polite" className={`h-4 font-inter text-xs text-ink-muted transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
         Copied!
       </p>
       <Link to="/docs#quickstart" className="text-link-emphasis text-link text-sm">
-        Quick Start →
+        Quick Start <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
       </Link>
     </div>
   )
@@ -109,7 +101,7 @@ export default function Landing() {
       <SiteNav />
 
       {/* HERO */}
-      <header className="mx-auto max-w-[1200px] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
+      <header className="mx-auto max-w-[var(--page-max-width)] px-6 pb-24 pt-24 text-center sm:pb-28 sm:pt-32">
         <Reveal>
           <h1 className="mx-auto max-w-4xl font-display font-bold text-[40px] leading-[1.1] tracking-normal sm:text-display sm:leading-display sm:tracking-display">
           Stop Building Dashboards.
@@ -131,7 +123,7 @@ export default function Landing() {
               {p.name}
             </span>
           ))}
-          <span className="font-inter text-sm font-semibold text-ink-muted">→</span>
+          <ArrowRight size={16} className="text-ink-muted" aria-hidden="true" />
           <span className="badge badge-success !text-sm">One dashboard</span>
         </div>
         <Link to="/signin" className="btn-primary mt-8 inline-block">
@@ -142,11 +134,11 @@ export default function Landing() {
       </header>
 
       {/* DARK FEATURE MOMENT */}
-      <section className="mx-auto max-w-[1200px] px-6 pb-28">
+      <section className="mx-auto max-w-[var(--page-max-width)] px-6 pb-28">
         <Reveal>
         {/* bg-feature: Inkwell Navy in light; bumps to Raised Navy in dark so
             the card stays distinct from the now-darker page (DARK_MODE.md). */}
-        <div className="relative overflow-hidden rounded-3xl bg-feature p-10 shadow-sm-2 sm:p-12">
+        <div className="relative overflow-hidden rounded-3xl bg-feature p-10 sm:p-12">
           <div className="max-w-lg">
             <h2 className="font-display font-bold text-4xl leading-[1.16] text-paper-white sm:text-heading-lg sm:leading-heading-lg">
               Register once. Monitor everything.
@@ -174,57 +166,53 @@ export default function Landing() {
         </Reveal>
       </section>
 
-      {/* FEATURE BLURBS — Paper White band with Warm Stone hairlines for
-          section depth; four-up on desktop, two-up on tablet, stacked on mobile. */}
+      {/* FEATURE BLURBS — one aligned grid, with a shared icon and type rhythm. */}
       <section id="features" className="border-y border-line bg-surface">
-        <div className="mx-auto grid max-w-[1200px] gap-12 px-6 py-24 sm:grid-cols-2 sm:py-28 lg:grid-cols-4 lg:gap-10">
-          <Reveal>
-          <div>
-            <p className="badge">Catalog</p>
-            <h3 className="mt-3 font-inter text-subheading font-semibold">Register any project in seconds.</h3>
+        <div className="mx-auto grid max-w-[var(--page-max-width)] gap-10 px-6 py-20 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal className="min-w-0" delay={0}>
+            <div className="flex h-9 items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-canvas text-ink"><FolderKanban size={18} aria-hidden="true" /></span>
+              <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Catalog</p>
+            </div>
+            <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Register any project in seconds.</h3>
             <p className="mt-2 text-body text-ink-muted">
               A name is enough to start. Add stack tags, repo links, and notes
-              whenever you like — the catalog never gets in the way of monitoring.
+              whenever you like. Your catalog stays out of the way of monitoring.
             </p>
-          </div>
           </Reveal>
-          <Reveal delay={0.08}>
-          <div>
-            <p className="badge">Connectors</p>
-            <h3 className="mt-3 font-inter text-subheading font-semibold">Plug in where your data already lives.</h3>
+          <Reveal className="min-w-0" delay={0.08}>
+            <div className="flex h-9 items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-canvas text-ink"><Webhook size={18} aria-hidden="true" /></span>
+              <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Connectors</p>
+            </div>
+            <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Connect the stack you already use.</h3>
             <p className="mt-2 text-body text-ink-muted">
-              Firebase and Stripe connect directly, and a generic webhook covers
-              everything else. Every source reports the same way, so all your
-              projects read the same.
+              Connect Firebase, Stripe, or Supabase directly, or send signed
+              events from any stack with a webhook. Every source lands in one view.
             </p>
-          </div>
           </Reveal>
-          <Reveal delay={0.16}>
-          <div>
-            <p className="badge">Alerts</p>
-            <h3 className="mt-3 font-inter text-subheading font-semibold">Know before you go looking.</h3>
+          <Reveal className="min-w-0" delay={0.16}>
+            <div className="flex h-9 items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-canvas text-ink"><BellRing size={18} aria-hidden="true" /></span>
+              <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Alerts</p>
+            </div>
+            <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Know before you go looking.</h3>
             <p className="mt-2 text-body text-ink-muted">
               Set a threshold on anything you track. When something breaks,
               Stackduck taps you on the shoulder — email or webhook, your call.
             </p>
-          </div>
           </Reveal>
-          <Reveal delay={0.24}>
-          <div>
-            <div className="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-ink">
-                <path d="M12 2.5 19 5.5v6c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2v-6l7-3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-                <path d="M9 11.5 11.2 13.7 15 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <p className="badge">Security</p>
+          <Reveal className="min-w-0" delay={0.24}>
+            <div className="flex h-9 items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-canvas text-ink"><ShieldCheck size={18} aria-hidden="true" /></span>
+              <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Security</p>
             </div>
-            <h3 className="mt-3 font-inter text-subheading font-semibold">Built with security in mind.</h3>
+            <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Built with security in mind.</h3>
             <p className="mt-2 text-body text-ink-muted">
               Stackduck only asks for the access it needs to monitor your projects.
               Credentials stay encrypted and under your control — revoke anytime
               from your own accounts.
             </p>
-          </div>
           </Reveal>
         </div>
       </section>

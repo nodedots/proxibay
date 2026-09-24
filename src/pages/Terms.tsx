@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import SiteFooter from '../components/SiteFooter'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -84,7 +85,7 @@ export default function Terms() {
           </p>
         </Section>
 
-        <Link to="/" className="text-link mt-6 inline-block text-sm">← Back</Link>
+        <Link to="/" className="text-link mt-6 inline-block text-sm"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back</Link>
       </div>
       </main>
       <SiteFooter />

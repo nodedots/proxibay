@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
 import { GuideShell, Trouble } from '../components/ConnectDocs'
 
 const GUIDES = [
@@ -42,7 +43,7 @@ export default function ConnectGuide() {
             <p className="badge bg-surface">{g.tag}</p>
             <h2 className="mt-2 font-inter text-subheading font-semibold">{g.title}</h2>
             <p className="mt-1 text-body text-ink-muted">{g.blurb}</p>
-            <p className="text-link-emphasis text-link mt-2 text-sm">Read the guide →</p>
+            <p className="text-link-emphasis text-link mt-2 text-sm">Read the guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></p>
           </Link>
         ))}
       </div>
