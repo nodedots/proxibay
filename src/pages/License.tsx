@@ -1,18 +1,23 @@
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import LegalNav from '../components/LegalNav'
 
 /** License page: plain-language MIT summary + pointer to the repo file. */
 export default function License() {
   return (
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
-      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
-        <p className="badge bg-surface">MIT License</p>
-        <h1 className="mt-3 font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
-          Free as in <span className="text-coral-emphasis">actually free.</span>
-        </h1>
-        <div className="card mt-8">
-          <div className="flex flex-col gap-3 font-inter text-sm leading-relaxed text-ink-secondary">
+      <main className="mx-auto max-w-5xl px-6 pb-24 pt-12 sm:pb-28 sm:pt-16">
+        <article className="max-w-3xl">
+          <LegalNav active="license" />
+          <header className="border-b border-line pb-6">
+            <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Open source</p>
+            <h1 className="mt-2 font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
+              Free as in <span className="text-coral-emphasis">actually free.</span>
+            </h1>
+            <p className="mt-2 text-sm font-medium text-ink-muted">MIT License</p>
+          </header>
+          <div className="mt-6 flex flex-col gap-5 font-inter text-body leading-relaxed text-ink-secondary">
             <p>
               Stackduck is MIT licensed. In plain language: you can <strong>use it, modify
               it, self-host it, and build on it</strong> — including commercially — as long
@@ -33,7 +38,7 @@ export default function License() {
             </p>
             <p className="text-ink-muted">Copyright © 2026 Asterverse Integrated Solutions and Allied Services Ltd.</p>
           </div>
-        </div>
+        </article>
       </main>
       <SiteFooter />
     </div>

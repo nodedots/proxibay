@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import LegalNav from '../components/LegalNav'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-8">
+    <section className="border-b border-line py-6 first:pt-0 last:border-0">
       <h2 className="font-inter text-subheading font-semibold text-ink">{title}</h2>
       <div className="mt-3 flex flex-col gap-3 font-inter text-sm leading-relaxed text-ink-secondary">{children}</div>
     </section>
@@ -18,10 +20,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-canvas font-inter text-ink">
-      <main className="mx-auto max-w-2xl px-6 pb-20 pt-12">
-      <div className="card">
-        <h1 className="font-inter text-2xl font-semibold text-ink">Privacy Policy</h1>
-        <p className="mt-1 font-inter text-sm text-ink-muted">Last updated: September 2026</p>
+      <SiteNav />
+      <main className="mx-auto max-w-5xl px-6 pb-24 pt-12 sm:pb-28 sm:pt-16">
+      <article className="max-w-3xl">
+        <LegalNav active="privacy" />
+        <header className="border-b border-line pb-6">
+          <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Your data and choices</p>
+          <h1 className="mt-2 font-display text-heading-sm font-bold sm:text-heading">Privacy Policy</h1>
+          <p className="mt-2 font-inter text-sm text-ink-muted">Last updated: September 2026</p>
+        </header>
 
         <Section title="What Stackduck is">
           <p>
@@ -112,7 +119,7 @@ export default function Privacy() {
         </Section>
 
         <Link to="/" className="text-link mt-6 inline-block text-sm"><ArrowLeft size={14} className="mr-1 inline" aria-hidden="true" />Back</Link>
-      </div>
+      </article>
       </main>
       <SiteFooter />
     </div>

@@ -39,7 +39,7 @@ import LogoStudies from './pages/LogoStudies'
 import { LayoutDashboard } from 'lucide-react'
 import { captureOAuthConflict, clearOAuthConflict, oauthLinkCompleteEventName, oauthLinkFailedEventName, readOAuthConflict } from './lib/auth-conflict'
 
-const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/logo-studies']
+const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/privacy', '/terms', '/logo-studies']
 
 /** Marketing + docs pages own their chrome — match exact or nested paths. */
 function isMarketing(pathname: string): boolean {

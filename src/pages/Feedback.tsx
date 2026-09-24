@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { addDoc, collection, Timestamp } from 'firebase/firestore'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { db } from '../firebase'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
@@ -42,18 +43,30 @@ export default function Feedback() {
   return (
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav />
-      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
+      <main className="mx-auto max-w-5xl px-6 pb-24 pt-12 sm:pb-28 sm:pt-16">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
+        <header className="max-w-xl">
+          <p className="badge bg-surface">No account required</p>
         <h1 className="font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Tell us <span className="text-coral-emphasis">what's broken.</span>
         </h1>
-        <p className="mt-4 text-body-lg text-ink-muted">
+        <p className="mt-4 text-body-lg leading-relaxed text-ink-secondary">
           Bugs, confusing copy, missing connectors — send it here. A human reads
           everything; the human is also the entire team.
         </p>
+        <p className="mt-6 border-t border-line pt-5 text-sm leading-relaxed text-ink-muted">
+          For anything urgent or trackable, use{' '}
+          <a href="https://github.com/nodedots/stackduck/issues" target="_blank" rel="noreferrer" className="text-link-emphasis text-link inline-flex items-center gap-1">
+            GitHub Issues <ArrowRight size={13} aria-hidden="true" />
+          </a>
+          .
+        </p>
+        </header>
 
-        <div className="card mt-8">
+        <div className="card p-5 sm:p-7">
           {sent ? (
-            <div className="text-center">
+            <div className="py-8 text-center">
+              <CheckCircle2 size={32} className="mx-auto text-mint-pulse" aria-hidden="true" />
               <p className="badge badge-success">Received</p>
               <h2 className="mt-3 font-inter text-xl font-semibold">Thanks — it's in the pile.</h2>
               <p className="mt-1 font-inter text-sm text-ink-muted">
@@ -68,9 +81,16 @@ export default function Feedback() {
                 </a>{' '}
                 instead so it can't get lost.
               </p>
+              <button type="button" className="btn-ghost mt-5" onClick={() => { setSent(false); setName(''); setEmail(''); setMessage('') }}>
+                Send another note
+              </button>
             </div>
           ) : (
             <form onSubmit={(e) => void onSubmit(e)} className="flex flex-col gap-4">
+              <div className="border-b border-line pb-4">
+                <h2 className="font-inter text-subheading font-semibold">Send a note</h2>
+                <p className="mt-1 text-sm text-ink-muted">We read every message. Replies go to the email you provide.</p>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="flex flex-col gap-1 text-sm font-medium">
                   Name <span className="font-normal text-ink-muted">(optional)</span>
@@ -118,6 +138,7 @@ export default function Feedback() {
               </button>
             </form>
           )}
+        </div>
         </div>
       </main>
       <SiteFooter />
