@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight, Check, Copy, ShieldCheck } from 'lucide-react'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import Folder from '../components/ui/folder-component'
@@ -74,18 +75,9 @@ function InstallSnippet() {
           onClick={() => void copy()}
           aria-label="Copy install command"
           title={copied ? 'Copied!' : 'Copy to clipboard'}
-          className="rounded-md p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
+          className="rounded-lg p-1.5 text-ink-muted transition-all duration-150 hover:bg-inset hover:text-ink"
         >
-          {copied ? (
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M3 8.5 6.5 12 13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          ) : (
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="5.5" y="5.5" width="8" height="8" rx="2" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M10.5 5.5v-2a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h2" stroke="currentColor" strokeWidth="1.5" />
-            </svg>
-          )}
+          {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
         </button>
       </div>
       <p aria-live="polite" className={`h-4 font-inter text-xs text-ink-muted transition-opacity duration-150 ${copied ? 'opacity-100' : 'opacity-0'}`}>
@@ -212,10 +204,7 @@ export default function Landing() {
           <Reveal delay={0.24}>
           <div>
             <div className="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-ink">
-                <path d="M12 2.5 19 5.5v6c0 4.6-3 7.7-7 9.2-4-1.5-7-4.6-7-9.2v-6l7-3z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-                <path d="M9 11.5 11.2 13.7 15 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <ShieldCheck size={18} aria-hidden="true" className="text-ink" />
               <p className="badge">Security</p>
             </div>
             <h3 className="mt-3 font-inter text-subheading font-semibold">Built with security in mind.</h3>

@@ -1,4 +1,26 @@
+import type { ComponentType, ReactNode, SVGProps } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowRight } from 'lucide-react'
+
+type IconProps = SVGProps<SVGSVGElement> & { size?: number | string }
+
+/**
+ * Inline link arrow — Lucide ArrowRight at text size, aligned to the
+ * baseline. One place so every "guide →" style link shares the same mark.
+ */
+export function LinkArrow({ size = 14 }: { size?: number }) {
+  return <ArrowRight size={size} aria-hidden="true" className="inline-block translate-y-[2px]" />
+}
+
+/** Wraps a link's trailing arrow: keeps icon + label on one line. */
+export function LinkWithArrow({ children }: { children: ReactNode }) {
+  return <span className="inline-flex items-center gap-1">{children} <LinkArrow /></span>
+}
+
+/** Lucide icon slot for GuideShell badges/steps that need a leading mark. */
+export function StepIcon({ Icon }: { Icon: ComponentType<IconProps> }) {
+  return <Icon width={18} height={18} aria-hidden="true" className="text-ink" />
+}
 import SiteNav from './SiteNav'
 import SiteFooter from './SiteFooter'
 

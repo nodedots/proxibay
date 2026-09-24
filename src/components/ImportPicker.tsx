@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import type { ImportItem, ImportSelection } from '../lib/oauth'
 
 /**
@@ -74,9 +75,9 @@ export default function ImportPicker(props: {
           onClick={props.onClose}
           aria-label="Close"
           title="Close"
-          className="float-right -mr-1 -mt-1 self-end rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+          className="modal-close self-end"
         >
-          ×
+          <X size={16} aria-hidden="true" />
         </button>
         <h2 id="import-heading" className="font-inter text-2xl font-semibold text-ink">
           {props.title}

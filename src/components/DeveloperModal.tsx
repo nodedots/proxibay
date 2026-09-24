@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { X } from 'lucide-react'
 
 /** Credit modal: who designs and builds Stackduck. Shared by footer + founder note. */
 export default function DeveloperModal({ onClose }: { onClose: () => void }) {
@@ -19,9 +20,9 @@ export default function DeveloperModal({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           aria-label="Close"
           title="Close"
-          className="absolute right-4 top-4 rounded-lg px-2 py-1 font-inter text-xl leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+          className="modal-close"
         >
-          ×
+          <X size={16} aria-hidden="true" />
         </button>
         <div className="flex flex-col items-center">
           <img

@@ -17,6 +17,7 @@
     "figma-squircle": "^1.1.0",
     "firebase": "^11.10.0",
     "flubber": "^0.4.2",
+    "lucide-react": "^1.48.0",
     "motion": "^13.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

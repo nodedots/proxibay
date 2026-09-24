@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
-import { Code } from '../components/ConnectDocs'
+import { Code, LinkWithArrow } from '../components/ConnectDocs'
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
@@ -177,7 +177,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
               pasted the wrong one.{' '}
-              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide →</Link>
+              <Link to="/docs/connect/supabase" className="text-link-emphasis text-link"><LinkWithArrow>Step-by-step key guide</LinkWithArrow></Link>
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signOut, type User } from 'firebase/auth'
+import { ChevronDown } from 'lucide-react'
 import { auth } from '../firebase'
 import UserAvatar from './UserAvatar'
 
@@ -50,9 +51,7 @@ export default function UserMenu({ user }: { user: User }) {
         className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pl-1 pr-2.5 transition-colors duration-150 hover:border-line-strong focus-visible:outline-2 focus-visible:outline-ring"
       >
         <UserAvatar user={user} size={28} />
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className={`text-ink-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
-          <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ChevronDown size={14} aria-hidden="true" className={`text-ink-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
