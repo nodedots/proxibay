@@ -8,12 +8,13 @@ import { Code } from '../components/ConnectDocs'
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-4">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary font-inter text-base font-semibold text-on-primary">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-line-strong bg-surface font-inter text-sm font-semibold text-ink">
         {n}
       </span>
-      <div>
-        <h3 className="font-inter text-subheading font-semibold">{title}</h3>
-        <div className="mt-1 flex flex-col gap-2 text-body text-ink-muted">{children}</div>
+      <div className="min-w-0 flex-1 border-b border-line pb-6">
+        <p className="text-xs font-semibold uppercase text-ink-muted">Step {n}</p>
+        <h3 className="mt-1 font-inter text-subheading font-semibold">{title}</h3>
+        <div className="mt-2 flex flex-col gap-2 text-body leading-relaxed text-ink-secondary">{children}</div>
       </div>
     </div>
   )
@@ -21,10 +22,12 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
 
 function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
-    <div className="card">
-      <h3 className="font-inter text-body font-semibold">{q}</h3>
-      <div className="mt-1 text-body-sm text-ink-muted">{children}</div>
-    </div>
+    <details className="group border-b border-line py-4 first:border-t">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-inter text-body font-semibold [&::-webkit-details-marker]:hidden">
+        {q}<span aria-hidden="true" className="text-xl font-normal text-ink-muted group-open:rotate-45">+</span>
+      </summary>
+      <div className="mt-2 text-body-sm leading-relaxed text-ink-secondary">{children}</div>
+    </details>
   )
 }
 
@@ -41,30 +44,34 @@ export default function Docs() {
     <div className="min-h-screen bg-canvas font-inter text-ink">
       <SiteNav active="docs" />
 
-      <main className="mx-auto max-w-2xl px-6 pb-24 pt-16 sm:pb-28 sm:pt-20">
+      <main className="mx-auto max-w-5xl px-6 pb-24 pt-12 sm:pb-28 sm:pt-16">
+        <header className="max-w-3xl border-b border-line pb-8 sm:pb-10">
+        <p className="font-inter text-xs font-semibold uppercase text-ink-muted">Stackduck documentation</p>
         <h1 className="font-display font-bold text-4xl leading-[1.16] sm:text-heading-lg sm:leading-heading-lg">
           Up and running <span className="text-coral-emphasis">in minutes.</span>
         </h1>
-        <p className="mt-4 text-body-lg text-ink-muted">
+        <p className="mt-4 max-w-2xl text-body-lg leading-relaxed text-ink-secondary">
           Concepts first, then the three-step quickstart. No agents to install, no code to rewrite.
         </p>
+        </header>
 
-        <nav aria-label="On this page" className="card mt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">On this page</p>
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2 font-inter text-sm font-medium">
-            <a href="#concepts" className="text-link">Core concepts</a>
-            <a href="#quickstart" className="text-link">Quickstart</a>
-            <a href="#connectors" className="text-link">Connectors</a>
-            <a href="#self-hosting" className="text-link">Self-hosting & contributing</a>
-            <a href="#faq" className="text-link">Questions</a>
+        <nav aria-label="On this page" className="sticky top-0 z-10 -mx-6 mt-6 border-y border-line bg-canvas/95 px-6 py-3 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-5 gap-y-2 font-inter text-sm font-medium">
+            <span className="hidden text-xs font-semibold uppercase text-ink-muted sm:inline">On this page</span>
+            <a href="#concepts" className="nav-link">Core concepts</a>
+            <a href="#quickstart" className="nav-link">Quickstart</a>
+            <a href="#connectors" className="nav-link">Connectors</a>
+            <a href="#self-hosting" className="nav-link">Self-hosting</a>
+            <a href="#faq" className="nav-link">Questions</a>
           </div>
         </nav>
 
-        <h2 id="concepts" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Core concepts</h2>
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="max-w-4xl">
+        <h2 id="concepts" className="mt-12 scroll-mt-24 border-b border-line pb-3 font-inter text-heading-sm font-semibold">Core concepts</h2>
+        <div className="mt-4 grid gap-px overflow-hidden rounded-cards border border-line bg-line md:grid-cols-3">
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Project — your catalog entry</h3>
-            <p className="mt-1 text-body-sm text-ink-muted">
+            <p className="mt-1 text-body-sm leading-relaxed text-ink-secondary">
               A project is the thing you run: a name plus whatever context you care about —
               description, stack tags, repo and live links, environment. Only the name is
               required. The catalog never gates monitoring; it's the label everything else hangs off.
@@ -72,7 +79,7 @@ export default function Docs() {
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Connector — how data gets in</h3>
-            <p className="mt-1 text-body-sm text-ink-muted">
+            <p className="mt-1 text-body-sm leading-relaxed text-ink-secondary">
               A connector authenticates against one of your backends and translates what it finds
               into a common shape. Poll connectors (Firebase, Stripe reconciliation, Supabase) fetch
               on a schedule; push connectors (generic webhook, Stripe events) receive data your
@@ -82,7 +89,7 @@ export default function Docs() {
           </div>
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Metric — what you actually read</h3>
-            <p className="mt-1 text-body-sm text-ink-muted">
+            <p className="mt-1 text-body-sm leading-relaxed text-ink-secondary">
               Every data point lands in one of five buckets: users, errors, revenue, uptime, or
               custom. Points are stored as daily aggregates per project, which is why a year of
               charts loads as fast as a week. Cards show the latest numbers; detail pages chart
@@ -91,7 +98,7 @@ export default function Docs() {
           </div>
         </div>
 
-        <h2 id="quickstart" className="mt-14 scroll-mt-6 font-inter text-heading-sm font-semibold">Quickstart</h2>
+        <h2 id="quickstart" className="mt-14 scroll-mt-24 border-b border-line pb-3 font-inter text-heading-sm font-semibold">Quickstart</h2>
 
         <h3 className="mt-6 font-inter text-body font-semibold">Run your own copy</h3>
         <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
@@ -120,7 +127,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
         </div>
 
         <h3 className="mt-8 font-inter text-body font-semibold">Your first project</h3>
-        <div className="mt-4 flex flex-col gap-8">
+        <div className="mt-5 flex flex-col gap-2">
           <Step n="1" title="Add your project">
             <p>
               Give it a name — that's all it takes. Add descriptions, links, and tags
@@ -144,8 +151,8 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </Step>
         </div>
 
-        <h2 id="connectors" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Connectors at a glance</h2>
-        <div className="mt-4 flex flex-col gap-3">
+        <h2 id="connectors" className="mt-14 scroll-mt-24 border-b border-line pb-3 font-inter text-heading-sm font-semibold">Connectors at a glance</h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="card">
             <h3 className="font-inter text-body font-semibold">Firebase</h3>
             <p className="mt-1 text-body-sm text-ink-muted">
@@ -183,8 +190,8 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </div>
         </div>
 
-        <h2 id="self-hosting" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Self-hosting & contributing</h2>
-        <div className="mt-4 flex flex-col gap-3 text-body text-ink-muted">
+        <h2 id="self-hosting" className="mt-14 scroll-mt-24 border-b border-line pb-3 font-inter text-heading-sm font-semibold">Self-hosting & contributing</h2>
+        <div className="mt-4 flex flex-col gap-3 text-body leading-relaxed text-ink-secondary">
           <p>
             Stackduck is MIT licensed and lives at{' '}
             <a
@@ -218,7 +225,8 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           </p>
         </div>
 
-        <h2 id="faq" className="mt-16 scroll-mt-6 font-inter text-heading-sm font-semibold">Questions</h2>        <div className="mt-4 flex flex-col gap-3">
+        <h2 id="faq" className="mt-14 scroll-mt-24 border-b border-line pb-3 font-inter text-heading-sm font-semibold">Questions</h2>
+        <div className="mt-1">
           <Faq q="Do I have to change my project code?">
             <p>For Firebase: no. For other backends: a few lines to sign and post events to your ingest URL. No agents, no SDKs to install.</p>
           </Faq>
@@ -237,6 +245,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <Link to="/signin" className="btn-primary inline-block">
             Add your first project
           </Link>
+        </div>
         </div>
       </main>
 

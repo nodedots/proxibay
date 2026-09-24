@@ -37,13 +37,16 @@ export default function ConnectGuide() {
       title={<>Get your project <span className="text-coral-emphasis">plugged in.</span></>}
       intro="Every connector needs one thing from you before Stackduck can read it. Pick yours below — each guide is its own page, written assuming no cloud experience."
     >
-      <div className="mt-8 flex flex-col gap-3">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {GUIDES.map((g) => (
-          <Link key={g.to} to={g.to} className="card card-hover">
-            <p className="badge bg-surface">{g.tag}</p>
-            <h2 className="mt-2 font-inter text-subheading font-semibold">{g.title}</h2>
-            <p className="mt-1 text-body text-ink-muted">{g.blurb}</p>
-            <p className="text-link-emphasis text-link mt-2 text-sm">Read the guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></p>
+          <Link key={g.to} to={g.to} className="card card-hover flex min-h-48 flex-col">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-xs font-semibold uppercase text-ink-muted">{g.tag}</p>
+              <ArrowRight size={16} className="text-ink-muted" aria-hidden="true" />
+            </div>
+            <h2 className="mt-3 font-inter text-subheading font-semibold">{g.title}</h2>
+            <p className="mt-2 flex-1 text-body-sm leading-relaxed text-ink-secondary">{g.blurb}</p>
+            <p className="mt-4 text-sm font-medium text-coral-emphasis">Read the guide</p>
           </Link>
         ))}
       </div>
