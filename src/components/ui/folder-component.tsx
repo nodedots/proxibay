@@ -76,6 +76,7 @@ const themes = {
 } as const;
 
 const sizeScales = {
+  xs: 0.15,
   sm: 0.65,
   md: 1,
   lg: 1.35,
@@ -83,7 +84,7 @@ const sizeScales = {
 
 type FolderComponentProps = Omit<React.ComponentProps<"div">, "color"> & {
   color?: "black" | "white" | "blue" | "stackduck" | "proxibay";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   /** Optional status-dot fill (e.g. a project health color) drawn on the flap. */
   accent?: string;
   /** Ambient demo mode: breathe open/closed on a loop. Hover/click still win. */

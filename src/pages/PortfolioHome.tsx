@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, ArrowRight, Check, Plus, Search, Upload } from 'lucide-react'
+import { ArrowRight, Check, Plus, Search, Upload } from 'lucide-react'
 import { motion } from 'motion/react'
 import { api, loadErrorMessage } from '../lib/api'
 import { auth } from '../firebase'
 import { listProjectsDirect, withFallback } from '../lib/store'
 import { homeStatusLabel, humanKeyLabel } from '../lib/format'
+import Folder from '../components/ui/folder-component'
 import {
   consumeImportPrompt,
   importSelected,
@@ -32,6 +33,13 @@ const STATUS_DOT: Record<string, string> = {
   amber: 'status-dot status-amber',
   gray: 'status-dot status-gray',
   green: 'status-dot status-green',
+}
+
+const STATUS_FILL: Record<string, string> = {
+  red: '#ff5858',
+  amber: '#fedf89',
+  gray: '#6b6d73',
+  green: '#86e0c1',
 }
 
 const MotionLink = motion(Link)
@@ -336,7 +344,7 @@ export default function PortfolioHome() {
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-inset text-ink-muted"><Activity size={18} aria-hidden="true" /></span>
+                <span className="flex h-[54px] w-16 shrink-0 items-center justify-center" aria-hidden="true"><Folder color="stackduck" size="xs" accent={STATUS_FILL[e.homeStatus]} /></span>
                 <div className="min-w-0"><h2 className="truncate font-inter text-base font-semibold">{e.project.name}</h2><p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted"><span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />{homeStatusLabel(e.homeStatus)}</p></div>
               </div>
               <ArrowRight size={16} className="mt-1 shrink-0 text-ink-muted" aria-hidden="true" />
@@ -344,7 +352,7 @@ export default function PortfolioHome() {
             {(e.project.stackTags?.length ?? 0) > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {e.project.stackTags!.map((t) => (
-                  <span key={t} className="badge">{t}</span>
+                <span key={t} className="badge">{t}</span>
                 ))}
               </div>
             )}

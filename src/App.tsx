@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
-import { getAdditionalUserInfo, getRedirectResult, onAuthStateChanged, type User } from 'firebase/auth'
+import { getAdditionalUserInfo, getRedirectResult, linkWithCredential, onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from './firebase'
 import {
   consumeConsentGiven,
@@ -37,6 +37,7 @@ import UserMenu from './components/UserMenu'
 import ThemeSwitcher from './components/ThemeSwitcher'
 import LogoStudies from './pages/LogoStudies'
 import { LayoutDashboard } from 'lucide-react'
+import { captureOAuthConflict, clearOAuthConflict, oauthLinkCompleteEventName, oauthLinkFailedEventName, readOAuthConflict } from './lib/auth-conflict'
 
 const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/logo-studies']
 
@@ -133,7 +134,28 @@ export default function App() {
   useEffect(() => {
     void getRedirectResult(auth)
       .then(async (result) => {
+        sessionStorage.removeItem('stackduck:oauth-redirect-kind')
         if (!result) return
+        const pendingLink = readOAuthConflict()
+        if (pendingLink) {
+          if (!pendingLink.email || result.user.email?.toLowerCase() !== pendingLink.email.toLowerCase()) {
+            await auth.signOut().catch(() => undefined)
+            window.dispatchEvent(new Event(oauthLinkFailedEventName()))
+            return
+          }
+          try {
+            await linkWithCredential(result.user, pendingLink.credential)
+          } catch {
+            window.dispatchEvent(new Event(oauthLinkFailedEventName()))
+            return
+          }
+          clearOAuthConflict()
+          if (pendingLink.credential.accessToken) {
+            await persistToken(pendingLink.kind, pendingLink.credential.accessToken)
+            await flagImportPromptIfNew(pendingLink.kind)
+          }
+          window.dispatchEvent(new Event(oauthLinkCompleteEventName()))
+        }
         const info = getAdditionalUserInfo(result)
         const kind: OAuthKind | null =
           info?.providerId === 'github.com' ? 'github'
@@ -150,7 +172,12 @@ export default function App() {
           await recordConsent(result.user.uid, result.user.email).catch(() => undefined)
         }
       })
-      .catch(() => undefined)
+      .catch((error: unknown) => {
+        const redirectKind = sessionStorage.getItem('stackduck:oauth-redirect-kind') as OAuthKind | null
+        sessionStorage.removeItem('stackduck:oauth-redirect-kind')
+        consumeConsentGiven()
+        if (redirectKind) captureOAuthConflict(redirectKind, error)
+      })
   }, [])
 
   return (

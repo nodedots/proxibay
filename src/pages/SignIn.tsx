@@ -9,6 +9,8 @@ import {
   signInWithPopup,
   signInWithRedirect,
   sendPasswordResetEmail,
+  linkWithCredential,
+  type User,
 } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
@@ -22,6 +24,7 @@ import {
   tokenFromResult,
   type OAuthKind,
 } from '../lib/oauth'
+import { captureOAuthConflict, clearOAuthConflict, oauthConflictEventName, oauthLinkCompleteEventName, oauthLinkFailedEventName, readOAuthConflict, type PendingOAuthLink } from '../lib/auth-conflict'
 
 type Mode = 'signin' | 'signup'
 
@@ -95,7 +98,7 @@ function friendlyError(code: string, mode: Mode, detail = ''): string {
     case 'auth/cancelled-popup-request':
       return 'The sign-in window was closed before finishing. Try again.'
     case 'auth/account-exists-with-different-credential':
-      return 'This email is already linked to a different sign-in method. Try that one instead.'
+      return 'This email already has a Stackduck account. Sign in with its original method to link this provider.'
     case 'auth/operation-not-allowed':
       return 'This sign-in method isn’t available right now. Try another one.'
     case 'no-token':
@@ -116,15 +119,41 @@ export default function SignIn() {
   const [mode, setMode] = useState<Mode>('signin')
   const [recovering, setRecovering] = useState(false)
   const [resetSent, setResetSent] = useState(false)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => readOAuthConflict()?.email ?? '')
   const [password, setPassword] = useState('')
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [pendingLink, setPendingLink] = useState<PendingOAuthLink | null>(() => readOAuthConflict())
   // A signed-in user with no consent record must agree before entering.
   const [pendingConsent, setPendingConsent] = useState<{ uid: string; email: string | null } | null>(null)
   const pendingRef = useRef(false)
   pendingRef.current = pendingConsent !== null
+  const pendingLinkRef = useRef(false)
+  pendingLinkRef.current = pendingLink !== null
+
+  useEffect(() => {
+    const syncPendingLink = () => {
+      const pending = readOAuthConflict()
+      setPendingLink(pending)
+      if (pending?.email) setEmail(pending.email)
+    }
+    const onLinkComplete = () => {
+      clearOAuthConflict()
+      pendingLinkRef.current = false
+      setPendingLink(null)
+      if (auth.currentUser) void enter(auth.currentUser.uid, auth.currentUser.email)
+    }
+    const onLinkFailed = () => setError('We couldn’t link that provider. Sign in with the account’s original method and try again.')
+    window.addEventListener(oauthConflictEventName(), syncPendingLink)
+    window.addEventListener(oauthLinkCompleteEventName(), onLinkComplete)
+    window.addEventListener(oauthLinkFailedEventName(), onLinkFailed)
+    return () => {
+      window.removeEventListener(oauthConflictEventName(), syncPendingLink)
+      window.removeEventListener(oauthLinkCompleteEventName(), onLinkComplete)
+      window.removeEventListener(oauthLinkFailedEventName(), onLinkFailed)
+    }
+  }, [navigate])
 
   /** True when this user already has a consent record. Self-healing gate. */
   async function hasConsent(uid: string): Promise<boolean> {
@@ -155,7 +184,7 @@ export default function SignIn() {
   useEffect(() => {
     let cancelled = false
     const unsub = auth.onAuthStateChanged((u) => {
-      if (u && !cancelled && !pendingRef.current) {
+      if (u && !cancelled && !pendingRef.current && !pendingLinkRef.current) {
         void enter(u.uid, u.email)
       }
     })
@@ -171,6 +200,22 @@ export default function SignIn() {
     setResetSent(false)
     setError(null)
     setConsent(false)
+  }
+
+  async function finishPendingLink(user: User) {
+    if (!pendingLink) return
+    if (!pendingLink.email || user.email?.toLowerCase() !== pendingLink.email.toLowerCase()) {
+      await auth.signOut()
+      throw new Error('That sign-in belongs to a different email. Use the account that matches the address from the first sign-in attempt.')
+    }
+    await linkWithCredential(user, pendingLink.credential)
+    if (pendingLink.credential.accessToken) {
+      await persistToken(pendingLink.kind, pendingLink.credential.accessToken)
+      await flagImportPromptIfNew(pendingLink.kind)
+    }
+    clearOAuthConflict()
+    pendingLinkRef.current = false
+    setPendingLink(null)
   }
 
   async function onPasswordReset(e: React.FormEvent) {
@@ -193,6 +238,10 @@ export default function SignIn() {
   async function onEmailSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (pendingLink && pendingLink.email && email.trim().toLowerCase() !== pendingLink.email.toLowerCase()) {
+      setError('Use the same email address as the provider sign-in you just attempted.')
+      return
+    }
     setBusy(true)
     try {
       if (mode === 'signup') {
@@ -201,6 +250,7 @@ export default function SignIn() {
         navigate('/portfolio')
       } else {
         const cred = await signInWithEmailAndPassword(auth, email.trim(), password)
+        await finishPendingLink(cred.user)
         await enter(cred.user.uid, cred.user.email)
       }
     } catch (err) {
@@ -223,10 +273,12 @@ export default function SignIn() {
         // Consent (signup mode) was already given via the checkbox; the
         // App-level return handler records it and re-flags the import prompt.
         if (mode === 'signup') markConsentGiven()
+        sessionStorage.setItem('stackduck:oauth-redirect-kind', kind)
         await signInWithRedirect(auth, buildProvider(kind))
         return
       }
       const result = await signInWithPopup(auth, buildProvider(kind))
+      if (pendingLink) await finishPendingLink(result.user)
       const token = tokenFromResult(kind, result)
       if (token) {
         await persistToken(kind, token)
@@ -240,7 +292,16 @@ export default function SignIn() {
       }
     } catch (err) {
       const code = (err as { code?: string }).code ?? ''
-      setError(friendlyError(code, mode, err instanceof Error ? err.message : ''))
+      const conflict = captureOAuthConflict(kind, err)
+      if (conflict) {
+        setMode('signin')
+        setConsent(false)
+        if (conflict.email) setEmail(conflict.email)
+        setPendingLink(conflict)
+        setError(null)
+        return
+      }
+      setError(!code && err instanceof Error ? err.message : friendlyError(code, mode, err instanceof Error ? err.message : ''))
     } finally {
       setBusy(false)
     }
@@ -269,6 +330,9 @@ export default function SignIn() {
   }
 
   const isSignup = mode === 'signup'
+  const providerOptions: OAuthKind[] = pendingLink
+    ? [pendingLink.kind === 'github' ? 'google' : 'github']
+    : ['google', 'github']
 
   function closeToHome() {
     navigate('/')
@@ -363,7 +427,7 @@ export default function SignIn() {
             <button className="mt-5 inline-flex items-center gap-1.5 font-inter text-sm text-link" onClick={() => { setRecovering(false); setResetSent(false); setError(null) }}><ArrowLeft size={15} aria-hidden="true" />Back to sign in</button>
           </div>
         ) : <>
-        <div className="mt-7 flex gap-1 rounded-lg bg-inset p-1" role="tablist" aria-label="Sign in or create account">
+        {!pendingLink && <div className="mt-7 flex gap-1 rounded-lg bg-inset p-1" role="tablist" aria-label="Sign in or create account">
           {(['signin', 'signup'] as Mode[]).map((m) => (
             <button
               key={m}
@@ -379,34 +443,30 @@ export default function SignIn() {
               {m === 'signin' ? 'Sign in' : 'Create account'}
             </button>
           ))}
-        </div>
+        </div>}
 
         <h1 id="auth-heading" className="mt-5 font-inter text-2xl font-semibold text-ink">
-          {isSignup ? 'Create your account' : 'Sign in to Stackduck'}
+          {pendingLink ? 'Connect your sign-in methods' : isSignup ? 'Create your account' : 'Sign in to Stackduck'}
         </h1>
-        <p className="mt-1.5 font-inter text-sm font-normal text-ink-muted">
+        {!pendingLink && <p className="mt-1.5 font-inter text-sm font-normal text-ink-muted">
           {isSignup
             ? 'One account for your whole portfolio. It takes less than a minute.'
             : 'Enter your email and password to continue.'}
-        </p>
+        </p>}
 
         {pendingConsent === null && (
           <div key={mode} className="fade-swap">
+            {pendingLink && <div role="status" className="mt-4 rounded-lg border border-line bg-inset p-3 font-inter text-sm text-ink-secondary">
+              This {pendingLink.kind === 'github' ? 'GitHub' : 'Google'} account matches an existing Stackduck account. Sign in with the other method to securely link both providers.
+              <button className="ml-1 text-link" onClick={() => { clearOAuthConflict(); pendingLinkRef.current = false; setPendingLink(null); setError(null) }}>Cancel</button>
+            </div>}
             <div className="mt-5 flex flex-col gap-2.5">
-              <button
-                className="btn-ghost flex w-full items-center justify-center gap-2"
-                disabled={busy || (isSignup && !consent)}
-                onClick={() => void onOAuth('google')}
-              >
-                <GoogleIcon /> Continue with Google
-              </button>
-              <button
-                className="btn-ghost flex w-full items-center justify-center gap-2"
-                disabled={busy || (isSignup && !consent)}
-                onClick={() => void onOAuth('github')}
-              >
-                <GitHubIcon /> Continue with GitHub
-              </button>
+              {providerOptions.map((kind) => (
+                <button key={kind} className="btn-ghost flex w-full items-center justify-center gap-2" disabled={busy || (isSignup && !consent)} onClick={() => void onOAuth(kind)}>
+                  {kind === 'google' ? <GoogleIcon /> : <GitHubIcon />}
+                  {pendingLink ? `Continue with ${kind === 'google' ? 'Google' : 'GitHub'} and link ${pendingLink.kind === 'github' ? 'GitHub' : 'Google'}` : `Continue with ${kind === 'google' ? 'Google' : 'GitHub'}`}
+                </button>
+              ))}
             </div>
 
             <div className="my-4 flex items-center gap-3" aria-hidden="true">
