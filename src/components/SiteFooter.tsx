@@ -144,6 +144,13 @@ export default function SiteFooter() {
           </div>
           <div className="mt-10 flex flex-col items-start gap-2 border-t border-line pt-5 sm:mt-12 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:pt-6">
             <p className="font-inter text-xs text-ink-muted">© 2026 Stackduck</p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-inter text-xs text-ink-muted">
+              <span>Open source under the MIT License</span>
+              <Link to="/license" className="text-link">License</Link>
+              <a href="https://github.com/nodedots/stackduck" target="_blank" rel="noreferrer" className="text-link">
+                Source on GitHub
+              </a>
+            </div>
             <button
               onClick={() => setDevOpen(true)}
               className="text-link shrink-0 text-left font-inter text-xs font-medium text-ink-muted hover:text-ink sm:text-right"
