@@ -27,10 +27,10 @@ function LinkedInIcon() {
   )
 }
 
-function DiscordIcon() {
+function TelegramIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M20.32 4.37a19.8 19.8 0 0 0-4.93-1.51 13.78 13.78 0 0 0-.64 1.28 18.27 18.27 0 0 0-5.5 0 12.64 12.64 0 0 0-.64-1.28c-1.71.29-3.37.8-4.93 1.51A20.3 20.3 0 0 0 .1 18.06a19.9 19.9 0 0 0 6.07 3.03c.49-.66.93-1.37 1.31-2.11a12.9 12.9 0 0 1-2.05-.98c.17-.12.34-.25.5-.38a14.2 14.2 0 0 0 12.14 0c.16.13.33.26.5.38-.65.39-1.34.72-2.05.98.38.74.82 1.45 1.31 2.11a19.84 19.84 0 0 0 6.07-3.03 20.3 20.3 0 0 0-3.58-13.69zM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.42s.95-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42zm7.97 0c-1.18 0-2.16-1.08-2.16-2.42s.95-2.42 2.16-2.42c1.21 0 2.18 1.1 2.16 2.42 0 1.34-.95 2.42-2.16 2.42z" />
+      <path d="M21.8 3.2 18.6 20c-.24 1.18-.88 1.47-1.78.92l-4.92-3.63-2.37 2.28c-.26.26-.48.48-.98.48l.35-5.01 9.12-8.24c.4-.35-.09-.55-.62-.2L6.12 13.7l-4.85-1.52c-1.06-.33-1.08-1.06.22-1.57L20.45 3.1c.88-.32 1.65.21 1.35 1.57z" />
     </svg>
   )
 }
@@ -44,7 +44,7 @@ const SOCIALS: Array<{
   { href: 'https://github.com/nodedots/stackduck', label: 'GitHub', Icon: GitHubIcon },
   { href: 'https://x.com/stackduck', label: 'X', Icon: XIcon },
   { href: 'https://www.linkedin.com/company/stackduck', label: 'LinkedIn', Icon: LinkedInIcon },
-  { href: 'https://discord.com/users/1147515838493110385', label: 'Discord', Icon: DiscordIcon },
+  { href: 'https://t.me/stackduck', label: 'Telegram', Icon: TelegramIcon },
 ]
 
 const GROUPS: Array<{
