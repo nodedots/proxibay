@@ -1,0 +1,21 @@
+# Local dev database: self-managed Postgres + TimescaleDB (Phase 1).
+# Hosting is NOT decided here — this compose file is for local/dev only
+# (Railway / Fly.io / Supabase Postgres-only / plain VPS are all still open).
+# Start:  docker compose -f backend/docker-compose.yml up -d
+# Stop:   docker compose -f backend/docker-compose.yml down
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: stackduck-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stackduck
+      POSTGRES_PASSWORD: stackduck
+      POSTGRES_DB: stackduck
+    ports:
+      - "5433:5432"
+    volumes:
+      - stackduck-pgdata:/var/lib/postgresql/data
+
+volumes:
+  stackduck-pgdata:
