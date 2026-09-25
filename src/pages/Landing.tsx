@@ -204,8 +204,8 @@ export default function Landing() {
             </div>
             <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Connect the stack you already use.</h3>
             <p className="mt-2 text-body text-ink-muted">
-              Connect Firebase, Stripe, or Supabase directly, or send signed
-              events from any stack with a webhook. Every source lands in one view.
+              Connect Firebase, Stripe, Supabase, Sentry, GitHub Actions, PostHog, Better Stack, or Vercel,
+              and send signed events from any other stack with a webhook. Every source lands in one view.
             </p>
           </Reveal>
           <Reveal className="min-w-0" delay={0.16}>

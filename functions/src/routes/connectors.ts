@@ -6,8 +6,10 @@ import { storeSecret, generateSigningSecret, accessSecret } from '../secrets.js'
 import { firebaseHealthCheck } from '../firebaseConnector.js'
 import { stripeHealthCheck } from '../stripeConnector.js'
 import { supabaseHealthCheck } from '../supabaseConnector.js'
+import { externalHealthCheck } from '../externalConnectors.js'
 
 export const connectorsRouter = Router({ mergeParams: true })
+const EXTERNAL_TYPES = ['sentry', 'github-actions', 'posthog', 'betterstack', 'vercel'] as const
 
 async function ownProject(uid: string, projectIdParam: string | string[]) {
   const projectId = Array.isArray(projectIdParam) ? projectIdParam[0] : projectIdParam
@@ -182,6 +184,87 @@ connectorsRouter.post('/stripe', async (req: AuthedRequest, res) => {
   return res.status(201).json({ connector, healthCheck, stripeEndpoint })
 })
 
+/** POST /v1/projects/:projectId/connectors/:provider for token-based monitoring APIs. */
+connectorsRouter.post('/:provider', async (req: AuthedRequest, res) => {
+  const type = param(req, 'provider')
+  if (!EXTERNAL_TYPES.includes(type as (typeof EXTERNAL_TYPES)[number])) {
+    return err(res, 404, 'not_found', 'Unknown connector provider.')
+  }
+  const provider = type as (typeof EXTERNAL_TYPES)[number]
+  const projectRef = await ownProject(req.uid as string, param(req, 'projectId'))
+  if (!projectRef) return err(res, 404, 'not_found', 'Project not found.')
+  const existing = await projectRef.collection('connectors').where('type', '==', provider).get()
+  const existingConnector = existing.docs[0]
+  if (existingConnector && existingConnector.get('status') !== 'error') {
+    return err(res, 409, 'duplicate_connector', `A ${provider} connector already exists.`)
+  }
+
+  const body = req.body ?? {}
+  if (typeof body.token !== 'string' || !body.token.trim()) {
+    return err(res, 400, 'invalid_argument', 'A provider API token is required.')
+  }
+  let config: Record<string, string>
+  let capabilities: ConnectorInstance['capabilities']
+  if (provider === 'sentry') {
+    if (typeof body.organization !== 'string' || typeof body.project !== 'string') {
+      return err(res, 400, 'invalid_argument', 'Sentry organization and project slugs are required.')
+    }
+    config = { token: body.token.trim(), organization: body.organization.trim(), project: body.project.trim() }
+    capabilities = ['error_metrics']
+  } else if (provider === 'github-actions') {
+    const snap = await projectRef.get()
+    const project = snap.data() as { repoUrl?: string }
+    const input = typeof body.repository === 'string' ? body.repository.trim() : project.repoUrl ?? ''
+    const match = input.match(/(?:github\.com\/)?([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/i)
+    if (!match || !/^[\w.-]+\/[\w.-]+$/.test(match[1])) {
+      return err(res, 400, 'invalid_argument', 'A GitHub repository URL or owner/name is required.')
+    }
+    config = { token: body.token.trim(), repository: match[1] }
+    capabilities = ['custom', 'error_metrics']
+  } else if (provider === 'posthog') {
+    if (typeof body.projectId !== 'string' || !body.projectId.trim() || !['us', 'eu'].includes(body.region)) {
+      return err(res, 400, 'invalid_argument', 'PostHog project ID and region (us or eu) are required.')
+    }
+    config = { token: body.token.trim(), projectId: body.projectId.trim(), region: body.region }
+    capabilities = ['user_metrics', 'custom']
+  } else if (provider === 'betterstack') {
+    if (typeof body.monitorUrl !== 'string' || !/^https:\/\//i.test(body.monitorUrl.trim())) {
+      return err(res, 400, 'invalid_argument', 'An HTTPS monitor URL is required.')
+    }
+    config = { token: body.token.trim(), monitorUrl: body.monitorUrl.trim() }
+    capabilities = ['uptime_metrics']
+  } else {
+    if (typeof body.projectId !== 'string' || !body.projectId.trim() || (body.teamId !== undefined && typeof body.teamId !== 'string')) {
+      return err(res, 400, 'invalid_argument', 'Vercel project ID and optional team ID must be provided.')
+    }
+    config = { token: body.token.trim(), projectId: body.projectId.trim(), ...(body.teamId.trim() ? { teamId: body.teamId.trim() } : {}) }
+    capabilities = ['custom', 'error_metrics']
+  }
+
+  const id = existingConnector?.id ?? `conn_${Date.now().toString(36)}`
+  config.provider = provider
+  const credentialsRef = await storeSecret(id, JSON.stringify(config))
+  const healthCheck = await externalHealthCheck(provider, credentialsRef)
+  const now = Timestamp.now()
+  const connector: ConnectorInstance = {
+    id,
+    type: provider,
+    authType: 'api_key',
+    fetchMode: 'poll',
+    capabilities,
+    credentialsRef,
+    status: healthCheck.ok ? 'connected' : 'error',
+    lastHealthCheck: now,
+    createdAt: now,
+    pollIntervalMinutes: 30,
+  }
+  await projectRef.collection('connectors').doc(id).set(connector)
+  if (!healthCheck.ok) {
+    return res.status(422).json({ error: { code: 'connector_unhealthy', message: healthCheck.detail }, connector, healthCheck })
+  }
+  return res.status(201).json({ connector, healthCheck })
+})
+
 /** POST /v1/projects/:projectId/connectors/:connectorId/healthcheck — manual re-check. */
 connectorsRouter.post('/:connectorId/healthcheck', async (req: AuthedRequest, res) => {
   const uid = req.uid as string
@@ -191,7 +274,7 @@ connectorsRouter.post('/:connectorId/healthcheck', async (req: AuthedRequest, re
   const snap = await ref.get()
   if (!snap.exists) return err(res, 404, 'not_found', 'Connector not found.')
   const connector = snap.data() as ConnectorInstance
-  if (connector.type !== 'firebase' && connector.type !== 'stripe' && connector.type !== 'supabase') {
+  if (!['firebase', 'stripe', 'supabase', ...EXTERNAL_TYPES].includes(connector.type)) {
     return err(res, 400, 'invalid_argument', 'healthCheck is only callable for API-key/poll connectors (push flips on first event).')
   }
   const healthCheck =
@@ -199,7 +282,9 @@ connectorsRouter.post('/:connectorId/healthcheck', async (req: AuthedRequest, re
       ? await stripeHealthCheck(connector.credentialsRef)
       : connector.type === 'supabase'
         ? await supabaseHealthCheck(connector.credentialsRef)
-        : await firebaseHealthCheck(connector.credentialsRef)
+        : EXTERNAL_TYPES.includes(connector.type as (typeof EXTERNAL_TYPES)[number])
+          ? await externalHealthCheck(connector.type as (typeof EXTERNAL_TYPES)[number], connector.credentialsRef)
+          : await firebaseHealthCheck(connector.credentialsRef)
   await ref.update({ status: healthCheck.ok ? 'connected' : 'error', lastHealthCheck: Timestamp.now() })
   const after = await ref.get()
   return res.json({ connector: after.data(), healthCheck })

@@ -11,6 +11,7 @@ import { buildApp } from './app.js'
 import { firebaseFetchMetrics } from './firebaseConnector.js'
 import { stripeReconcile } from './stripeConnector.js'
 import { supabaseFetchMetrics } from './supabaseConnector.js'
+import { externalFetchMetrics } from './externalConnectors.js'
 import { writeEventsToBuckets } from './buckets.js'
 import { ConnectorInstance } from './types.js'
 
@@ -85,6 +86,32 @@ export const pollSupabaseMetrics = onSchedule({ schedule: 'every 30 minutes' }, 
         await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
       } catch (e) {
         console.error(`supabase poll failed ${p.id}/${conn.id}`, e)
+        await c.ref.update({ status: 'error' })
+      }
+    }
+  }
+})
+
+/** Poll API-backed monitoring, analytics, uptime, and deployment connectors. */
+export const pollExternalMetrics = onSchedule({ schedule: 'every 30 minutes' }, async () => {
+  const db = getFirestore()
+  const projects = await db.collection('projects').where('status', 'in', ['active', 'paused']).get()
+  for (const p of projects.docs) {
+    const conns = await p.ref.collection('connectors')
+      .where('type', 'in', ['sentry', 'github-actions', 'posthog', 'betterstack', 'vercel']).get()
+    for (const c of conns.docs) {
+      const conn = c.data() as ConnectorInstance
+      try {
+        const events = await externalFetchMetrics(
+          conn.type as 'sentry' | 'github-actions' | 'posthog' | 'betterstack' | 'vercel',
+          conn.credentialsRef,
+          p.id,
+          conn.id,
+        )
+        await writeEventsToBuckets(events)
+        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
+      } catch (e) {
+        console.error(`external poll failed (${conn.type}) ${p.id}/${conn.id}`, e)
         await c.ref.update({ status: 'error' })
       }
     }

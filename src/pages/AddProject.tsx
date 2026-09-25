@@ -5,6 +5,7 @@ import { api, ApiError, connectErrorMessage } from '../lib/api'
 import { createProjectDirect, withFallback } from '../lib/store'
 import SaJsonUpload from '../components/SaJsonUpload'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
+import ExternalConnectorForm, { type ExternalConnectorType } from '../components/ExternalConnectorForm'
 import type { CreatedProject, FirebaseConnectResult, StripeConnectResult, SupabaseConnectResult, WebhookConnectResult } from '../lib/contracts'
 import type { Project } from '../types'
 
@@ -57,7 +58,7 @@ export default function AddProject() {
   const [busy, setBusy] = useState(false)
 
   // Step 2 state
-  const [connectorChoice, setConnectorChoice] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
+  const [connectorChoice, setConnectorChoice] = useState<ConnectableType | 'webhook' | null>(null)
   const [saJson, setSaJson] = useState('')
   const [stripeKey, setStripeKey] = useState('')
   const [stripeWhSecret, setStripeWhSecret] = useState('')
@@ -175,6 +176,27 @@ export default function AddProject() {
     }
   }
 
+  async function connectExternal(type: ExternalConnectorType, data: Record<string, string>) {
+    setStep2Error(null)
+    setStep2Busy(true)
+    try {
+      const res = await api<{ healthCheck: { ok: boolean; detail: string } }>(
+        `/v1/projects/${project!.id}/connectors/${type}`,
+        { method: 'POST', body: JSON.stringify(data) },
+      )
+      if (!res.healthCheck.ok) {
+        setStep2Error(`Saved but unhealthy: ${res.healthCheck.detail}`)
+        return
+      }
+      sessionStorage.setItem('stackduck:just-connected', type === 'github-actions' ? 'GitHub Actions' : type === 'posthog' ? 'PostHog' : type === 'betterstack' ? 'Better Stack' : type === 'vercel' ? 'Vercel' : 'Sentry')
+      navigate(`/projects/${project!.id}`)
+    } catch (err) {
+      setStep2Error(connectErrorMessage(err))
+    } finally {
+      setStep2Busy(false)
+    }
+  }
+
   if (phase === 'connect' && project) {
     const done = !!webhookResult || !!stripeResult
     return (
@@ -191,6 +213,7 @@ export default function AddProject() {
             <li><strong className="font-medium text-ink">Firebase</strong> — for apps built on Firebase. We read your user counts and error logs.</li>
             <li><strong className="font-medium text-ink">Stripe</strong> — for products that take card payments. We read sales and payouts.</li>
             <li><strong className="font-medium text-ink">Supabase</strong> — for apps backed by a Supabase database. We read your users.</li>
+            <li><strong className="font-medium text-ink">Sentry, GitHub Actions, PostHog, Better Stack, and Vercel</strong> — monitor errors, workflows, product usage, uptime, and deployments.</li>
             <li><strong className="font-medium text-ink">Generic Webhook</strong> — for anything else. We give you a link your app can send updates to.</li>
           </ul>
 
@@ -352,6 +375,20 @@ export default function AddProject() {
                 </button>
                 <button className="btn-ghost" onClick={() => setConnectorChoice(null)}>Back</button>
               </div>
+            </div>
+          )}
+
+          {(connectorChoice === 'sentry' || connectorChoice === 'github-actions' || connectorChoice === 'posthog' || connectorChoice === 'betterstack' || connectorChoice === 'vercel') && (
+            <div className="mt-6">
+              <ExternalConnectorForm
+                type={connectorChoice}
+                repoUrl={project.repoUrl}
+                liveUrl={project.liveUrl}
+                busy={step2Busy}
+                error={step2Error}
+                onConnect={(data) => void connectExternal(connectorChoice, data)}
+                onCancel={() => { setConnectorChoice(null); setStep2Error(null) }}
+              />
             </div>
           )}
 

@@ -34,7 +34,7 @@ export interface Project {
   updatedAt: FirebaseTimestamp
 }
 
-export type ConnectorType = 'firebase' | 'generic-webhook' | 'supabase' | 'stripe'
+export type ConnectorType = 'firebase' | 'generic-webhook' | 'supabase' | 'stripe' | 'sentry' | 'github-actions' | 'posthog' | 'betterstack' | 'vercel'
 export type ConnectorAuthType = 'api_key' | 'oauth' | 'service_account' | 'none'
 export type ConnectorFetchMode = 'poll' | 'push' | 'both'
 export type ConnectorStatus = 'connected' | 'error' | 'pending'

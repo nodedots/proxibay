@@ -1,7 +1,8 @@
-# API_CONTRACT.md — Stackduck Phase 1 (DRAFT for review — no implementation yet)
+# API_CONTRACT.md — Stackduck (historical design notes)
 
-Scope: everything needed for the **Add Project flow** + **Firebase** + **Generic Webhook**
-connectors. Stripe / Supabase / Alerting are NOT in this contract (later phases).
+This file records the original API design and is not a complete or normative description
+of the current API. See [CONNECTORS.md](CONNECTORS.md) for the current connector inventory,
+setup permissions, metric coverage, and token-based connector API.
 
 Base URL (emulator): `http://localhost:5001/proxibay-dev/europe-west1/api`
 Base URL (prod): `https://europe-west1-proxibay-dev.cloudfunctions.net/api`

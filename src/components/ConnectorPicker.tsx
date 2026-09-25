@@ -1,6 +1,6 @@
-import { ArrowRight, CreditCard, Database, Radio } from 'lucide-react'
+import { Activity, ArrowRight, Cloud, CreditCard, Database, GitBranch, Radio, ShieldAlert } from 'lucide-react'
 
-export type ConnectableType = 'firebase' | 'stripe' | 'supabase' | 'generic-webhook'
+export type ConnectableType = 'firebase' | 'stripe' | 'supabase' | 'generic-webhook' | 'sentry' | 'github-actions' | 'posthog' | 'betterstack' | 'vercel'
 
 interface CatalogItem {
   key: string
@@ -38,6 +38,29 @@ const GROUPS: CatalogGroup[] = [
     ],
   },
   {
+    title: 'Monitoring',
+    blurb: 'Errors and releases from your existing tools.',
+    items: [
+      { key: 'sentry', name: 'Sentry', blurb: 'Recent error events and trends.', state: 'live', type: 'sentry' },
+      { key: 'github-actions', name: 'GitHub Actions', blurb: 'Workflow runs and failures.', state: 'live', type: 'github-actions' },
+      { key: 'vercel', name: 'Vercel', blurb: 'Recent deployment status and failures.', state: 'live', type: 'vercel' },
+    ],
+  },
+  {
+    title: 'Analytics',
+    blurb: 'Product usage from your analytics stack.',
+    items: [
+      { key: 'posthog', name: 'PostHog', blurb: '30-day active users and event volume.', state: 'live', type: 'posthog' },
+    ],
+  },
+  {
+    title: 'Uptime',
+    blurb: 'Availability from your existing monitors.',
+    items: [
+      { key: 'betterstack', name: 'Better Stack', blurb: 'Live monitor availability status.', state: 'live', type: 'betterstack' },
+    ],
+  },
+  {
     title: 'Webhooks',
     blurb: 'Anything else, on your terms.',
     items: [
@@ -51,11 +74,17 @@ const ICONS = {
   supabase: Database,
   stripe: CreditCard,
   'generic-webhook': Radio,
+  sentry: ShieldAlert,
+  'github-actions': GitBranch,
+  posthog: Activity,
+  betterstack: Activity,
+  vercel: Cloud,
 }
 
 /** Compact connector chooser shared by project setup and project details. */
 export default function ConnectorPicker(props: {
   connectedTypes: string[]
+  failedTypes?: string[]
   onSelect: (type: ConnectableType) => void
 }) {
   const available = GROUPS.flatMap((group) => group.items.filter((item) => item.state === 'live'))
@@ -74,12 +103,13 @@ export default function ConnectorPicker(props: {
       <ul className="grid gap-2 sm:grid-cols-2">
         {available.map((item) => {
           const connected = !!item.type && props.connectedTypes.includes(item.type)
+          const retry = !!item.type && props.failedTypes?.includes(item.type)
           const Icon = item.type ? ICONS[item.type] : Database
           return (
             <li key={item.key}>
               <button
                 type="button"
-                disabled={connected}
+                disabled={connected && !retry}
                 onClick={() => item.type && props.onSelect(item.type)}
                 className="flex min-h-[76px] w-full items-center gap-3 rounded-lg border border-line bg-surface px-3 py-3 text-left transition-colors hover:border-line-strong hover:bg-inset disabled:cursor-default"
               >
@@ -90,7 +120,7 @@ export default function ConnectorPicker(props: {
                   <span className="block truncate font-inter text-sm font-semibold text-ink">{item.name}</span>
                   <span className="mt-0.5 block font-inter text-xs text-ink-muted">{item.blurb}</span>
                 </span>
-                {connected ? <span className="badge badge-success shrink-0">Connected</span> : <ArrowRight size={16} className="shrink-0 text-ink-muted" aria-hidden="true" />}
+                {connected && !retry ? <span className="badge badge-success shrink-0">Connected</span> : retry ? <span className="shrink-0 text-xs font-medium text-coral-emphasis">Reconnect</span> : <ArrowRight size={16} className="shrink-0 text-ink-muted" aria-hidden="true" />}
               </button>
             </li>
           )

@@ -27,6 +27,36 @@ const GUIDES = [
     title: 'The signed webhook',
     blurb: 'A private URL plus a signing secret. Your backend signs each event; no SDKs, no agents.',
   },
+  {
+    to: '/docs#connectors',
+    tag: 'Sentry',
+    title: 'Organization, project, and token',
+    blurb: 'Use a project:read token to report recent error-event volume.',
+  },
+  {
+    to: '/docs#connectors',
+    tag: 'GitHub Actions',
+    title: 'Repository and fine-grained token',
+    blurb: 'Grant read-only Actions and repository metadata access for workflow status.',
+  },
+  {
+    to: '/docs#connectors',
+    tag: 'PostHog',
+    title: 'Project ID, region, and API key',
+    blurb: 'Grant query:read and project read access for usage metrics.',
+  },
+  {
+    to: '/docs#connectors',
+    tag: 'Better Stack',
+    title: 'Monitor URL and Uptime token',
+    blurb: 'Use a read-only Uptime API token to track an existing monitor.',
+  },
+  {
+    to: '/docs#connectors',
+    tag: 'Vercel',
+    title: 'Project ID and access token',
+    blurb: 'Use a scoped read token, and include a team ID for team-owned projects.',
+  },
 ]
 
 /** Connection guide index: one card per connector, each with its own page. */

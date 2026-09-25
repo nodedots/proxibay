@@ -81,8 +81,9 @@ export default function Docs() {
             <h3 className="font-inter text-body font-semibold">Connector — how data gets in</h3>
             <p className="mt-1 text-body-sm leading-relaxed text-ink-secondary">
               A connector authenticates against one of your backends and translates what it finds
-              into a common shape. Poll connectors (Firebase, Stripe reconciliation, Supabase) fetch
-              on a schedule; push connectors (generic webhook, Stripe events) receive data your
+              into a common shape. Poll connectors (Firebase, Supabase, Sentry, GitHub Actions,
+              PostHog, Better Stack, Vercel, and Stripe reconciliation) fetch on a schedule; push connectors (generic
+              webhook and Stripe events) receive data your
               systems send. Each one reports its own status — receiving updates, having trouble,
               or waiting for first data — independently of the project's status.
             </p>
@@ -137,9 +138,9 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
           <Step n="2" title="Connect live data">
             <p>
               Pick a connector right after creating the project, or any time later from
-              its page. Firebase connects with a service-account key and starts polling
-              on its own. Any other backend pushes small signed events to a unique URL
-              we generate for you — a few lines with any HTTP client.
+              its page. Connect supported services with a scoped read token or service
+              credential; Stackduck verifies access and polls on a schedule. Any other
+              backend can push signed events to a unique URL we generate for you.
             </p>
           </Step>
           <Step n="3" title="Read the portfolio">
@@ -186,6 +187,41 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               anon key can't list users, so the health check tells you immediately if you
               pasted the wrong one.{' '}
               <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Sentry</h3>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              Add an organization and project slug plus a token with project:read access.
+              Stackduck polls the project's received error-event volume for the last 24 hours.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">GitHub Actions</h3>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              Connect a repository and fine-grained token with read-only Actions access.
+              Stackduck tracks workflow runs, failures, and in-progress runs over time.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">PostHog</h3>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              Enter your project ID, region, and a project-scoped personal API key. Stackduck
+              reads 30-day active users and 24-hour event volume.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Better Stack</h3>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              Match an existing monitor by URL using a read-only Uptime API token. Stackduck
+              records its current availability (up or down) on each poll.
+            </p>
+          </div>
+          <div className="card">
+            <h3 className="font-inter text-body font-semibold">Vercel</h3>
+            <p className="mt-1 text-body-sm text-ink-muted">
+              Provide a scoped access token and project ID (plus team ID for team projects).
+              Stackduck tracks ready, active, and failed deployments from the last 24 hours.
             </p>
           </div>
         </div>

@@ -11,6 +11,7 @@ Stackduck is an open-source monitoring portfolio for developers who run more tha
 
 - Keep a catalog of projects with stack, repository, environment, and notes.
 - Connect supported data sources and ingest metrics from other backends with signed webhooks.
+- Monitor Sentry errors, GitHub Actions runs, PostHog usage, Better Stack uptime, and Vercel deployments.
 - Compare project health, activity, users, and revenue in a portfolio view.
 - Set threshold alerts delivered by email or webhook.
 - Use Firebase authentication, including email/password, Google, and GitHub sign-in.
@@ -71,6 +72,7 @@ firebase deploy --only functions,hosting
 ## Project documentation
 
 - [API contract](API_CONTRACT.md): Cloud Functions endpoints and payloads
+- [Connector reference](CONNECTORS.md): supported integrations, permissions, and reported metrics
 - [Project detail specification](PROJECT_DETAIL_SPEC.md): active project experience
 - [Decision log](DECISIONS.md): product and implementation decisions
 - [Dark mode notes](DARK_MODE.md): theme behavior

@@ -10,7 +10,7 @@ const ENTRIES: Array<{ version: string; date: string; items: string[] }> = [
     items: [
       'Portfolio home with project cards, health colors, search, and filters',
       'Project detail: inline-editable catalog, connectors, metric charts',
-      'Connectors: Firebase, Stripe, Supabase, generic webhook, plus GitHub/Google Cloud importing',
+      'Connectors: Firebase, Stripe, Supabase, Sentry, GitHub Actions, PostHog, Better Stack, Vercel, and signed webhooks',
       'Email, Google, and GitHub sign-in with consent records',
       'Connection guides, docs, and this changelog',
     ],

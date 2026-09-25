@@ -7,6 +7,7 @@ import DurationPicker from '../components/ui/duration-picker'
 import { api, ingestUrlFor, stripeUrlFor, ApiError, connectErrorMessage, loadErrorMessage } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
+import ExternalConnectorForm, { type ExternalConnectorType } from '../components/ExternalConnectorForm'
 import { getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { connectorStatus, describeRule, humanKeyLabel, metricFamilyLabel } from '../lib/format'
 import { db } from '../firebase'
@@ -138,7 +139,7 @@ export default function ProjectDetail() {
   const [nameEditing, setNameEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
   const [nameSaving, setNameSaving] = useState(false)
-  const [attach, setAttach] = useState<'firebase' | 'stripe' | 'supabase' | 'webhook' | null>(null)
+  const [attach, setAttach] = useState<ConnectableType | 'webhook' | null>(null)
   const [showConnectorPicker, setShowConnectorPicker] = useState(false)
   const [stripeKey, setStripeKey] = useState('')
   const [stripeWhSecret, setStripeWhSecret] = useState('')
@@ -464,6 +465,28 @@ export default function ProjectDetail() {
     }
   }
 
+  async function attachExternal(type: ExternalConnectorType, data: Record<string, string>) {
+    if (!projectId) return
+    setAttachError(null)
+    setAttachBusy(true)
+    try {
+      const result = await api<{ healthCheck: { ok: boolean; detail: string } }>(
+        `/v1/projects/${projectId}/connectors/${type}`,
+        { method: 'POST', body: JSON.stringify(data) },
+      )
+      if (!result.healthCheck.ok) setAttachError(`Saved but unhealthy: ${result.healthCheck.detail}`)
+      else {
+        setAttach(null)
+        showToast(`${type === 'github-actions' ? 'GitHub Actions' : type === 'posthog' ? 'PostHog' : type === 'betterstack' ? 'Better Stack' : type === 'vercel' ? 'Vercel' : 'Sentry'} connected. First metrics arrive on the next poll.`)
+      }
+      await load()
+    } catch (e) {
+      setAttachError(connectErrorMessage(e))
+    } finally {
+      setAttachBusy(false)
+    }
+  }
+
   if (error === 'not-found') {
     return (
       <div className="card mt-8 text-center">
@@ -679,7 +702,10 @@ export default function ProjectDetail() {
 
         {showConnectorPicker && (connectors?.length ?? 0) > 0 && (
           <div className="mt-4 border-t border-line pt-4">
-            <ConnectorPicker connectedTypes={(connectors ?? []).map((c) => c.type)} onSelect={(type) => {
+            <ConnectorPicker
+              connectedTypes={(connectors ?? []).filter((c) => c.status !== 'error').map((c) => c.type)}
+              failedTypes={(connectors ?? []).filter((c) => c.status === 'error').map((c) => c.type)}
+              onSelect={(type) => {
               setAttach(type === 'generic-webhook' ? 'webhook' : type)
               setWebhookSecret(null)
               setStripeEndpoint(null)
@@ -696,6 +722,7 @@ export default function ProjectDetail() {
             <div className="mt-3">
               <ConnectorPicker
                 connectedTypes={[]}
+                failedTypes={[]}
                 onSelect={(type: ConnectableType) => {
                   setAttach(type === 'generic-webhook' ? 'webhook' : type)
                   setWebhookSecret(null)
@@ -717,10 +744,10 @@ export default function ProjectDetail() {
                   <div className="flex items-center gap-2">
                     <span className={`status-dot ${st.dot}`} aria-hidden="true" />
                     <span className="text-sm font-semibold">
-                      {c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Generic Webhook'}
+                      {c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : c.type === 'sentry' ? 'Sentry' : c.type === 'github-actions' ? 'GitHub Actions' : c.type === 'posthog' ? 'PostHog' : c.type === 'betterstack' ? 'Better Stack' : c.type === 'vercel' ? 'Vercel' : 'Generic Webhook'}
                     </span>
                   </div>
-                  {(c.type === 'firebase' || c.type === 'stripe' || c.type === 'supabase') && (
+                  {(c.type === 'firebase' || c.type === 'stripe' || c.type === 'supabase' || c.type === 'sentry' || c.type === 'github-actions' || c.type === 'posthog' || c.type === 'betterstack' || c.type === 'vercel') && (
                     <button className="btn-ghost text-sm" disabled={healthBusy === c.id} onClick={() => void runHealthcheck(c.id)}>
                       {healthBusy === c.id ? 'Checking…' : 'Check again'}
                     </button>
@@ -880,6 +907,17 @@ export default function ProjectDetail() {
               <button className="btn-ghost" onClick={() => { setAttach(null); setAttachError(null) }}>Cancel</button>
             </div>
           </div>
+        )}
+        {(attach === 'sentry' || attach === 'github-actions' || attach === 'posthog' || attach === 'betterstack' || attach === 'vercel') && (
+          <ExternalConnectorForm
+            type={attach}
+            repoUrl={entry?.project.repoUrl}
+            liveUrl={entry?.project.liveUrl}
+            busy={attachBusy}
+            error={attachError}
+            onConnect={(data) => void attachExternal(attach, data)}
+            onCancel={() => { setAttach(null); setAttachError(null) }}
+          />
         )}
         {attach === 'webhook' && (
           <div className="mt-3 rounded-lg bg-inset p-4">
@@ -1120,7 +1158,7 @@ export default function ProjectDetail() {
           {(connectors ?? []).map((c) => {
             const st = connectorStatus(c.status)
             const activity = connectorActivity(c)
-            const label = c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : 'Webhook'
+            const label = c.type === 'firebase' ? 'Firebase' : c.type === 'stripe' ? 'Stripe' : c.type === 'supabase' ? 'Supabase' : c.type === 'sentry' ? 'Sentry' : c.type === 'github-actions' ? 'GitHub Actions' : c.type === 'posthog' ? 'PostHog' : c.type === 'betterstack' ? 'Better Stack' : c.type === 'vercel' ? 'Vercel' : 'Webhook'
             return (
               <li key={c.id} className="text-ink-muted">
                 {label} — {st.headline.toLowerCase()}{activity ? ` · ${activity}` : ''}
