@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp, writeBatch, type QuerySnapshot, type DocumentData } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import DurationPicker from '../components/ui/duration-picker'
 import { api, ingestUrlFor, stripeUrlFor, ApiError, connectErrorMessage, loadErrorMessage } from '../lib/api'
 import SaJsonUpload from '../components/SaJsonUpload'
+import ReconnectBanner, { needsReconnect } from '../components/ReconnectBanner'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
 import ExternalConnectorForm, { type ExternalConnectorType } from '../components/ExternalConnectorForm'
-import { getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
+import { deleteProjectData, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { connectorStatus, describeRule, humanKeyLabel, metricFamilyLabel } from '../lib/format'
 import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
@@ -295,27 +296,7 @@ export default function ProjectDetail() {
    *  Secret-manager credentials are orphaned (no client access) — documented. */
   async function deleteProject() {
     if (!projectId) return
-    const batchDelete = async (snap: QuerySnapshot<DocumentData>) => {
-      const CHUNK = 400
-      for (let i = 0; i < snap.docs.length; i += CHUNK) {
-        const batch = writeBatch(db)
-        for (const d of snap.docs.slice(i, i + CHUNK)) batch.delete(d.ref)
-        await batch.commit()
-      }
-    }
-    const conns = await getDocs(collection(db, 'projects', projectId, 'connectors'))
-    await batchDelete(conns)
-    const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
-    await batchDelete(rs)
-    for (;;) {
-      const buckets = await getDocs(
-        query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(400)),
-      )
-      if (buckets.docs.length === 0) break
-      await batchDelete(buckets)
-      if (buckets.docs.length < 400) break
-    }
-    await deleteDoc(doc(db, 'projects', projectId))
+    await deleteProjectData(projectId)
     navigate('/portfolio')
   }
 
@@ -791,7 +772,19 @@ export default function ProjectDetail() {
                   )}
                 </div>
                 <p className="mt-1 text-sm font-medium">{st.headline}</p>
-                {c.status === 'error' && (
+                {c.status === 'error' && needsReconnect(c.lastError) && (
+                  <ReconnectBanner
+                    connectorType={c.type}
+                    onReconnect={() => {
+                      setAttach(c.type === 'generic-webhook' ? 'webhook' : (c.type as ConnectableType))
+                      setWebhookSecret(null)
+                      setStripeEndpoint(null)
+                      setShowConnectorPicker(false)
+                      document.getElementById('connectors')?.scrollIntoView({ behavior: 'smooth' })
+                    }}
+                  />
+                )}
+                {c.status === 'error' && !needsReconnect(c.lastError) && (
                   <div role="status" className="mt-2 rounded-md border border-coral-emphasis/30 bg-coral-emphasis/5 px-3 py-2">
                     <p className="text-sm text-coral-emphasis">
                       {healthErrors[c.id] || c.lastError || 'The last connection check failed. Check credentials and provider permissions.'}

@@ -9,7 +9,11 @@
     "start:prod": "node dist/main",
     "test": "jest",
     "typeorm": "typeorm-ts-node-commonjs",
-    "migrate:firestore": "ts-node --transpile-only scripts/firestore-migrate.ts"
+    "migrate:firestore": "ts-node --transpile-only scripts/firestore-migrate.ts",
+    "smoke:email": "node scripts/alert-email-smoke.mjs",
+    "smoke:unit": "node scripts/unit-check.cjs",
+    "smoke:local": "node scripts/local-shakedown.mjs",
+    "smoke:alerts": "node scripts/shakedown-alerts.mjs"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.4",
@@ -35,6 +39,7 @@
     "passport-local": "^1.0.0",
     "pg": "^8.13.0",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.30.0",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.20"
   },

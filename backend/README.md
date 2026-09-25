@@ -56,6 +56,31 @@ otherwise ready, per the brief.
   then `npm run start:dev`, then exercise register → project → connector →
   ingest → metrics → alerts.
 
+## Smoke tests (run these, don't trust a compile)
+
+| Command | What it proves |
+| --- | --- |
+| `npm run smoke:unit` | Signature + encryption vectors (no DB/network needed) |
+| `npm run smoke:local` | register → project → webhook connector → signed ingest → metrics read-back |
+| `npm run smoke:alerts` | alert rule → evaluation → webhook delivery → cooldown blocks re-fire |
+| `npm run smoke:email` | **real** Resend send (needs `RESEND_API_KEY` + `ALERT_TO`) |
+
+`smoke:alerts` needs `PROJECT_ID` + `TOKEN` from `smoke:local`'s output, and the
+API must run with `JOBS_TRIGGER_SECRET` set — that enables
+`POST /v1/internal/jobs/{evaluate-alerts,poll-providers,reconcile-stripe}`
+so the 5-minute job can be triggered on demand instead of waited on. The routes
+404 when `JOBS_TRIGGER_SECRET` is empty, so production stays unaffected.
+
+## Hosting — Railway
+
+See [RAILWAY.md](RAILWAY.md). Key point: use Railway's **TimescaleDB template**
+("[we do not plan to add extensions to the PostgreSQL templates… for the most
+popular extensions, like PostGIS and Timescale, there are several options in the
+template marketplace](https://docs.railway.com/guides/postgresql)") — the plain
+Postgres template has no TimescaleDB. Set `REQUIRE_TIMESCALE=true` there so a
+wrong database fails fast instead of silently degrading to `date_trunc()`.
+
+
 ## API surface (mirrors API_CONTRACT.md, JWT instead of Firebase ID tokens)
 
 - `POST /v1/auth/register|login|refresh|logout`, `GET /v1/auth/me`

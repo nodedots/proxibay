@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check, Plus, Search, Upload } from 'lucide-react'
+import { ArrowRight, Check, Plus, Search, Upload, X } from 'lucide-react'
 import { motion } from 'motion/react'
 import { api, loadErrorMessage } from '../lib/api'
 import { auth } from '../firebase'
-import { listProjectsDirect, withFallback } from '../lib/store'
+import { deleteProjectData, listProjectsDirect, withFallback } from '../lib/store'
 import { homeStatusLabel, humanKeyLabel } from '../lib/format'
 import Folder from '../components/ui/folder-component'
 import {
@@ -15,6 +15,7 @@ import {
   type OAuthKind,
 } from '../lib/oauth'
 import ImportPicker from '../components/ImportPicker'
+import ConfirmDialog from '../components/ConfirmDialog'
 import type { ProjectListEntry } from '../lib/contracts'
 
 function timeAgo(iso: { seconds: number } | string | undefined): string | null {
@@ -42,7 +43,7 @@ const STATUS_FILL: Record<string, string> = {
   green: '#86e0c1',
 }
 
-const MotionLink = motion(Link)
+const MotionCard = motion.div
 
 /** One checklist row: done check or step number, title, blurb, optional action. */
 function OnboardingStep(props: {
@@ -89,6 +90,40 @@ export default function PortfolioHome() {
   const [attempt, setAttempt] = useState(0)
   const [importMenu, setImportMenu] = useState(false)
   const [onboardingGone, setOnboardingGone] = useState(false)
+  // Removal is permanent (project + its connectors, metrics, alert rules), so
+  // it goes through a typed confirmation prompt rather than a bare click.
+  const [removeTarget, setRemoveTarget] = useState<ProjectListEntry | null>(null)
+  const [removeBusy, setRemoveBusy] = useState(false)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const noticeTimer = useRef<number | null>(null)
+
+  function flashNotice(msg: string) {
+    setNotice(msg)
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current)
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 5000)
+  }
+
+  useEffect(() => () => {
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current)
+  }, [])
+
+  async function confirmRemoval() {
+    if (!removeTarget) return
+    const { id, name } = removeTarget.project
+    setRemoveBusy(true)
+    setRemoveError(null)
+    try {
+      await deleteProjectData(id)
+      setEntries((prev) => (prev ? prev.filter((e) => e.project.id !== id) : prev))
+      setRemoveTarget(null)
+      flashNotice(`“${name}” was removed, along with its data sources, metrics, and alert rules.`)
+    } catch (e) {
+      setRemoveError(loadErrorMessage(`“${name}” for removal`, e))
+    } finally {
+      setRemoveBusy(false)
+    }
+  }
   const [picker, setPicker] = useState<{
     kind: OAuthKind
     items: ImportItem[]
@@ -332,11 +367,9 @@ export default function PortfolioHome() {
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((e, i) => (
-          <MotionLink
+          <MotionCard
             key={e.project.id}
-            to={`/projects/${e.project.id}`}
-            className="card card-hover"
-            aria-label={`${e.project.name} — ${homeStatusLabel(e.homeStatus)}`}
+            className="card card-hover relative"
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
@@ -345,7 +378,7 @@ export default function PortfolioHome() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-[54px] w-16 shrink-0 items-center justify-center" aria-hidden="true"><Folder color="stackduck" size="xs" accent={STATUS_FILL[e.homeStatus]} /></span>
-                <div className="min-w-0"><h2 className="truncate font-inter text-base font-semibold">{e.project.name}</h2><p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted"><span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />{homeStatusLabel(e.homeStatus)}</p></div>
+                <div className="min-w-0"><h2 className="truncate font-inter text-base font-semibold"><Link to={`/projects/${e.project.id}`} className="after:absolute after:inset-0 after:content-['']">{e.project.name}</Link></h2><p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted"><span className={STATUS_DOT[e.homeStatus]} title={homeStatusLabel(e.homeStatus)} />{homeStatusLabel(e.homeStatus)}</p></div>
               </div>
               <ArrowRight size={16} className="mt-1 shrink-0 text-ink-muted" aria-hidden="true" />
             </div>
@@ -378,7 +411,17 @@ export default function PortfolioHome() {
                 return t ? `Updated ${t}` : 'No updates yet'
               })()}
             </p>
-          </MotionLink>
+            <div className="mt-2 flex items-center justify-end">
+              <button
+                type="button"
+                className="relative z-10 rounded-lg px-2 py-1 font-inter text-xs font-medium text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-coral-emphasis focus-visible:bg-inset focus-visible:text-coral-emphasis"
+                aria-label={`Remove ${e.project.name} from your portfolio`}
+                onClick={() => { setRemoveError(null); setRemoveTarget(e) }}
+              >
+                Remove
+              </button>
+            </div>
+          </MotionCard>
         ))}
       </div>
 
@@ -399,6 +442,48 @@ export default function PortfolioHome() {
             setAttempt((a) => a + 1)
           }}
           onClose={() => setPicker(null)}
+        />
+      )}
+
+      {/* Same bottom-centre toast idiom as the project detail page. */}
+      {notice && (
+        <div
+          role="status"
+          className="fade-swap fixed bottom-6 left-1/2 z-50 flex max-w-sm -translate-x-1/2 items-center gap-3 rounded-2xl border border-line bg-elevated p-4 shadow-sm"
+        >
+          <span className="status-dot status-green shrink-0" aria-hidden="true" />
+          <p className="font-inter text-sm font-medium">{notice}</p>
+          <button
+            className="rounded-lg px-2 py-1 font-inter text-lg leading-none text-ink-muted transition-colors duration-150 hover:bg-inset hover:text-ink"
+            aria-label="Dismiss"
+            onClick={() => setNotice(null)}
+          >
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {removeTarget && (
+        <ConfirmDialog
+          title={`Remove “${removeTarget.project.name}”?`}
+          body={
+            <>
+              <p>
+                This permanently deletes the project and everything attached to it — data sources,
+                metrics history, and alert rules. It can’t be undone.
+              </p>
+              <p className="mt-2">
+                Only want it out of the way for now? Open the project and use Archive instead —
+                archived projects keep their history and can be restored.
+              </p>
+            </>
+          }
+          confirmWord={removeTarget.project.name}
+          confirmLabel="Remove permanently"
+          busy={removeBusy}
+          error={removeError}
+          onConfirm={() => void confirmRemoval()}
+          onCancel={() => { setRemoveTarget(null); setRemoveError(null) }}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   deleteField,
   doc,
   getDocs,
@@ -9,6 +10,8 @@ import {
   Timestamp,
   updateDoc,
   where,
+  writeBatch,
+  type QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import type { ProjectListEntry } from './contracts'
@@ -94,6 +97,38 @@ export async function patchProjectDirect(projectId: string, body: Record<string,
 /** Demo-grade archive: flips project status; connector disable needs the API. */
 export async function archiveProjectDirect(projectId: string): Promise<void> {
   await updateDoc(doc(db, 'projects', projectId), { status: 'archived', updatedAt: Timestamp.now() })
+}
+
+/**
+ * Permanently removes a project and everything underneath it: connectors,
+ * alert rules, metric buckets, then the project row itself. Children go first
+ * so the owner checks in firestore.rules still pass. Batched at 400 writes to
+ * stay inside Firestore's per-batch cap.
+ *
+ * Shared by Portfolio Home removal and the project detail "Delete forever" so
+ * the two paths can't drift apart.
+ */
+export async function deleteProjectData(projectId: string): Promise<void> {
+  const batchDelete = async (docs: QueryDocumentSnapshot[]) => {
+    const CHUNK = 400
+    for (let i = 0; i < docs.length; i += CHUNK) {
+      const batch = writeBatch(db)
+      for (const d of docs.slice(i, i + CHUNK)) batch.delete(d.ref)
+      await batch.commit()
+    }
+  }
+  await batchDelete((await getDocs(collection(db, 'projects', projectId, 'connectors'))).docs)
+  await batchDelete((await getDocs(collection(db, 'projects', projectId, 'alertRules'))).docs)
+  // Metric buckets are a flat collection keyed by projectId — drain in pages.
+  for (;;) {
+    const buckets = await getDocs(
+      query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(400)),
+    )
+    if (buckets.docs.length === 0) break
+    await batchDelete(buckets.docs)
+    if (buckets.docs.length < 400) break
+  }
+  await deleteDoc(doc(db, 'projects', projectId))
 }
 
 export interface DirectBucket { date: string; points: Array<{ time: string; value: number }>; dailyAggregate?: { sum?: number; last?: number } }

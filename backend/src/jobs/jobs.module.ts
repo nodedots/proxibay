@@ -5,6 +5,8 @@ import { ConnectorsModule } from '../connectors/connectors.module';
 import { Connector } from '../entities/connector.entity';
 import { Project } from '../entities/project.entity';
 import { MetricsModule } from '../metrics/metrics.module';
+import { JobsTriggerController } from './jobs-trigger.controller';
+import { JobsTriggerGuard } from './jobs-trigger.guard';
 import { JobsService } from './jobs.service';
 
 @Module({
@@ -14,6 +16,9 @@ import { JobsService } from './jobs.service';
     MetricsModule,
     AlertsModule,
   ],
-  providers: [JobsService],
+  controllers: [JobsTriggerController],
+  providers: [JobsService, JobsTriggerGuard],
+  exports: [JobsService],
 })
 export class JobsModule {}
+
