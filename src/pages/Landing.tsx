@@ -215,8 +215,8 @@ export default function Landing() {
             </div>
             <h3 className="mt-5 min-h-14 font-inter text-subheading font-semibold">Know before you go looking.</h3>
             <p className="mt-2 text-body text-ink-muted">
-              Set a threshold on anything you track. When something breaks,
-              Stackduck taps you on the shoulder — email or webhook, your call.
+              Save threshold rules for any metric you track. Automatic monitoring
+              and email or webhook notifications are coming soon.
             </p>
           </Reveal>
           <Reveal className="min-w-0" delay={0.24}>

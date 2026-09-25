@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { Timestamp, getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { AuthedRequest, err } from '../auth.js'
 import { ConnectorInstance, MetricType } from '../types.js'
 import { storeSecret, generateSigningSecret, accessSecret } from '../secrets.js'
@@ -49,6 +49,7 @@ connectorsRouter.post('/firebase', async (req: AuthedRequest, res) => {
     capabilities: ['user_metrics', 'error_metrics'],
     credentialsRef,
     status: healthCheck.ok ? 'connected' : 'error',
+    ...(healthCheck.ok ? {} : { lastError: healthCheck.detail }),
     lastHealthCheck: now,
     createdAt: now,
     pollIntervalMinutes: typeof pollIntervalMinutes === 'number' ? pollIntervalMinutes : 30,
@@ -92,6 +93,7 @@ connectorsRouter.post('/supabase', async (req: AuthedRequest, res) => {
     capabilities: ['user_metrics'],
     credentialsRef,
     status: healthCheck.ok ? 'connected' : 'error',
+    ...(healthCheck.ok ? {} : { lastError: healthCheck.detail }),
     lastHealthCheck: now,
     createdAt: now,
     pollIntervalMinutes: 30,
@@ -167,6 +169,7 @@ connectorsRouter.post('/stripe', async (req: AuthedRequest, res) => {
     capabilities: ['revenue_metrics'],
     credentialsRef,
     status: healthCheck.ok ? 'connected' : 'error',
+    ...(healthCheck.ok ? {} : { lastError: healthCheck.detail }),
     lastHealthCheck: now,
     createdAt: now,
   }
@@ -254,6 +257,7 @@ connectorsRouter.post('/:provider', async (req: AuthedRequest, res) => {
     capabilities,
     credentialsRef,
     status: healthCheck.ok ? 'connected' : 'error',
+    ...(healthCheck.ok ? {} : { lastError: healthCheck.detail }),
     lastHealthCheck: now,
     createdAt: now,
     pollIntervalMinutes: 30,
@@ -285,7 +289,11 @@ connectorsRouter.post('/:connectorId/healthcheck', async (req: AuthedRequest, re
         : EXTERNAL_TYPES.includes(connector.type as (typeof EXTERNAL_TYPES)[number])
           ? await externalHealthCheck(connector.type as (typeof EXTERNAL_TYPES)[number], connector.credentialsRef)
           : await firebaseHealthCheck(connector.credentialsRef)
-  await ref.update({ status: healthCheck.ok ? 'connected' : 'error', lastHealthCheck: Timestamp.now() })
+  await ref.update({
+    status: healthCheck.ok ? 'connected' : 'error',
+    lastError: healthCheck.ok ? FieldValue.delete() : healthCheck.detail,
+    lastHealthCheck: Timestamp.now(),
+  })
   const after = await ref.get()
   return res.json({ connector: after.data(), healthCheck })
 })

@@ -13,7 +13,7 @@ Stackduck is an open-source monitoring portfolio for developers who run more tha
 - Connect supported data sources and ingest metrics from other backends with signed webhooks.
 - Monitor Sentry errors, GitHub Actions runs, PostHog usage, Better Stack uptime, and Vercel deployments.
 - Compare project health, activity, users, and revenue in a portfolio view.
-- Set threshold alerts delivered by email or webhook.
+- Save threshold alert rules; automatic evaluation and email/webhook delivery are not enabled yet.
 - Use Firebase authentication, including email/password, Google, and GitHub sign-in.
 
 Connector availability depends on the integration; see the app's connector catalog for current status.

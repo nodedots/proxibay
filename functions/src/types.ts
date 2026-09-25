@@ -38,6 +38,7 @@ export interface ConnectorInstance {
   capabilities: MetricType[]
   credentialsRef: string
   status: ConnectorStatus
+  lastError?: string
   lastHealthCheck?: FirebaseFirestore.Timestamp
   lastFetchedAt?: FirebaseFirestore.Timestamp
   createdAt: FirebaseFirestore.Timestamp

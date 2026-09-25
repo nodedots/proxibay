@@ -147,7 +147,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p>
               Your home page becomes the morning check: every project a card, color-coded
               by health, key numbers on the front. Click through for charts and history.
-              Set an alert threshold and you'll hear about breakage instead of finding it.
+              You can save threshold rule configurations; automatic evaluation and delivery are still in development.
             </p>
           </Step>
         </div>

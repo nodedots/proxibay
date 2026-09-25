@@ -160,6 +160,10 @@ export default function ProjectDetail() {
   const [ruleTarget, setRuleTarget] = useState('')
   const [ruleBusy, setRuleBusy] = useState(false)
   const [ruleError, setRuleError] = useState<string | null>(null)
+  const [ruleActionId, setRuleActionId] = useState<string | null>(null)
+  const [showRuleForm, setShowRuleForm] = useState(false)
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null)
+  const [healthErrors, setHealthErrors] = useState<Record<string, string>>({})
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef<number | null>(null)
 
@@ -408,16 +412,17 @@ export default function ProjectDetail() {
 
   async function createRule() {
     if (!projectId || !ruleKey || !ruleThreshold.trim() || !ruleTarget.trim() || ruleWindow < 1) return
-    const [metricType, ...keyParts] = ruleKey.split('/')
+    const [metricTypeValue, ...keyParts] = ruleKey.split('/')
+    const metricType = metricTypeValue as MetricType
     setRuleError(null)
     setRuleBusy(true)
     try {
       const threshold = Number(ruleThreshold)
-      if (Number.isNaN(threshold)) {
-        setRuleError('Threshold must be a number.')
+      if (!Number.isFinite(threshold)) {
+        setRuleError('Enter a valid numeric threshold.')
         return
       }
-      await addDoc(collection(db, 'projects', projectId, 'alertRules'), {
+      const ruleFields = {
         projectId,
         metricType,
         key: keyParts.join('/'),
@@ -426,15 +431,21 @@ export default function ProjectDetail() {
         windowMinutes: ruleWindow,
         channel: ruleChannel,
         channelTarget: ruleTarget.trim(),
-        status: 'active',
-        createdAt: Timestamp.now(),
-      })
+      }
+      if (editingRuleId) {
+        await updateDoc(doc(db, 'projects', projectId, 'alertRules', editingRuleId), ruleFields)
+        setRules((current) => current?.map((rule) => rule.id === editingRuleId ? { ...rule, ...ruleFields } : rule) ?? null)
+      } else {
+        const createdRule: Omit<AlertRule, 'id'> = { ...ruleFields, status: 'active', createdAt: Timestamp.now() }
+        const saved = await addDoc(collection(db, 'projects', projectId, 'alertRules'), createdRule)
+        setRules((current) => [...(current ?? []), { ...createdRule, id: saved.id }])
+      }
+      setEditingRuleId(null)
       setRuleKey('')
       setRuleThreshold('')
       setRuleTarget('')
       setRuleWindow(15)
-      const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
-      setRules(rs.docs.map((d) => ({ ...(d.data() as AlertRule), id: d.id })))
+      setShowRuleForm(false)
     } catch {
       setRuleError('Couldn’t save the rule. Check your connection and try again.')
     } finally {
@@ -444,22 +455,48 @@ export default function ProjectDetail() {
 
   async function toggleRule(rule: AlertRule) {
     if (!projectId) return
-    await updateDoc(doc(db, 'projects', projectId, 'alertRules', rule.id), {
-      status: rule.status === 'active' ? 'muted' : 'active',
-    })
-    setRules((rs) => rs?.map((r) => (r.id === rule.id ? { ...r, status: r.status === 'active' ? 'muted' : 'active' } : r)) ?? null)
+    setRuleActionId(rule.id)
+    setRuleError(null)
+    try {
+      await updateDoc(doc(db, 'projects', projectId, 'alertRules', rule.id), {
+        status: rule.status === 'active' ? 'muted' : 'active',
+      })
+      setRules((rs) => rs?.map((r) => (r.id === rule.id ? { ...r, status: r.status === 'active' ? 'muted' : 'active' } : r)) ?? null)
+    } catch {
+      setRuleError('Could not update this rule. Check your connection and retry.')
+    } finally {
+      setRuleActionId(null)
+    }
   }
 
   async function deleteRule(rule: AlertRule) {
     if (!projectId) return
-    await deleteDoc(doc(db, 'projects', projectId, 'alertRules', rule.id))
-    setRules((rs) => rs?.filter((r) => r.id !== rule.id) ?? null)
+    setRuleActionId(rule.id)
+    setRuleError(null)
+    try {
+      await deleteDoc(doc(db, 'projects', projectId, 'alertRules', rule.id))
+      setRules((rs) => rs?.filter((r) => r.id !== rule.id) ?? null)
+    } catch {
+      setRuleError('Could not delete this rule. Check your connection and retry.')
+    } finally {
+      setRuleActionId(null)
+    }
   }
 
-  async function runHealthcheck(connectorId: string) {    setHealthBusy(connectorId)
+  async function runHealthcheck(connectorId: string) {
+    setHealthBusy(connectorId)
+    setHealthErrors((errors) => ({ ...errors, [connectorId]: '' }))
     try {
-      await api(`/v1/projects/${projectId}/connectors/${connectorId}/healthcheck`, { method: 'POST' })
+      const result = await api<{ healthCheck: { ok: boolean; detail: string } }>(
+        `/v1/projects/${projectId}/connectors/${connectorId}/healthcheck`,
+        { method: 'POST' },
+      )
+      if (!result.healthCheck.ok) {
+        setHealthErrors((errors) => ({ ...errors, [connectorId]: result.healthCheck.detail }))
+      }
       await load()
+    } catch {
+      setHealthErrors((errors) => ({ ...errors, [connectorId]: 'Could not reach the connector service. Check your connection and try again.' }))
     } finally {
       setHealthBusy(null)
     }
@@ -754,6 +791,17 @@ export default function ProjectDetail() {
                   )}
                 </div>
                 <p className="mt-1 text-sm font-medium">{st.headline}</p>
+                {c.status === 'error' && (
+                  <div role="status" className="mt-2 rounded-md border border-coral-emphasis/30 bg-coral-emphasis/5 px-3 py-2">
+                    <p className="text-sm text-coral-emphasis">
+                      {healthErrors[c.id] || c.lastError || 'The last connection check failed. Check credentials and provider permissions.'}
+                    </p>
+                    <p className="mt-1 text-xs text-ink-muted">Re-enter credentials with Add source, or use Check again to retry the connection.</p>
+                  </div>
+                )}
+                {healthErrors[c.id] && c.status !== 'error' && (
+                  <p role="alert" className="mt-2 text-sm text-coral-emphasis">{healthErrors[c.id]}</p>
+                )}
                 <p className="mt-1 text-xs text-ink-muted">Reporting · {reportingFor(c, keys)}</p>
                 {activity ? (
                   <p className="mt-1 text-xs text-ink-muted">{activity}</p>
@@ -1044,24 +1092,49 @@ export default function ProjectDetail() {
       <section className="card order-4 scroll-mt-24" id="alerts">
         <h2 className="font-inter text-lg font-semibold">Alerts</h2>
         <p className="mt-1 text-sm text-ink-muted">
-          Rules you save here will start watching on their own.
+          Save threshold rules for this project. Automatic evaluation and email or webhook delivery are not enabled yet, so saved rules do not send notifications.
         </p>
+
+        {rules === null && <p className="mt-3 text-sm text-ink-muted">Loading saved rules…</p>}
+        {rules?.length === 0 && (
+          <p className="mt-3 rounded-md border border-line px-3 py-3 text-sm text-ink-muted">
+            No alert rules yet. Add a metric source and save a threshold rule to keep its configuration here.
+          </p>
+        )}
 
         {rules !== null && rules.length > 0 && (
           <ul className="mt-3 flex flex-col gap-2">
             {rules.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <span className={r.status === 'active' ? 'badge badge-success' : 'badge'}>
-                    {r.status === 'active' ? 'Active' : 'Paused'}
-                  </span>
-                  <span className="font-medium">{describeRule(r)}</span>
+              <li key={r.id} className="flex flex-col gap-3 rounded-lg border border-line p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={r.status === 'active' ? 'badge' : 'badge badge-success'}>
+                      {r.status === 'active' ? 'Configured' : 'Muted'}
+                    </span>
+                    <span className="text-sm font-medium">{describeRule(r)}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-ink-muted">{r.channel === 'email' ? 'Email' : 'Webhook'} destination: {r.channelTarget}</p>
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => void toggleRule(r)}>
-                    {r.status === 'active' ? 'Mute' : 'Unmute'}
+                <div className="flex shrink-0 gap-2">
+                  <button className="btn-ghost px-2 py-1 text-xs" disabled={ruleActionId !== null} onClick={() => void toggleRule(r)}>
+                    {ruleActionId === r.id ? 'Updating…' : r.status === 'active' ? 'Mute rule' : 'Resume rule'}
                   </button>
-                  <button className="btn-ghost px-2 py-1 text-xs" onClick={() => void deleteRule(r)}>
+                  <button
+                    className="btn-ghost px-2 py-1 text-xs"
+                    disabled={ruleActionId !== null || ruleBusy}
+                    onClick={() => {
+                      setRuleError(null)
+                      setEditingRuleId(r.id)
+                      setRuleKey(`${r.metricType}/${r.key}`)
+                      setRuleCondition(r.condition)
+                      setRuleThreshold(String(r.threshold))
+                      setRuleWindow(r.windowMinutes)
+                      setRuleChannel(r.channel)
+                      setRuleTarget(r.channelTarget)
+                      setShowRuleForm(true)
+                    }}
+                  >Edit</button>
+                  <button className="btn-ghost px-2 py-1 text-xs" disabled={ruleActionId !== null} aria-label={`Delete alert rule: ${humanKeyLabel(r.key)}`} onClick={() => void deleteRule(r)}>
                     Delete
                   </button>
                 </div>
@@ -1071,17 +1144,28 @@ export default function ProjectDetail() {
         )}
 
         <h3 className="mt-5 font-inter text-base font-semibold">Recent firings</h3>
-        <p className="mt-1 text-sm text-ink-muted">
-          No alerts have fired yet. When one does, you'll see what happened, when, and where
-          it was sent — right here.
+        <p className="mt-1 rounded-md bg-inset px-3 py-3 text-sm text-ink-muted">
+          Firing history will appear here once automatic alert evaluation and notification delivery are available.
         </p>
 
-        <div className="mt-4 rounded-lg bg-inset p-4">
-          <p className="text-sm font-medium">New alert{keys.length === 0 ? ' — connect a data source first so there’s a metric to watch' : ''}</p>
+        {ruleError && <p role="alert" className="mt-3 text-sm text-coral-emphasis">{ruleError}</p>}
+        {keys.length === 0 ? (
+          <div className="mt-4 rounded-md border border-line p-3">
+            <p className="text-sm font-medium">Connect a metric source first</p>
+            <p className="mt-1 text-sm text-ink-muted">Once a source reports its first metric, you can save a threshold rule for it.</p>
+            <button className="btn-ghost mt-2 text-sm" onClick={() => document.getElementById('connectors')?.scrollIntoView({ behavior: 'smooth' })}>
+              Go to data sources <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" />
+            </button>
+          </div>
+        ) : !showRuleForm ? (
+          <button className="btn-primary mt-4" onClick={() => { setRuleError(null); setShowRuleForm(true) }}>New alert rule</button>
+        ) : (
+        <form className="mt-4 rounded-lg bg-inset p-4" onSubmit={(event) => { event.preventDefault(); void createRule() }}>
+          <p className="text-sm font-semibold">{editingRuleId ? 'Edit rule' : 'Configure a rule'}</p>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm font-medium">
               Metric
-              <select className="input" value={ruleKey} onChange={(e) => setRuleKey(e.target.value)} disabled={keys.length === 0}>
+              <select className="input" required value={ruleKey} onChange={(e) => setRuleKey(e.target.value)}>
                 <option value="">Choose…</option>
                 {keys.map((k) => (
                   <option key={`${k.metricType}/${k.key}`} value={`${k.metricType}/${k.key}`}>
@@ -1104,6 +1188,7 @@ export default function ProjectDetail() {
                   className="input"
                   type="number"
                   step="any"
+                  required
                   placeholder="e.g. 5"
                   value={ruleThreshold}
                   onChange={(e) => setRuleThreshold(e.target.value)}
@@ -1133,6 +1218,7 @@ export default function ProjectDetail() {
                 <input
                   className="input"
                   type={ruleChannel === 'email' ? 'email' : 'url'}
+                  required
                   placeholder={ruleChannel === 'email' ? 'you@example.com' : 'https://…'}
                   value={ruleTarget}
                   onChange={(e) => setRuleTarget(e.target.value)}
@@ -1140,15 +1226,16 @@ export default function ProjectDetail() {
               </label>
             </div>
           </div>
-          {ruleError && <p role="alert" className="mt-2 text-sm text-coral-emphasis">{ruleError}</p>}
           <button
+            type="submit"
             className="btn-primary mt-3"
             disabled={ruleBusy || !ruleKey || !ruleThreshold.trim() || !ruleTarget.trim() || ruleWindow < 1}
-            onClick={() => void createRule()}
           >
-            {ruleBusy ? 'Saving…' : 'Save alert'}
+            {ruleBusy ? 'Saving…' : editingRuleId ? 'Save changes' : 'Save rule'}
           </button>
-        </div>
+          <button type="button" className="btn-ghost ml-2 mt-3" disabled={ruleBusy} onClick={() => { setShowRuleForm(false); setEditingRuleId(null); setRuleError(null) }}>Cancel</button>
+        </form>
+        )}
       </section>
 
       {/* 6. Recent */}

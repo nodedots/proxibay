@@ -50,6 +50,7 @@ export interface ConnectorInstance {
   /** pointer to Secret Manager — NEVER a raw secret */
   credentialsRef: string
   status: ConnectorStatus
+  lastError?: string
   lastHealthCheck?: FirebaseTimestamp
   /** poll-mode only */
   lastFetchedAt?: FirebaseTimestamp

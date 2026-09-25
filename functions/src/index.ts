@@ -5,7 +5,7 @@
 import { setGlobalOptions } from 'firebase-functions/v2'
 import { onRequest } from 'firebase-functions/v2/https'
 import { onSchedule } from 'firebase-functions/v2/scheduler'
-import { Timestamp, getFirestore } from 'firebase-admin/firestore'
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore'
 import { initializeApp } from 'firebase-admin/app'
 import { buildApp } from './app.js'
 import { firebaseFetchMetrics } from './firebaseConnector.js'
@@ -34,10 +34,10 @@ export const pollStripeMetrics = onSchedule({ schedule: 'every 24 hours' }, asyn
       try {
         const events = await stripeReconcile(conn.credentialsRef, p.id, conn.id)
         await writeEventsToBuckets(events)
-        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
+        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected', lastError: FieldValue.delete() })
       } catch (e) {
         console.error(`stripe reconcile failed ${p.id}/${conn.id}`, e)
-        await c.ref.update({ status: 'error' })
+        await c.ref.update({ status: 'error', lastError: 'Automatic sync failed. Check the provider connection and permissions.' })
       }
     }
   }
@@ -58,10 +58,10 @@ export const pollFirebaseMetrics = onSchedule({ schedule: 'every 30 minutes' }, 
       try {
         const events = await firebaseFetchMetrics(conn.credentialsRef, p.id, conn.id, since)
         await writeEventsToBuckets(events)
-        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
+        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected', lastError: FieldValue.delete() })
       } catch (e) {
         console.error(`poll failed ${p.id}/${conn.id}`, e)
-        await c.ref.update({ status: 'error' })
+        await c.ref.update({ status: 'error', lastError: 'Automatic sync failed. Check the provider connection and permissions.' })
       }
     }
   }
@@ -83,10 +83,10 @@ export const pollSupabaseMetrics = onSchedule({ schedule: 'every 30 minutes' }, 
       try {
         const events = await supabaseFetchMetrics(conn.credentialsRef, p.id, conn.id, since)
         await writeEventsToBuckets(events)
-        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
+        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected', lastError: FieldValue.delete() })
       } catch (e) {
         console.error(`supabase poll failed ${p.id}/${conn.id}`, e)
-        await c.ref.update({ status: 'error' })
+        await c.ref.update({ status: 'error', lastError: 'Automatic sync failed. Check the provider connection and permissions.' })
       }
     }
   }
@@ -109,10 +109,10 @@ export const pollExternalMetrics = onSchedule({ schedule: 'every 30 minutes' }, 
           conn.id,
         )
         await writeEventsToBuckets(events)
-        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected' })
+        await c.ref.update({ lastFetchedAt: Timestamp.now(), status: 'connected', lastError: FieldValue.delete() })
       } catch (e) {
         console.error(`external poll failed (${conn.type}) ${p.id}/${conn.id}`, e)
-        await c.ref.update({ status: 'error' })
+        await c.ref.update({ status: 'error', lastError: 'Automatic sync failed. Check the provider connection and permissions.' })
       }
     }
   }

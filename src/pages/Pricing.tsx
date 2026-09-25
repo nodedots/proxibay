@@ -104,17 +104,17 @@ export default function Pricing() {
   const rows: Array<{ label: string; free: string; pro: string }> = [
     { label: 'Price', free: '$0', pro: '$9.99/mo or $107.89/yr' },
     { label: 'Projects', free: 'Unlimited', pro: 'Unlimited' },
-    { label: 'Connectors', free: 'All four', pro: 'All four' },
+    { label: 'Connectors', free: 'All available', pro: 'All available' },
     { label: 'Charts & history', free: 'Full access', pro: 'Full access' },
-    { label: 'Alerts', free: 'Email + webhook', pro: 'Email + webhook' },
+    { label: 'Alerts', free: 'Rule setup; monitoring soon', pro: 'Rule setup; monitoring soon' },
     { label: 'Support', free: 'Community (Issues)', pro: 'Priority' },
   ]
 
   const freeFeatures = [
     'Unlimited projects in your portfolio',
-    'Firebase, Stripe, Supabase + webhook connectors',
+    'All available connectors',
     'Metric charts and history',
-    'Threshold alerts by email and webhook',
+    'Threshold rule setup (evaluation and delivery coming soon)',
   ]
 
   return (
