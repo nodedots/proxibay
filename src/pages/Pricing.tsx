@@ -4,7 +4,7 @@ import { Activity, ArrowRight, Check as CheckIcon, CircleCheck, UsersRound } fro
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
 import { Reveal } from '../components/Reveal'
-import { auth } from '../firebase'
+import { useAuthUser } from '../lib/useAuthUser'
 import { getPlans, startCheckout, type PlanOffer } from '../lib/billing'
 
 /** Intended prices, shown until the server publishes live ones. */
@@ -68,6 +68,7 @@ function PricingPreview() {
 /** Pricing: free during early access, Pro flat-rate options, comparison, FAQ. */
 export default function Pricing() {
   const navigate = useNavigate()
+  const sessionUser = useAuthUser()
   const [offers, setOffers] = useState<PlanOffer[] | null>(null)
   const [teamsNote, setTeamsNote] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -86,7 +87,7 @@ export default function Pricing() {
     offers?.find((o) => o.period === period)?.price ?? FALLBACK_PRICES[period]
 
   async function upgrade(period: 'monthly' | 'yearly') {
-    if (!auth.currentUser) {
+    if (!sessionUser) {
       navigate('/signin')
       return
     }

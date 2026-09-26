@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { addDoc, collection, Timestamp } from 'firebase/firestore'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
-import { db } from '../firebase'
 import SiteNav from '../components/SiteNav'
 import SiteFooter from '../components/SiteFooter'
+import { api } from '../lib/api'
 
 /**
- * Public feedback form. Writes to the `feedback` collection (reviewed in the
- * Firebase console) — no account needed, shape-validated by security rules.
+ * Public feedback form. POSTs to the API (stored in Postgres, reviewed via
+ * SQL) — no account needed, rate-limited server-side.
  */
 export default function Feedback() {
   const [name, setName] = useState('')
@@ -26,11 +25,13 @@ export default function Feedback() {
     setError(null)
     setBusy(true)
     try {
-      await addDoc(collection(db, 'feedback'), {
-        ...(name.trim() ? { name: name.trim().slice(0, 100) } : {}),
-        ...(email.trim() ? { email: email.trim().slice(0, 254) } : {}),
-        message: message.trim().slice(0, 2000),
-        createdAt: Timestamp.now(),
+      await api<{ ok: boolean }>('/v1/feedback', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...(name.trim() ? { name: name.trim().slice(0, 100) } : {}),
+          ...(email.trim() ? { email: email.trim().slice(0, 254) } : {}),
+          message: message.trim().slice(0, 2000),
+        }),
       })
       setSent(true)
     } catch {

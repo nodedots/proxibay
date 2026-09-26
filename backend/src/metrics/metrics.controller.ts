@@ -15,6 +15,23 @@ export class MetricsController {
     private readonly metrics: MetricsService,
   ) {}
 
+  /** Latest value per (metricType,key) — chart key discovery for the detail page. */
+  @Get('metric-keys')
+  async keys(
+    @Req() req: { user: { userId: string } },
+    @Param('projectId') projectId: string,
+  ) {
+    const p = await this.projects.findOne({ where: { id: projectId } });
+    if (!p || p.ownerId !== req.user.userId) return err(404, 'not_found', 'Project not found.');
+    const latest = await this.metrics.latestPerKey(projectId, 10);
+    return {
+      keys: latest.map((m) => ({
+        metricType: m.metricType, key: m.key, value: Number(m.value),
+        at: m.at instanceof Date ? m.at.toISOString() : m.at,
+      })),
+    };
+  }
+
   /** GET ?metricType=&key=[&from=&to=] — max 90d, mirrors the old contract. */
   @Get()
   async series(

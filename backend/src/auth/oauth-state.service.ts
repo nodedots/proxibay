@@ -14,6 +14,11 @@ export interface OAuthStateClaim {
   consent: boolean;
 }
 
+export interface OAuthImportClaim {
+  provider: OAuthProvider;
+  userId: string;
+}
+
 /**
  * OAuth CSRF protection (Security Plan §1): the `state` sent to Google/GitHub
  * must be verifiable as something WE issued before the code exchange runs.
@@ -92,6 +97,59 @@ export class OAuthStateService {
     }
     res.clearCookie(COOKIE, { path: '/v1/auth' });
     return { provider, consent: payload['consent'] === true };
+  }
+
+  /**
+   * Import-time state: same signed-state + cookie binding, but the claim
+   * carries the already-authenticated user's id so the callback can store
+   * the provider token against the right account without a session.
+   */
+  issueImport(req: Request, res: Response, provider: OAuthProvider, userId: string): string {
+    const nonce = cryptoRandom();
+    const state = this.jwt.sign(
+      { purpose: 'oauth_import', provider, nonce, userId },
+      { secret: this.secret(), expiresIn: TTL },
+    );
+    res.cookie(COOKIE, nonce, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: isSecure(req),
+      path: '/v1/auth',
+      maxAge: 5 * 60 * 1000,
+    });
+    return state;
+  }
+
+  /** Verifies import state before the token exchange; returns who to store for. */
+  verifyImport(req: Request, res: Response, provider: OAuthProvider): OAuthImportClaim {
+    const state = firstString(req.query?.['state']);
+    const nonce = readCookie(req.headers?.cookie, COOKIE);
+    if (!state || !nonce) {
+      throw new BadRequestException({
+        error: { code: 'oauth_state_missing', message: 'Import could not be verified — start again from the portfolio.' },
+      });
+    }
+    let payload: Record<string, unknown>;
+    try {
+      payload = this.jwt.verify<Record<string, unknown>>(state, { secret: this.secret() });
+    } catch {
+      throw new BadRequestException({
+        error: { code: 'oauth_state_invalid', message: 'That import link expired or was tampered with — start again.' },
+      });
+    }
+    if (
+      payload['purpose'] !== 'oauth_import' ||
+      payload['provider'] !== provider ||
+      typeof payload['nonce'] !== 'string' ||
+      typeof payload['userId'] !== 'string' ||
+      !timingSafeEqual(payload['nonce'] as string, nonce)
+    ) {
+      throw new BadRequestException({
+        error: { code: 'oauth_state_mismatch', message: 'Import could not be verified — start again from the portfolio.' },
+      });
+    }
+    res.clearCookie(COOKIE, { path: '/v1/auth' });
+    return { provider, userId: payload['userId'] as string };
   }
 }
 

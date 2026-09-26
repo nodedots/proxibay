@@ -65,7 +65,7 @@ export default function Privacy() {
             connector can use it. This access uses a restricted Google scope and works for
             test users while our app verification is pending.</p>
           <p><strong>Access tokens.</strong> The short-lived tokens that power these listings
-            are stored securely (never alongside your project data) and used only to refresh
+            are stored encrypted and used only to refresh
             your import lists at your request. Disconnecting the provider or revoking access
             on the provider's side stops this immediately.</p>
         </Section>
@@ -82,10 +82,11 @@ export default function Privacy() {
 
         <Section title="How your data is stored and processed">
           <p>
-            Account, catalog, and metric data is stored in a Firebase project database hosted
-            by Google Cloud. Authentication is handled by Firebase Authentication. These
-            processors handle your data only as instructed to operate the service, under
-            Google's own data processing terms.
+            Account, catalog, and metric data is stored in a PostgreSQL database
+            (with the TimescaleDB extension for metrics) hosted on Railway.
+            Authentication is handled by our own API with hashed credentials —
+            passwords are never stored in readable form. These processors handle
+            your data only as instructed to operate the service.
           </p>
         </Section>
 

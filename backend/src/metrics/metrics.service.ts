@@ -46,20 +46,27 @@ export class MetricsService {
     const bucket = fn === 'time_bucket'
       ? `time_bucket(INTERVAL '1 day', "timestamp")`
       : `date_trunc('day', "timestamp")`;
+    // `last` (latest value in the day) powers the UI hero stats. Timescale
+    // has last(); plain Postgres falls back to ordered array_agg.
+    const last = fn === 'time_bucket'
+      ? `last("value", "timestamp")`
+      : `(array_agg("value" ORDER BY "timestamp" DESC))[1]`;
     const rows = await this.points.query(
       `SELECT ${bucket} AS "day", COUNT(*)::int AS "count",
               SUM("value") AS "sum", AVG("value") AS "avg",
-              MAX("value") AS "max", MIN("value") AS "min"
+              MAX("value") AS "max", MIN("value") AS "min",
+              ${last} AS "last"
          FROM "metric_points"
         WHERE "project_id" = $1 AND "metric_type" = $2 AND "key" = $3
           AND "timestamp" >= $4 AND "timestamp" <= $5
         GROUP BY 1 ORDER BY 1 ASC`,
       [projectId, metricType, key, from.toISOString(), to.toISOString()],
     );
-    return (rows as Array<{ day: Date; count: number; sum: string; avg: string; max: string; min: string }>).map((r) => ({
+    return (rows as Array<{ day: Date; count: number; sum: string; avg: string; max: string; min: string; last: string | null }>).map((r) => ({
       date: new Date(r.day).toISOString().slice(0, 10),
       count: r.count,
       sum: Number(r.sum), avg: Number(r.avg), max: Number(r.max), min: Number(r.min),
+      ...(r.last === null ? {} : { last: Number(r.last) }),
     }));
   }
 

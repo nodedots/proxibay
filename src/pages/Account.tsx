@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { deleteUser, signOut, updateProfile, type User } from 'firebase/auth'
-import { auth } from '../firebase'
+import { api } from '../lib/api'
+import { signOut, type BackendUser } from '../lib/session'
 import { useAuthUser } from '../lib/useAuthUser'
-import { DEFAULT_PREFS, loadUserPrefs, saveUserPrefs, type UserPrefs } from '../lib/prefs'
+import { DEFAULT_PREFS, coercePrefs, saveUserPrefs, type UserPrefs } from '../lib/prefs'
 import UserAvatar from '../components/UserAvatar'
 
 function Section({
@@ -70,16 +70,16 @@ function fmtDate(iso: string | undefined): string {
 }
 
 const PROVIDER_LABEL: Record<string, string> = {
-  'google.com': 'Google',
-  'github.com': 'GitHub',
+  google: 'Google',
+  github: 'GitHub',
   password: 'Email & password',
 }
 
 
 /**
  * Account settings (auth-gated): profile, persisted preferences, security
- * overview, and a danger zone. Preferences live on `users/{uid}.prefs`
- * (owner-scoped by firestore.rules; merge write keeps consent fields intact).
+ * overview, and a danger zone. Profile + preferences live on the backend
+ * user row (PATCH /v1/auth/me).
  */
 export default function Account() {
   const user = useAuthUser()
@@ -101,23 +101,25 @@ export default function Account() {
   useEffect(() => {
     if (!user) return
     setName(user.displayName ?? '')
-    setPhotoUrl(user.photoURL ?? '')
-    void loadUserPrefs(user.uid).then((p) => {
-      setPrefs(p)
-      setPrefsLoaded(true)
-    })
+    setPhotoUrl(user.photoUrl ?? '')
+    setPrefs(coercePrefs(user.prefs))
+    setPrefsLoaded(true)
   }, [user])
 
   if (user === undefined) return <p className="p-8 text-ink-muted">Loading…</p>
   if (user === null) return null // RequireAuth owns the redirect
 
-  async function saveProfile(u: User) {
+  async function saveProfile(u: BackendUser) {
+    void u
     setSavingProfile(true)
     setProfileMsg(null)
     try {
-      await updateProfile(u, {
-        displayName: name.trim() || null,
-        photoURL: photoUrl.trim() || null,
+      await api<{ user: BackendUser }>('/v1/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          displayName: name.trim() || null,
+          photoUrl: photoUrl.trim() || null,
+        }),
       })
       setProfileMsg('Profile updated.')
     } catch {
@@ -127,11 +129,11 @@ export default function Account() {
     }
   }
 
-  async function savePrefs(uid: string) {
+  async function savePrefs() {
     setSavingPrefs(true)
     setPrefsMsg(null)
     try {
-      await saveUserPrefs(uid, prefs)
+      await saveUserPrefs(prefs)
       setPrefsMsg('Preferences saved.')
     } catch {
       setPrefsMsg('Couldn’t save preferences. Check your connection and try again.')
@@ -140,18 +142,14 @@ export default function Account() {
     }
   }
 
-  async function handleDelete(u: User) {
+  async function handleDelete() {
     setDangerError(null)
     try {
-      await deleteUser(u)
+      await api<{ ok: boolean }>(`/v1/auth/me`, { method: 'DELETE' })
+      await signOut()
       navigate('/')
-    } catch (e) {
-      const code = (e as { code?: string }).code ?? ''
-      setDangerError(
-        code === 'auth/requires-recent-login'
-          ? 'For your security, sign out and sign back in before deleting your account.'
-          : 'Couldn’t delete your account. Try again, or contact support.',
-      )
+    } catch {
+      setDangerError('Couldn’t delete your account. Try again, or contact support.')
     }
   }
 
@@ -166,11 +164,11 @@ export default function Account() {
       <div className="mt-8 flex flex-col gap-6">
         <Section title="Profile" blurb="How you appear across Stackduck. Your email comes from your sign-in provider and can’t be changed here.">
           <div className="flex items-center gap-4">
-            <UserAvatar user={{ displayName: name, email: user.email, photoURL: photoUrl }} size={56} />
+            <UserAvatar user={{ displayName: name, email: user.email, photoUrl }} size={56} />
             <div className="min-w-0">
               <p className="truncate font-inter text-sm font-medium text-ink">{user.email}</p>
               <p className="font-inter text-xs font-normal text-ink-muted">
-                {user.emailVerified ? 'Email verified' : 'Email not verified'}
+                Member since {fmtDate(user.createdAt)}
               </p>
             </div>
           </div>
@@ -231,7 +229,7 @@ export default function Account() {
               className="flex flex-col gap-4"
               onSubmit={(e) => {
                 e.preventDefault()
-                void savePrefs(user.uid)
+                void savePrefs()
               }}
             >
               <div className="grid gap-4 sm:grid-cols-2">
@@ -299,9 +297,9 @@ export default function Account() {
             <div>
               <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Sign-in methods</dt>
               <dd className="mt-1 flex flex-wrap gap-2">
-                {user.providerData.map((p) => (
-                  <span key={p.providerId} className="badge">
-                    {PROVIDER_LABEL[p.providerId] ?? p.providerId}
+                {user.providers.map((p) => (
+                  <span key={p} className="badge">
+                    {PROVIDER_LABEL[p] ?? p}
                   </span>
                 ))}
               </dd>
@@ -309,20 +307,14 @@ export default function Account() {
             <div>
               <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Member since</dt>
               <dd className="mt-1 font-inter text-sm font-normal text-ink">
-                {fmtDate(user.metadata.creationTime)}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-inter text-xs font-medium uppercase tracking-wide text-ink-muted">Last sign-in</dt>
-              <dd className="mt-1 font-inter text-sm font-normal text-ink">
-                {fmtDate(user.metadata.lastSignInTime)}
+                {fmtDate(user.createdAt)}
               </dd>
             </div>
           </dl>
           <button
             type="button"
             className="btn-ghost mt-5"
-            onClick={() => void signOut(auth).then(() => navigate('/'))}
+            onClick={() => void signOut().then(() => navigate('/'))}
           >
             Sign out
           </button>
@@ -331,7 +323,8 @@ export default function Account() {
         <section className="card border-coral-emphasis" aria-label="Danger zone">
           <h2 className="font-inter text-lg font-semibold text-ink">Danger zone</h2>
           <p className="mt-1 font-inter text-sm font-normal text-ink-muted">
-            Deleting your account removes your sign-in immediately. Project data is retained per our{' '}
+            Deleting your account removes your sign-in immediately, along with your
+            projects, connectors, metrics, and alert rules.{' '}
             <a href="/privacy" className="text-link text-link-emphasis">
               privacy policy
             </a>
@@ -342,7 +335,7 @@ export default function Account() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => void handleDelete(user)}
+                  onClick={() => void handleDelete()}
                   className="rounded-lg bg-coral-emphasis px-4 py-2.5 font-inter text-sm font-semibold text-paper-white transition-colors duration-150 hover:opacity-90 focus-visible:outline-2 focus-visible:outline-ring"
                 >
                   Yes, delete my account

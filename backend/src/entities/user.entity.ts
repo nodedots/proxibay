@@ -39,6 +39,13 @@ export class User {
   @Column({ name: 'consent_accepted_at', type: 'timestamptz', nullable: true })
   consentAcceptedAt?: Date | null;
 
+  /**
+   * Account preferences (default chart window, portfolio sort, email flags).
+   * Merged server-side against an allowlist on PATCH — never trusted wholesale.
+   */
+  @Column({ type: 'jsonb', nullable: true })
+  prefs?: Record<string, unknown> | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

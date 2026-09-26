@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { ArrowRight, Check } from 'lucide-react'
 import { api, ApiError, connectErrorMessage } from '../lib/api'
-import { createProjectDirect, withFallback } from '../lib/store'
 import SaJsonUpload from '../components/SaJsonUpload'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
 import ExternalConnectorForm, { type ExternalConnectorType } from '../components/ExternalConnectorForm'
@@ -82,10 +81,7 @@ export default function AddProject() {
       if (liveUrl.trim()) body.liveUrl = liveUrl.trim()
       if (environment) body.environment = environment
       if (notes.trim()) body.notes = notes.trim()
-      const res = await withFallback(
-        () => api<CreatedProject>('/v1/projects', { method: 'POST', body: JSON.stringify(body) }),
-        async () => ({ project: await createProjectDirect(body as Parameters<typeof createProjectDirect>[0]) }),
-      )
+      const res = await api<CreatedProject>('/v1/projects', { method: 'POST', body: JSON.stringify(body) })
       setProject(res.project)
       setPhase('connect')
     } catch (err) {
@@ -164,7 +160,7 @@ export default function AddProject() {
     setStep2Error(null)
     setStep2Busy(true)
     try {
-      const res = await api<WebhookConnectResult>(`/v1/projects/${project!.id}/connectors/webhook`, {
+      const res = await api<WebhookConnectResult>(`/v1/projects/${project!.id}/connectors/generic-webhook`, {
         method: 'POST',
         body: JSON.stringify({}),
       })

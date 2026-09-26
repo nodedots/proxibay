@@ -46,13 +46,15 @@ async function bootstrap() {
     }),
   );
 
-  // Raw bodies for HMAC/Stripe signature verification must reach the guards as
-  // exact bytes, so ingest routes bypass JSON parsing entirely.
+  // Raw bodies for HMAC/Stripe/Kelviq signature verification must reach the
+  // guards as exact bytes, so these routes bypass JSON parsing entirely.
   const ingestRaw = raw({ type: 'application/json', limit: INGEST_RAW_LIMIT });
   const stripeRaw = raw({ type: 'application/json', limit: STRIPE_RAW_LIMIT });
+  const billingRaw = raw({ type: '*/*', limit: API_JSON_LIMIT });
   const jsonParser = json({ limit: API_JSON_LIMIT });
   server.use('/v1/ingest', ingestRaw);
   server.use('/v1/stripe', stripeRaw);
+  server.use('/v1/billing/webhooks', billingRaw);
   server.use('/v1', (req: Request, _res: Response, next: NextFunction) => {
     if (Buffer.isBuffer((req as unknown as { body: unknown }).body)) return next();
     return jsonParser(req, _res, next);

@@ -39,6 +39,6 @@ export default function ReconnectBanner(props: {
 }
 
 /** Migration placeholder marker written by the Firestore→Postgres script. */
-export function needsReconnect(lastError: string | undefined): boolean {
+export function needsReconnect(lastError: string | null | undefined): boolean {
   return (lastError ?? '').startsWith('Migrated from Firestore')
 }

@@ -1,7 +1,6 @@
 /**
- * Stackduck data layer — mirrors Data Model & Schema Spec exactly.
- * Single source of truth shared by frontend + Cloud Functions
- * (functions/ has its own copy until a monorepo workspace is set up).
+ * Stackduck data layer — mirrors the NestJS API response shapes.
+ * Single source of truth shared by the frontend pages.
  */
 
 export type MetricType =
@@ -14,7 +13,7 @@ export type MetricType =
 export type ProjectStatus = 'active' | 'paused' | 'archived'
 export type Environment = 'production' | 'staging' | 'development'
 
-/** Firestore: `projects/{projectId}` */
+/** Backend: `projects` row */
 export interface Project {
   id: string
   /** uid that registered it — single-owner, no teams (PRD non-goal) */
@@ -30,8 +29,8 @@ export interface Project {
   status: ProjectStatus
   /** free-text, docs links etc. */
   notes?: string
-  createdAt: FirebaseTimestamp
-  updatedAt: FirebaseTimestamp
+  createdAt: IsoTimestamp
+  updatedAt: IsoTimestamp
 }
 
 export type ConnectorType = 'firebase' | 'generic-webhook' | 'supabase' | 'stripe' | 'sentry' | 'github-actions' | 'posthog' | 'betterstack' | 'vercel'
@@ -39,7 +38,7 @@ export type ConnectorAuthType = 'api_key' | 'oauth' | 'service_account' | 'none'
 export type ConnectorFetchMode = 'poll' | 'push' | 'both'
 export type ConnectorStatus = 'connected' | 'error' | 'pending'
 
-/** Firestore: `projects/{projectId}/connectors/{connectorId}` */
+/** Backend: `connectors` row (credentials stripped server-side — never present). */
 export interface ConnectorInstance {
   id: string
   type: ConnectorType
@@ -47,14 +46,12 @@ export interface ConnectorInstance {
   fetchMode: ConnectorFetchMode
   /** what this instance actually reports */
   capabilities: MetricType[]
-  /** pointer to Secret Manager — NEVER a raw secret */
-  credentialsRef: string
   status: ConnectorStatus
-  lastError?: string
-  lastHealthCheck?: FirebaseTimestamp
+  lastError?: string | null
+  lastHealthCheck?: IsoTimestamp | null
   /** poll-mode only */
-  lastFetchedAt?: FirebaseTimestamp
-  createdAt: FirebaseTimestamp
+  lastFetchedAt?: IsoTimestamp | null
+  createdAt: IsoTimestamp
 }
 
 /** Pre-storage output of every connector — never stored 1:1, always bucketed. */
@@ -65,11 +62,11 @@ export interface NormalizedEvent {
   /** e.g. "signups", "active_users", "error_rate", "mrr" */
   key: string
   value: number
-  timestamp: FirebaseTimestamp
+  timestamp: IsoTimestamp
   metadata?: Record<string, string | number | boolean>
 }
 
-/** Firestore: `metrics/{projectId}_{metricType}_{key}_{YYYY-MM-DD}` */
+/** Backend: TimescaleDB rollup bucket from GET /v1/projects/:id/metrics. */
 export interface MetricBucket {
   projectId: string
   metricType: MetricType
@@ -77,7 +74,7 @@ export interface MetricBucket {
   /** "2026-09-20" */
   date: string
   /** intraday points for this key/day */
-  points: Array<{ time: FirebaseTimestamp; value: number }>
+  points: Array<{ time: IsoTimestamp; value: number }>
   dailyAggregate?: {
     sum?: number
     avg?: number
@@ -86,10 +83,10 @@ export interface MetricBucket {
     /** useful for gauge-like metrics (e.g. current uptime status) */
     last?: number
   }
-  updatedAt: FirebaseTimestamp
+  updatedAt: IsoTimestamp
 }
 
-/** Firestore: `projects/{projectId}/alertRules/{ruleId}` (refined per Alerting Model). */
+/** Backend: `alert_rules` row. */
 export type AlertCondition = 'above' | 'below'
 export type AlertChannel = 'email' | 'webhook'
 export type AlertStatus = 'active' | 'muted'
@@ -107,15 +104,12 @@ export interface AlertRule {
   /** email address or webhook URL */
   channelTarget: string
   status: AlertStatus
-  lastTriggeredAt?: FirebaseTimestamp
-  createdAt: FirebaseTimestamp
+  lastTriggeredAt?: IsoTimestamp | null
+  createdAt: IsoTimestamp
 }
 
-/** Minimal Timestamp shape — Firestore Timestamp at runtime. */
-export interface FirebaseTimestamp {
-  seconds: number
-  nanoseconds: number
-}
+/** ISO-8601 timestamps from the API (was a Firestore Timestamp pre-cutover). */
+export type IsoTimestamp = string
 
 /** Doc-ID helper — must stay in sync with functions/src/metrics.ts */
 export function metricBucketId(

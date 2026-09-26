@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, limit, query, where, addDoc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import DurationPicker from '../components/ui/duration-picker'
 import { api, ingestUrlFor, stripeUrlFor, ApiError, connectErrorMessage, loadErrorMessage } from '../lib/api'
@@ -9,15 +8,14 @@ import SaJsonUpload from '../components/SaJsonUpload'
 import ReconnectBanner, { needsReconnect } from '../components/ReconnectBanner'
 import ConnectorPicker, { type ConnectableType } from '../components/ConnectorPicker'
 import ExternalConnectorForm, { type ExternalConnectorType } from '../components/ExternalConnectorForm'
-import { deleteProjectData, getMetricsDirect, listProjectsDirect, patchProjectDirect, withFallback } from '../lib/store'
 import { connectorStatus, describeRule, humanKeyLabel, metricFamilyLabel } from '../lib/format'
-import { db } from '../firebase'
 import type { ProjectListEntry, FirebaseConnectResult, WebhookConnectResult, StripeConnectResult, SupabaseConnectResult } from '../lib/contracts'
 import type { AlertRule, ConnectorInstance, MetricType, Project } from '../types'
 
-function timeAgo(ts: { seconds: number } | string | undefined): string | null {
+function timeAgo(ts: string | undefined): string | null {
   if (!ts) return null
-  const ms = typeof ts === 'string' ? new Date(ts).getTime() : ts.seconds * 1000
+  const ms = new Date(ts).getTime()
+  if (Number.isNaN(ms)) return null
   const mins = Math.max(0, Math.round((Date.now() - ms) / 60000))
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
@@ -28,8 +26,8 @@ function timeAgo(ts: { seconds: number } | string | undefined): string | null {
 
 /** "Polled 12m ago · checked 1h ago" — segments omitted when there's nothing to report. */
 function connectorActivity(c: ConnectorInstance): string | null {
-  const polled = timeAgo(c.lastFetchedAt as unknown as { seconds: number } | undefined)
-  const checked = timeAgo(c.lastHealthCheck as unknown as { seconds: number } | undefined)
+  const polled = timeAgo(c.lastFetchedAt ?? undefined)
+  const checked = timeAgo(c.lastHealthCheck ?? undefined)
   const parts: string[] = []
   if (c.fetchMode === 'poll' && polled) parts.push(`new data ${polled}`)
   if (checked) parts.push(`last checked ${checked}`)
@@ -190,49 +188,19 @@ export default function ProjectDetail() {
     if (!projectId) return
     setError(null)
     try {
-      const list = await withFallback(
-        () => api<{ projects: ProjectListEntry[] }>('/v1/projects?status=active').then((r) => r.projects),
-        () => listProjectsDirect(),
-      )
-      const found = list.find((p) => p.project.id === projectId)
-      if (!found) {
-        // Maybe paused/archived — fetch the doc directly.
-        const snap = await getDoc(doc(db, 'projects', projectId))
-        if (!snap.exists()) {
-          setError('not-found')
-          return
-        }
-        const p = snap.data() as Project
-        setEntry({ project: p, connectorStatuses: [], keyMetrics: [], homeStatus: 'gray' })
-      } else {
-        // Refresh full project doc for catalog fields (list omits some).
-        const snap = await getDoc(doc(db, 'projects', projectId))
-        if (snap.exists()) found.project = { ...(snap.data() as Project), id: projectId }
-        setEntry(found)
-      }
-      const conns = await getDocs(collection(db, 'projects', projectId, 'connectors'))
-      setConnectors(conns.docs.map((d) => d.data() as ConnectorInstance))
-      const rs = await getDocs(collection(db, 'projects', projectId, 'alertRules'))
-      setRules(rs.docs.map((d) => ({ ...(d.data() as AlertRule), id: d.id })))
-      const m = await getDocs(
-        query(collection(db, 'metrics'), where('projectId', '==', projectId), limit(100)),
-      )
-      const byDate = m.docs
-        .map((d) => d.data() as { metricType: MetricType; key: string; date: string })
-        .sort((a, b) => (a.date < b.date ? 1 : -1))
-        .slice(0, 60)
-      const seen = new Set<string>()
-      const discovered: Array<{ metricType: MetricType; key: string }> = []
-      for (const data of byDate) {
-        const k = `${data.metricType}/${data.key}`
-        if (!seen.has(k)) {
-          seen.add(k)
-          discovered.push({ metricType: data.metricType, key: data.key })
-        }
-      }
-      setKeys(discovered)
-    } catch {
-      setError(loadErrorMessage('this project', undefined))
+      const [detail, conns, rulesRes, keysRes] = await Promise.all([
+        api<ProjectListEntry>(`/v1/projects/${projectId}`),
+        api<{ connectors: ConnectorInstance[] }>(`/v1/projects/${projectId}/connectors`),
+        api<{ rules: AlertRule[] }>(`/v1/projects/${projectId}/alerts`),
+        api<{ keys: Array<{ metricType: MetricType; key: string }> }>(`/v1/projects/${projectId}/metric-keys`),
+      ])
+      setEntry(detail)
+      setConnectors(conns.connectors)
+      setRules(rulesRes.rules)
+      setKeys(keysRes.keys)
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) setError('not-found')
+      else setError(loadErrorMessage('this project', e))
     }
   }, [projectId])
 
@@ -250,13 +218,10 @@ export default function ProjectDetail() {
       const next: Record<string, BucketResp[]> = {}
       for (const k of keys) {
         try {
-          const r = await withFallback(
-            () => api<{ buckets: BucketResp[] }>(
-              `/v1/projects/${projectId}/metrics?metricType=${k.metricType}&key=${encodeURIComponent(k.key)}&from=${from}&to=${to}`,
-            ).then((res) => res.buckets),
-            () => getMetricsDirect(projectId, k.metricType, k.key, from, to),
+          const r = await api<{ buckets: BucketResp[] }>(
+            `/v1/projects/${projectId}/metrics?metricType=${k.metricType}&key=${encodeURIComponent(k.key)}&from=${from}&to=${to}`,
           )
-          next[`${k.metricType}/${k.key}`] = r
+          next[`${k.metricType}/${k.key}`] = r.buckets
         } catch {
           next[`${k.metricType}/${k.key}`] = []
         }
@@ -266,14 +231,12 @@ export default function ProjectDetail() {
     return () => { cancelled = true }
   }, [projectId, keys, rangeHours])
 
-  async function patchProject(body: Record<string, unknown>) {    const res = await withFallback(
-      () => api<{ project: Project }>(`/v1/projects/${projectId}`, {
-        method: 'PATCH',
-        body: JSON.stringify(body),
-      }).then((r) => r.project),
-      () => patchProjectDirect(projectId as string, body),
-    )
-    setEntry((e) => (e ? { ...e, project: { ...e.project, ...res } } : e))
+  async function patchProject(body: Record<string, unknown>) {
+    const res = await api<{ project: Project }>(`/v1/projects/${projectId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+    setEntry((e) => (e ? { ...e, project: { ...e.project, ...res.project } } : e))
   }
 
   async function saveName() {
@@ -292,11 +255,10 @@ export default function ProjectDetail() {
     }
   }
 
-  /** Hard delete: project doc + connectors + rules + metric buckets, in batches.
-   *  Secret-manager credentials are orphaned (no client access) — documented. */
+  /** Hard delete: project + connectors + rules + metric points, server-side. */
   async function deleteProject() {
     if (!projectId) return
-    await deleteProjectData(projectId)
+    await api<{ ok: boolean }>(`/v1/projects/${projectId}?forever=true`, { method: 'DELETE' })
     navigate('/portfolio')
   }
 
@@ -377,7 +339,7 @@ export default function ProjectDetail() {
     setAttachError(null)
     setAttachBusy(true)
     try {
-      const res = await api<WebhookConnectResult>(`/v1/projects/${projectId}/connectors/webhook`, {
+      const res = await api<WebhookConnectResult>(`/v1/projects/${projectId}/connectors/generic-webhook`, {
         method: 'POST',
         body: JSON.stringify({}),
       })
@@ -404,7 +366,6 @@ export default function ProjectDetail() {
         return
       }
       const ruleFields = {
-        projectId,
         metricType,
         key: keyParts.join('/'),
         condition: ruleCondition,
@@ -414,12 +375,17 @@ export default function ProjectDetail() {
         channelTarget: ruleTarget.trim(),
       }
       if (editingRuleId) {
-        await updateDoc(doc(db, 'projects', projectId, 'alertRules', editingRuleId), ruleFields)
-        setRules((current) => current?.map((rule) => rule.id === editingRuleId ? { ...rule, ...ruleFields } : rule) ?? null)
+        const updated = await api<{ rule: AlertRule }>(`/v1/projects/${projectId}/alerts/${editingRuleId}`, {
+          method: 'PATCH',
+          body: JSON.stringify(ruleFields),
+        })
+        setRules((current) => current?.map((rule) => rule.id === editingRuleId ? updated.rule : rule) ?? null)
       } else {
-        const createdRule: Omit<AlertRule, 'id'> = { ...ruleFields, status: 'active', createdAt: Timestamp.now() }
-        const saved = await addDoc(collection(db, 'projects', projectId, 'alertRules'), createdRule)
-        setRules((current) => [...(current ?? []), { ...createdRule, id: saved.id }])
+        const created = await api<{ rule: AlertRule }>(`/v1/projects/${projectId}/alerts`, {
+          method: 'POST',
+          body: JSON.stringify(ruleFields),
+        })
+        setRules((current) => [...(current ?? []), created.rule])
       }
       setEditingRuleId(null)
       setRuleKey('')
@@ -439,10 +405,11 @@ export default function ProjectDetail() {
     setRuleActionId(rule.id)
     setRuleError(null)
     try {
-      await updateDoc(doc(db, 'projects', projectId, 'alertRules', rule.id), {
-        status: rule.status === 'active' ? 'muted' : 'active',
+      const updated = await api<{ rule: AlertRule }>(`/v1/projects/${projectId}/alerts/${rule.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: rule.status === 'active' ? 'muted' : 'active' }),
       })
-      setRules((rs) => rs?.map((r) => (r.id === rule.id ? { ...r, status: r.status === 'active' ? 'muted' : 'active' } : r)) ?? null)
+      setRules((rs) => rs?.map((r) => (r.id === rule.id ? updated.rule : r)) ?? null)
     } catch {
       setRuleError('Could not update this rule. Check your connection and retry.')
     } finally {
@@ -455,7 +422,7 @@ export default function ProjectDetail() {
     setRuleActionId(rule.id)
     setRuleError(null)
     try {
-      await deleteDoc(doc(db, 'projects', projectId, 'alertRules', rule.id))
+      await api<{ ok: boolean }>(`/v1/projects/${projectId}/alerts/${rule.id}`, { method: 'DELETE' })
       setRules((rs) => rs?.filter((r) => r.id !== rule.id) ?? null)
     } catch {
       setRuleError('Could not delete this rule. Check your connection and retry.')
@@ -698,7 +665,7 @@ export default function ProjectDetail() {
         </dl>
         <p className="mt-3 text-xs text-ink-muted">
           {(() => {
-            const t = timeAgo(p.updatedAt as unknown as { seconds: number })
+            const t = timeAgo(p.updatedAt)
             return t ? `Saved ${t}` : 'Not saved yet'
           })()}
         </p>
@@ -1085,7 +1052,8 @@ export default function ProjectDetail() {
       <section className="card order-4 scroll-mt-24" id="alerts">
         <h2 className="font-inter text-lg font-semibold">Alerts</h2>
         <p className="mt-1 text-sm text-ink-muted">
-          Save threshold rules for this project. Automatic evaluation and email or webhook delivery are not enabled yet, so saved rules do not send notifications.
+          Save threshold rules for this project. Rules are evaluated every few minutes
+          and notify you by email or webhook when they trip.
         </p>
 
         {rules === null && <p className="mt-3 text-sm text-ink-muted">Loading saved rules…</p>}

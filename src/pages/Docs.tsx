@@ -105,37 +105,50 @@ export default function Docs() {
         <h3 className="mt-6 font-inter text-body font-semibold">Run your own copy</h3>
         <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
           <p>
-            Everything below runs on your machine. You need Node 20+, a Firebase
-            project with Authentication and Firestore enabled (the UI still signs in
-            and reads through Firebase until the backend cutover), plus Docker for
-            the API's Postgres database.
+            Everything below runs on your machine. You need Node 20+ and Docker.
+            Stackduck has two halves with separate prerequisites — set up the one
+            you need, or both:
           </p>
+          <ul className="list-disc pl-5">
+            <li>
+              <strong>API backend (NestJS + Postgres/TimescaleDB).</strong> Owns
+              auth, connectors, metrics, and alerts. It needs no cloud account —
+              Docker Compose provisions its database locally.
+            </li>
+            <li>
+              <strong>Frontend (React).</strong> Talks to the API over REST — just
+              point it at the backend's URL.
+            </li>
+          </ul>
         </div>
         <div className="mt-3">
           <Code>{`npx degit nodedots/stackduck my-stackduck
-cd my-stackduck
-npm install
-cp .env.example .env   # paste your Firebase web config`}</Code>
+cd my-stackduck`}</Code>
         </div>
         <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
           <p>
-            Then point the app at your Firebase project: create it in the{' '}
-            <strong>Firebase console</strong>, enable <strong>Email/Password</strong>{' '}
-            sign-in plus <strong>Firestore</strong>, and paste the web SDK config into{' '}
-            <code>.env</code>. Run <code>firebase init</code> once and select Firestore
-            + Hosting so deploys have somewhere to go. For the self-managed API
-            (which takes over auth, connectors, and metrics at cutover), start its
-            database and server from <code>backend/</code>:
+            <strong>API backend:</strong> from <code>backend/</code>, install,
+            configure, and start the database and server (the example file tells
+            you how to generate each secret):
           </p>
         </div>
         <div className="mt-3">
-          <Code>{`npm run dev   # the whole UI on Auth + Firestore alone`}</Code>
+          <Code>{`cd backend
+npm install
+cp .env.example .env   # fill in JWT + encryption secrets
+docker compose -f docker-compose.yml up -d   # Postgres/TimescaleDB
+npm run start:dev   # API on :3001, /v1/health`}</Code>
+        </div>
+        <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
+          <p>
+            <strong>Frontend:</strong> from the repo root, point the app at the API
+            and start it:
+          </p>
         </div>
         <div className="mt-3">
-          <Code>{`docker compose -f backend/docker-compose.yml up -d
-cd backend
-cp .env.example .env   # fill in JWT + encryption secrets
-npm run start:dev   # API on :3001, /v1/health`}</Code>
+          <Code>{`npm install
+cp .env.example .env   # VITE_API_BASE=http://localhost:3001
+npm run dev   # the whole UI against your local API`}</Code>
         </div>
 
         <h3 className="mt-8 font-inter text-body font-semibold">Your first project</h3>
@@ -255,10 +268,10 @@ npm run start:dev   # API on :3001, /v1/health`}</Code>
             </a>
             . To run your own copy, follow <a href="#quickstart" className="text-link-emphasis text-link">Quickstart</a> above;
             a few notes that only matter once you're running it: scheduled polling and
-            alert evaluation now run as cron jobs inside the API in <code>backend/</code>
+            alert evaluation run as cron jobs inside the API in <code>backend/</code>
             (backed by Postgres/TimescaleDB — see <code>backend/RAILWAY.md</code> for
-            hosting), while Auth + Firestore alone is still enough to explore the
-            whole UI until the cutover. The API contract lives in <code>API_CONTRACT.md</code> and every
+            hosting). The API contract lives in <code>API_CONTRACT.md</code> (historical
+            Firebase notes plus the cutover deltas) and every
             open question gets logged in <code>DECISIONS.md</code>.
           </p>
           <p>

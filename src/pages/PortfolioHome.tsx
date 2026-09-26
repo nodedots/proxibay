@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Check, Plus, Search, Upload, X } from 'lucide-react'
 import { motion } from 'motion/react'
-import { api, loadErrorMessage } from '../lib/api'
-import { auth } from '../firebase'
-import { deleteProjectData, listProjectsDirect, withFallback } from '../lib/store'
+import { api, ApiError, loadErrorMessage } from '../lib/api'
+import { useAuthUser } from '../lib/useAuthUser'
 import { homeStatusLabel, humanKeyLabel } from '../lib/format'
 import Folder from '../components/ui/folder-component'
 import {
+  authForImport,
   consumeImportPrompt,
   importSelected,
   listImportCandidates,
@@ -18,9 +18,10 @@ import ImportPicker from '../components/ImportPicker'
 import ConfirmDialog from '../components/ConfirmDialog'
 import type { ProjectListEntry } from '../lib/contracts'
 
-function timeAgo(iso: { seconds: number } | string | undefined): string | null {
+function timeAgo(iso: string | undefined): string | null {
   if (!iso) return null
-  const ms = typeof iso === 'string' ? new Date(iso).getTime() : iso.seconds * 1000
+  const ms = new Date(iso).getTime()
+  if (Number.isNaN(ms)) return null
   const mins = Math.max(0, Math.round((Date.now() - ms) / 60000))
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
@@ -114,7 +115,7 @@ export default function PortfolioHome() {
     setRemoveBusy(true)
     setRemoveError(null)
     try {
-      await deleteProjectData(id)
+      await api<{ ok: boolean }>(`/v1/projects/${id}?forever=true`, { method: 'DELETE' })
       setEntries((prev) => (prev ? prev.filter((e) => e.project.id !== id) : prev))
       setRemoveTarget(null)
       flashNotice(`“${name}” was removed, along with its data sources, metrics, and alert rules.`)
@@ -135,25 +136,24 @@ export default function PortfolioHome() {
     setImportMenu(false)
     setPicker({ kind, items: [], loading: true, error: null })
     try {
-      const { items, redirected } = await listImportCandidates(kind)
-      if (redirected) {
-        setPicker(null) // resolves on return — the auto-prompt below reopens
-        return
-      }
+      // Stored provider token → list through the backend proxy. No token (or
+      // an expired one) → bounce to the provider's import-time OAuth dance.
+      const { items } = await listImportCandidates(kind)
       setPicker({ kind, items, loading: false, error: null })
     } catch (e) {
-      const code = (e as { code?: string }).code ?? ''
-      const detail = e instanceof Error ? e.message : ''
+      const code = e instanceof ApiError ? e.code : ''
+      if (code === 'no_integration' || code === 'integration_expired' || code === 'unauthenticated') {
+        await authForImport(kind) // full-page redirect; picker reopens on return
+        return
+      }
       setPicker({
         kind,
         items: [],
         loading: false,
         error:
-          code === 'no-token'
-            ? 'We couldn’t read your account list from that sign-in. Try again.'
-            : /invalid.scope/i.test(code) || /invalid.scope/i.test(detail)
-              ? 'Google hasn’t enabled this level of access for Stackduck yet (verification is pending). Email or GitHub sign-in still works — importing can wait.'
-              : 'Couldn’t load anything to import. Check the connection and try again.',
+          kind === 'google'
+            ? 'Couldn’t load anything to import. Google may not have enabled this level of access for Stackduck yet (verification is pending) — importing can wait.'
+            : 'Couldn’t load anything to import. Check the connection and try again.',
       })
     }
   }, [])
@@ -162,20 +162,33 @@ export default function PortfolioHome() {
     if (picker) void openImporter(picker.kind)
   }, [picker, openImporter])
 
-  // Auto-opens the picker once after a social auth captured a fresh token.
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Return leg of the import OAuth dance (?import=github|google), plus the
+  // auto-prompt flagged after a social sign-in captured a fresh token.
   useEffect(() => {
+    const param = searchParams.get('import')
+    const denied = searchParams.get('error')
+    if (denied) {
+      setSearchParams({}, { replace: true })
+      flashNotice('That provider connection didn’t complete — try importing again.')
+      return
+    }
+    if (param === 'github' || param === 'google') {
+      setSearchParams({}, { replace: true })
+      void openImporter(param)
+      return
+    }
     const kind = consumeImportPrompt()
     if (kind) void openImporter(kind)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openImporter])
 
   useEffect(() => {
     setEntries(null)
     setError(null)
-    withFallback(
-      () => api<{ projects: ProjectListEntry[] }>('/v1/projects').then((r) => r.projects),
-      () => listProjectsDirect(),
-    )
-      .then((projects) => setEntries(projects))
+    api<{ projects: ProjectListEntry[] }>('/v1/projects')
+      .then((r) => setEntries(r.projects))
       .catch((e) => setError(loadErrorMessage('your portfolio', e)))
   }, [attempt])
 
@@ -195,9 +208,10 @@ export default function PortfolioHome() {
 
   // Guided first run: shown until all three steps are done (or dismissed).
   // Returning users with live projects never see it.
+  const sessionUser = useAuthUser()
   const onboarding = useMemo(() => {
     if (!entries || onboardingGone) return null
-    const uid = auth.currentUser?.uid ?? 'anon'
+    const uid = sessionUser?.id ?? 'anon'
     if (typeof localStorage !== 'undefined' && localStorage.getItem(`stackduck:onboarding-dismissed:${uid}`)) return null
     const hasProject = entries.length > 0
     const hasConnector = entries.some((e) => e.connectorStatuses.length > 0)
@@ -208,7 +222,7 @@ export default function PortfolioHome() {
   }, [entries, onboardingGone])
 
   function dismissOnboarding() {
-    const uid = auth.currentUser?.uid ?? 'anon'
+    const uid = sessionUser?.id ?? 'anon'
     try {
       localStorage.setItem(`stackduck:onboarding-dismissed:${uid}`, '1')
     } catch {
@@ -407,7 +421,7 @@ export default function PortfolioHome() {
             </div>
             <p className="mt-3 text-xs text-ink-muted">
               {(() => {
-                const t = timeAgo((e.project.updatedAt as unknown as { seconds: number }) ?? undefined)
+                const t = timeAgo(e.project.updatedAt)
                 return t ? `Updated ${t}` : 'No updates yet'
               })()}
             </p>

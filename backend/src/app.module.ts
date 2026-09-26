@@ -6,13 +6,18 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AlertsModule } from './alerts/alerts.module';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { TimescaleSetupService } from './config/timescale-setup.service';
 import { ConnectorsModule } from './connectors/connectors.module';
 import { CredentialsModule } from './credentials/credentials.module';
 import { AuditModule } from './common/audit.service';
+import { FeedbackModule } from './feedback/feedback.module';
 import { AlertRule } from './entities/alert-rule.entity';
 import { Connector } from './entities/connector.entity';
+import { Feedback } from './entities/feedback.entity';
+import { IntegrationToken } from './entities/integration-token.entity';
 import { MetricPoint } from './entities/metric-point.entity';
+import { PasswordResetToken } from './entities/password-reset.entity';
 import { Project } from './entities/project.entity';
 import { RefreshToken, User } from './entities/user.entity';
 import { HealthController } from './health.controller';
@@ -38,7 +43,7 @@ import { ProjectsModule } from './projects/projects.module';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
-        entities: [User, RefreshToken, Project, Connector, MetricPoint, AlertRule],
+        entities: [User, RefreshToken, Project, Connector, MetricPoint, AlertRule, Feedback, IntegrationToken, PasswordResetToken],
         synchronize: true,
         // Railway's public TCP proxy needs TLS; internal service networking
         // does not. Opt in with DATABASE_SSL=true (rejectUnauthorized off:
@@ -48,6 +53,8 @@ import { ProjectsModule } from './projects/projects.module';
     }),
     CredentialsModule,
     AuthModule,
+    BillingModule,
+    FeedbackModule,
     ProjectsModule,
     ConnectorsModule,
     MetricsModule,

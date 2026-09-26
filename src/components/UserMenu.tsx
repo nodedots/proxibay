@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { signOut, type User } from 'firebase/auth'
-import { auth } from '../firebase'
+import { signOut, type BackendUser } from '../lib/session'
 import UserAvatar from './UserAvatar'
 
 const ITEM_CLASS =
@@ -13,7 +12,7 @@ const ITEM_CLASS =
  * settings, Sign out). Shared by the marketing SiteNav and the app Header so
  * a logged-in user is recognized on every page, landing included.
  */
-export default function UserMenu({ user }: { user: User }) {
+export default function UserMenu({ user }: { user: BackendUser }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
@@ -36,7 +35,7 @@ export default function UserMenu({ user }: { user: User }) {
 
   async function handleSignOut() {
     setOpen(false)
-    await signOut(auth).catch(() => undefined)
+    await signOut().catch(() => undefined)
     navigate('/')
   }
 

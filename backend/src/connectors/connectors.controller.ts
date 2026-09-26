@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -14,6 +14,34 @@ import { ExternalBody, FirebaseBody, StripeBody, SupabaseBody, WebhookBody, newC
 
 const EXTERNAL_SET = new Set<string>(EXTERNAL);
 
+/**
+ * Copy-paste samples for the timestamped webhook scheme
+ * (HMAC-SHA256(secret, `${timestamp}.${rawBody}`) + X-Stackduck-Timestamp).
+ */
+function webhookSnippet(ingestUrl: string): { node: string; curl: string } {
+  const node = `const crypto = require('crypto');
+
+const body = JSON.stringify({ metricType: 'user_metrics', key: 'signups', value: 1 });
+const timestamp = Math.floor(Date.now() / 1000).toString();
+const signature = crypto.createHmac('sha256', process.env.STACKDUCK_SIGNING_SECRET)
+  .update(timestamp + '.' + body).digest('hex');
+
+await fetch('${ingestUrl}', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Stackduck-Timestamp': timestamp,
+    'X-Stackduck-Signature': signature,
+  },
+  body,
+});`;
+  const curl = `BODY='{"metricType":"user_metrics","key":"signups","value":1}'
+TS=$(date +%s)
+SIG=$(echo -n "$TS.$BODY" | openssl dgst -sha256 -hmac "$STACKDUCK_SIGNING_SECRET")
+curl -X POST "${ingestUrl}" -H 'Content-Type: application/json' -H "X-Stackduck-Timestamp: $TS" -H "X-Stackduck-Signature: $SIG" -d "$BODY"`;
+  return { node, curl };
+}
+
 @Controller('v1/projects/:projectId/connectors')
 @UseGuards(JwtAuthGuard)
 export class ConnectorsController {
@@ -28,6 +56,13 @@ export class ConnectorsController {
   async ownProject(userId: string, projectId: string): Promise<Project | null> {
     const p = await this.projects.findOne({ where: { id: projectId } });
     return p && p.ownerId === userId ? p : null;
+  }
+
+  @Get()
+  async list(@Req() req: { user: { userId: string } }, @Param('projectId') projectId: string) {
+    if (!(await this.ownProject(req.user.userId, projectId))) return err(404, 'not_found', 'Project not found.');
+    const conns = await this.connectors.find({ where: { projectId }, order: { createdAt: 'ASC' } });
+    return { connectors: conns.map((c) => this.sanitize(c)) };
   }
 
   sanitize(c: Connector) {
@@ -64,8 +99,10 @@ export class ConnectorsController {
       health: healthCheck.ok ? 'ok' : 'failed',
     });
     const base = process.env.PUBLIC_API_BASE ?? `http://localhost:${process.env.PORT ?? 3001}`;
+    // The copy-paste snippet is generated server-side from the live scheme so
+    // client samples can never drift out of sync with verification again.
     const extra = type === 'generic-webhook'
-      ? { signingSecret: secretPayload, ingestUrl: `${base}/v1/ingest/${id}` }
+      ? { signingSecret: secretPayload, ingestUrl: `${base}/v1/ingest/${id}`, snippet: webhookSnippet(`${base}/v1/ingest/${id}`) }
       : type === 'stripe' ? { stripeEndpoint: `${base}/v1/stripe/${id}` } : {};
     if (!healthCheck.ok) {
       return { statusCode: 422 as const, body: { error: { code: 'connector_unhealthy', message: healthCheck.detail }, connector: this.sanitize(conn), healthCheck, ...extra } };

@@ -41,8 +41,16 @@ use the **TimescaleDB template**, not the plain Postgres one).
    - `RESEND_API_KEY` + `ALERT_FROM_EMAIL` — Resend (see below)
    - `GOOGLE_CLIENT_ID/SECRET`, `GITHUB_CLIENT_ID/SECRET` — Phase 3 prep values
    - `PUBLIC_APP_URL` — staging frontend origin (NOT the live app until Phase 4)
+   - `CORS_ALLOWED_ORIGINS` — extra origins (comma-separated), never `*`
    - `REQUIRE_TIMESCALE=true` — fail fast on Railway if the extension is missing
      (local dev keeps `false` for plain-Postgres fallback)
+   - `KELVIQ_SERVER_API_KEY`, `KELVIQ_ENV=sandbox`, `KELVIQ_PLAN_PRO_MONTHLY`,
+     `KELVIQ_PLAN_PRO_YEARLY`, `KELVIQ_WEBHOOK_SECRET` — billing (sandbox until
+     go-live; unset locally: plans show as not offered, checkout 409s)
+   - `GITHUB_IMPORT_CALLBACK_URL`, `GOOGLE_IMPORT_CALLBACK_URL` — import-time
+     OAuth callbacks (`…/v1/auth/github-import/callback`,
+     `…/v1/auth/google-import/callback`); register both in the GitHub OAuth App
+     and Google Cloud Console alongside the sign-in callbacks
 3. Generate a domain → note the `https://…up.railway.app` URL as the
    **staging API base** for the OAuth callback setup (step 5).
 
@@ -78,13 +86,29 @@ to `/v1/ingest/:id` → row in `metric_points` → `GET /v1/projects/:id/metrics
 daily rollup via `time_bucket()` → alert rule tripped → 5-min job fires →
 cooldown blocks re-fire. Report anything off — don't silently patch.
 
-## 5. OAuth callbacks (staging only — live stays on Firebase)
+## 5. OAuth callbacks
 
+Register all four callback URLs (sign-in + import) wherever the API is
+deployed, staging and production alike:
 - Google Cloud Console → Credentials → OAuth client → add
-  `https://<staging-api>/v1/auth/google/callback`
+  `https://<api>/v1/auth/google/callback`
+  plus `https://<api>/v1/auth/google-import/callback` (GCP project
+  import; needs the Cloud Resource Manager read-only scope verified)
 - GitHub → OAuth App settings → Authorization callback URL →
-  `https://<staging-api>/v1/auth/github/callback`
-- Keep the **live** app on Firebase handlers until Phase 3/4. Staging-only.
+  `https://<api>/v1/auth/github/callback`
+  plus `https://<api>/v1/auth/github-import/callback` (repo import)
+- Sign-in requests identity scopes only (`read:user` + email); the `repo`
+  scope lives exclusively on the import flow and its token is stored
+  encrypted server-side, never returned to the client
+
+## 5b. Frontend cutover wiring
+
+The React frontend talks to this API over REST (`VITE_API_BASE`):
+sessions are a 15-minute JWT (memory) + rotating refresh token
+(localStorage). Point `VITE_API_BASE` at the staging API base above for
+staging previews; `PUBLIC_APP_URL` on the API must exactly match the
+frontend origin or CORS rejects it. The old Firebase Functions backend and
+`functions/` directory are retired — do not deploy them alongside this API.
 
 ## 6. Security-plan operations checklist (do before production traffic)
 

@@ -7,6 +7,7 @@ import { AuditService } from '../common/audit.service';
 import { err } from '../common/errors';
 import { projectHomeStatus } from '../common/types';
 import { Connector } from '../entities/connector.entity';
+import { MetricPoint } from '../entities/metric-point.entity';
 import { Project } from '../entities/project.entity';
 import { MetricsService } from '../metrics/metrics.service';
 
@@ -39,6 +40,7 @@ export class ProjectsController {
   constructor(
     @InjectRepository(Project) private readonly projects: Repository<Project>,
     @InjectRepository(Connector) private readonly connectors: Repository<Connector>,
+    @InjectRepository(MetricPoint) private readonly points: Repository<MetricPoint>,
     private readonly metrics: MetricsService,
     private readonly audit: AuditService,
   ) {}
@@ -105,11 +107,24 @@ export class ProjectsController {
     return { project: await this.projects.findOneOrFail({ where: { id: projectId } }) };
   }
 
-  /** Soft-archive per D8; ingest goes 410. */
+  /** Soft-archive per D8; ingest goes 410. `?forever=true` hard-deletes everything. */
   @Delete(':projectId')
-  async remove(@Req() req: { user: { userId: string } }, @Param('projectId') projectId: string) {
+  async remove(
+    @Req() req: { user: { userId: string } },
+    @Param('projectId') projectId: string,
+    @Query('forever') forever?: string,
+  ) {
     const p = await this.projects.findOne({ where: { id: projectId } });
     if (!p || p.ownerId !== req.user.userId) return err(404, 'not_found', 'Project not found.');
+    if (forever === 'true') {
+      const conns = await this.connectors.find({ where: { projectId } });
+      await this.points.delete({ projectId });
+      // Connectors + alert rules cascade off the project FK; metric points
+      // carry no FK so they go first, explicitly.
+      await this.projects.delete({ id: projectId });
+      this.audit.event('project.deleted', { project_id: projectId, owner_id: p.ownerId, disabled_connectors: conns.length, forever: true });
+      return { ok: true, deletedConnectors: conns.length };
+    }
     const conns = await this.connectors.find({ where: { projectId } });
     await this.projects.update({ id: projectId }, { status: 'archived' });
     for (const c of conns) await this.connectors.update({ id: c.id }, { status: 'error' });
@@ -119,5 +134,19 @@ export class ProjectsController {
       disabledConnectors: conns.length,
       note: 'Ingest URLs now return 410 Gone.',
     };
+  }
+
+  @Get(':projectId')
+  async getOne(@Req() req: { user: { userId: string } }, @Param('projectId') projectId: string) {
+    const p = await this.projects.findOne({ where: { id: projectId } });
+    if (!p || p.ownerId !== req.user.userId) return err(404, 'not_found', 'Project not found.');
+    const conns = await this.connectors.find({ where: { projectId } });
+    const connectorStatuses = conns.map((c) => c.status);
+    const latest = await this.metrics.latestPerKey(projectId, 10);
+    const keyMetrics = latest.slice(0, 3).map((m) => ({
+      metricType: m.metricType, key: m.key, value: Number(m.value), at: m.at,
+    }));
+    const homeStatus = projectHomeStatus({ hasTriggeredUnresolvedAlert: false, connectorStatuses });
+    return { project: p, connectorStatuses, keyMetrics, homeStatus };
   }
 }

@@ -1,9 +1,9 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore'
-import { db } from '../firebase'
+import { api } from './api'
+import { getSessionUser } from './session'
 
 /**
- * User preferences, stored on the existing `users/{uid}` doc (owner-only per
- * firestore.rules) under a single `prefs` map so consent fields stay untouched.
+ * User preferences, stored on the backend user row (`prefs` column, merged
+ * against an allowlist server-side). Falls back to defaults when signed out.
  */
 export interface UserPrefs {
   /** Default chart window on project detail, in days. */
@@ -23,17 +23,31 @@ export const DEFAULT_PREFS: UserPrefs = {
   emailWeeklyDigest: true,
 }
 
-export async function loadUserPrefs(uid: string): Promise<UserPrefs> {
+export function coercePrefs(raw: unknown): UserPrefs {
+  const r = (raw ?? {}) as Partial<UserPrefs>
+  return {
+    defaultWindowDays: r.defaultWindowDays === 7 || r.defaultWindowDays === 90 ? r.defaultWindowDays : 30,
+    portfolioSort: r.portfolioSort === 'name' ? 'name' : 'updated',
+    emailProductUpdates: r.emailProductUpdates === false ? false : true,
+    emailWeeklyDigest: r.emailWeeklyDigest === false ? false : true,
+  }
+}
+
+export async function loadUserPrefs(): Promise<UserPrefs> {
   try {
-    const snap = await getDoc(doc(db, 'users', uid))
-    const raw = snap.exists() ? (snap.data() as { prefs?: Partial<UserPrefs> }).prefs : undefined
-    return { ...DEFAULT_PREFS, ...(raw ?? {}) }
+    const user = getSessionUser()
+    if (user?.prefs) return coercePrefs(user.prefs)
+    const res = await api<{ user: { prefs?: Partial<UserPrefs> | null } }>('/v1/auth/me')
+    return coercePrefs(res.user.prefs)
   } catch {
-    // Offline / rules-mismatch: fall back to defaults rather than block settings UI.
     return DEFAULT_PREFS
   }
 }
 
-export async function saveUserPrefs(uid: string, prefs: UserPrefs): Promise<void> {
-  await setDoc(doc(db, 'users', uid), { prefs }, { merge: true })
+export async function saveUserPrefs(prefs: UserPrefs): Promise<UserPrefs> {
+  const res = await api<{ user: { prefs?: Partial<UserPrefs> | null } }>('/v1/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify({ prefs }),
+  })
+  return coercePrefs(res.user.prefs)
 }

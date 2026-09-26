@@ -1,16 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
-import { getAdditionalUserInfo, getRedirectResult, linkWithCredential, onAuthStateChanged, type User } from 'firebase/auth'
-import { auth } from './firebase'
-import {
-  consumeConsentGiven,
-  flagImportPromptIfNew,
-  persistToken,
-  recordConsent,
-  tokenFromResult,
-  type OAuthKind,
-} from './lib/oauth'
+import { useAuthUser } from './lib/useAuthUser'
+import type { BackendUser } from './lib/session'
 import SignIn from './pages/SignIn'
+import AuthCallback from './pages/AuthCallback'
 import PortfolioHome from './pages/PortfolioHome'
 import AddProject from './pages/AddProject'
 import ProjectDetail from './pages/ProjectDetail'
@@ -38,7 +31,6 @@ import UserMenu from './components/UserMenu'
 import ThemeSwitcher from './components/ThemeSwitcher'
 import LogoStudies from './pages/LogoStudies'
 import { LayoutDashboard } from 'lucide-react'
-import { captureOAuthConflict, clearOAuthConflict, oauthLinkCompleteEventName, oauthLinkFailedEventName, readOAuthConflict } from './lib/auth-conflict'
 
 const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/privacy', '/terms', '/security', '/logo-studies']
 
@@ -47,10 +39,10 @@ function isMarketing(pathname: string): boolean {
   return MARKETING_PATHS.includes(pathname) || pathname.startsWith('/docs/')
 }
 
-function Header({ user }: { user: User | null }) {
+function Header({ user }: { user: BackendUser | null }) {
   const { pathname } = useLocation()
   // Marketing pages bring their own nav — app chrome stays off them.
-  if (isMarketing(pathname) || pathname === '/signin') return null
+  if (isMarketing(pathname) || pathname === '/signin' || pathname === '/auth/callback') return null
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-[var(--page-max-width)] items-center justify-between gap-4 px-5 py-3 sm:px-6">
@@ -99,7 +91,7 @@ import { PageFade } from './components/Reveal'
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation()
-  if (pathname === '/signin') {
+  if (pathname === '/signin' || pathname === '/auth/callback') {
     return <PageFade routeKey={pathname}>{children}</PageFade>
   }
   // Marketing pages own their full layout (incl. <main>) — don't nest landmarks.
@@ -113,7 +105,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function RequireAuth({ user, children }: { user: User | null | undefined; children: JSX.Element }) {
+function RequireAuth({ user, children }: { user: BackendUser | null | undefined; children: JSX.Element }) {
   const navigate = useNavigate()
   useEffect(() => {
     if (user === null) navigate('/signin')
@@ -124,62 +116,7 @@ function RequireAuth({ user, children }: { user: User | null | undefined; childr
 }
 
 export default function App() {
-  const [user, setUser] = useState<User | null | undefined>(undefined)
-
-  useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), [])
-
-  // Consumes OAuth redirect results exactly once, app-wide (SignIn never calls
-  // getRedirectResult itself): captures provider tokens for import flows and
-  // records consent for signup-mode redirects that pre-checked the box.
-  // Routing itself stays with onAuthStateChanged + the consent gate in SignIn.
-  useEffect(() => {
-    void getRedirectResult(auth)
-      .then(async (result) => {
-        sessionStorage.removeItem('stackduck:oauth-redirect-kind')
-        if (!result) return
-        const pendingLink = readOAuthConflict()
-        if (pendingLink) {
-          if (!pendingLink.email || result.user.email?.toLowerCase() !== pendingLink.email.toLowerCase()) {
-            await auth.signOut().catch(() => undefined)
-            window.dispatchEvent(new Event(oauthLinkFailedEventName()))
-            return
-          }
-          try {
-            await linkWithCredential(result.user, pendingLink.credential)
-          } catch {
-            window.dispatchEvent(new Event(oauthLinkFailedEventName()))
-            return
-          }
-          clearOAuthConflict()
-          if (pendingLink.credential.accessToken) {
-            await persistToken(pendingLink.kind, pendingLink.credential.accessToken)
-            await flagImportPromptIfNew(pendingLink.kind)
-          }
-          window.dispatchEvent(new Event(oauthLinkCompleteEventName()))
-        }
-        const info = getAdditionalUserInfo(result)
-        const kind: OAuthKind | null =
-          info?.providerId === 'github.com' ? 'github'
-          : info?.providerId === 'google.com' ? 'google'
-          : null
-        if (kind) {
-          const token = tokenFromResult(kind, result)
-          if (token) {
-            await persistToken(kind, token).catch(() => undefined)
-            await flagImportPromptIfNew(kind).catch(() => undefined)
-          }
-        }
-        if (info?.isNewUser && consumeConsentGiven()) {
-          await recordConsent(result.user.uid, result.user.email).catch(() => undefined)
-        }
-      })
-      .catch((error: unknown) => {
-        const redirectKind = sessionStorage.getItem('stackduck:oauth-redirect-kind') as OAuthKind | null
-        sessionStorage.removeItem('stackduck:oauth-redirect-kind')
-        consumeConsentGiven()
-        if (redirectKind) captureOAuthConflict(redirectKind, error)
-      })
-  }, [])
+  const user = useAuthUser()
 
   return (
     <BrowserRouter>
@@ -188,6 +125,7 @@ export default function App() {
         <Shell>
           <Routes>
             <Route path="/signin" element={<SignIn />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/logo-studies" element={<LogoStudies />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />

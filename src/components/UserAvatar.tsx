@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import type { User } from 'firebase/auth'
+import type { BackendUser } from '../lib/session'
+
+type AvatarUser = Pick<BackendUser, 'displayName' | 'email'> & { photoUrl?: string | null; photoURL?: string | null }
 
 /** Initials from display name, falling back to the email local-part. */
-export function userInitials(user: Pick<User, 'displayName' | 'email'>): string {
+export function userInitials(user: Pick<AvatarUser, 'displayName' | 'email'>): string {
   const name = (user.displayName ?? '').trim()
   if (name) {
     const parts = name.split(/\s+/)
@@ -17,15 +19,16 @@ export default function UserAvatar({
   user,
   size = 36,
 }: {
-  user: Pick<User, 'displayName' | 'email' | 'photoURL'>
+  user: AvatarUser
   size?: number
 }) {
   const [imgFailed, setImgFailed] = useState(false)
   const label = user.displayName || user.email || 'Account'
-  if (user.photoURL && !imgFailed) {
+  const photo = user.photoUrl ?? user.photoURL ?? null
+  if (photo && !imgFailed) {
     return (
       <img
-        src={user.photoURL}
+        src={photo}
         alt={label}
         width={size}
         height={size}
