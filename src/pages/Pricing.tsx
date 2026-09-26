@@ -106,7 +106,7 @@ export default function Pricing() {
     { label: 'Projects', free: 'Unlimited', pro: 'Unlimited' },
     { label: 'Connectors', free: 'All available', pro: 'All available' },
     { label: 'Charts & history', free: 'Full access', pro: 'Full access' },
-    { label: 'Alerts', free: 'Rule setup; monitoring soon', pro: 'Rule setup; monitoring soon' },
+    { label: 'Alerts', free: 'Threshold rules + notifications', pro: 'Threshold rules + notifications' },
     { label: 'Support', free: 'Community (Issues)', pro: 'Priority' },
   ]
 
@@ -114,7 +114,7 @@ export default function Pricing() {
     'Unlimited projects in your portfolio',
     'All available connectors',
     'Metric charts and history',
-    'Threshold rule setup (evaluation and delivery coming soon)',
+    'Threshold rules with email and webhook notifications',
   ]
 
   return (

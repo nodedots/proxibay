@@ -21,8 +21,12 @@ export default function ConnectWebhook() {
         </Step>
         <Step n="2" title="Send a signed event from your backend">
           <p>
-            Compute an HMAC-SHA256 signature of the raw request body with your secret, and send
-            it in the <strong>X-Stackduck-Signature</strong> header. In Node.js:
+            Every request carries two headers: <strong>X-Stackduck-Timestamp</strong> (the
+            current time in unix seconds) and <strong>X-Stackduck-Signature</strong>, which is
+            the hex HMAC-SHA256 of <code>{'{timestamp}.{raw body}'}</code> with your secret.
+            Signing the timestamp is what stops replay attacks — deliveries older than five
+            minutes are rejected even with a valid signature, so keep your server clock
+            accurate. In Node.js:
           </p>
           <Code>{`const crypto = require('crypto');
 
@@ -33,24 +37,28 @@ const body = JSON.stringify({
   // timestamp is optional — omitted means "right now"
 });
 
+const timestamp = Math.floor(Date.now() / 1000).toString();
 const signature = crypto
   .createHmac('sha256', process.env.STACKDUCK_SIGNING_SECRET)
-  .update(body)
+  .update(timestamp + '.' + body)
   .digest('hex');
 
 await fetch(process.env.STACKDUCK_INGEST_URL, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-Stackduck-Timestamp': timestamp,
     'X-Stackduck-Signature': signature,
   },
   body,
 });`}</Code>
           <p>Quick test from a terminal (replace the placeholders):</p>
           <Code>{`BODY='{"metricType":"user_metrics","key":"signups","value":1}'
-SIG=$(echo -n "$BODY" | openssl dgst -sha256 -hmac "$STACKDUCK_SIGNING_SECRET")
+TS=$(date +%s)
+SIG=$(echo -n "$TS.$BODY" | openssl dgst -sha256 -hmac "$STACKDUCK_SIGNING_SECRET")
 curl -X POST "$STACKDUCK_INGEST_URL" \\
   -H 'Content-Type: application/json' \\
+  -H "X-Stackduck-Timestamp: $TS" \\
   -H "X-Stackduck-Signature: $SIG" \\
   -d "$BODY"`}</Code>
         </Step>
@@ -59,7 +67,8 @@ curl -X POST "$STACKDUCK_INGEST_URL" \\
             The connector starts as <strong>pending</strong> and flips to{' '}
             <strong>connected</strong> automatically when the first verified event arrives —
             no health check to run, no page to refresh. You can send up to 500 events per
-            request as a JSON array; sustained traffic is capped at 60 requests a minute
+            request as a JSON array (requests are capped at 100kb); sustained traffic is capped
+            at 60 requests a minute
             per connector (a retry loop gone wild gets a polite 429, not a bill shock).
           </p>
         </Step>
@@ -67,9 +76,16 @@ curl -X POST "$STACKDUCK_INGEST_URL" \\
       <h2 className="mt-12 font-inter text-heading-sm font-semibold">If something fails</h2>
       <div className="mt-4 flex flex-col gap-3">
         <Trouble title="Events rejected (401)">
-          Signature mismatch. The usual suspects: signing a pretty-printed body but sending
-          a compact one (sign the exact bytes you send), an extra newline, or a rotated secret
+          Signature mismatch. The usual suspects: signing the body alone instead of{' '}
+          <code>{'{timestamp}.{body}'}</code>, signing a pretty-printed body but sending
+          a compact one (sign the exact bytes you send), a missing{' '}
+          <code>X-Stackduck-Timestamp</code> header, an extra newline, or a rotated secret
           that never made it into your backend's environment.
+        </Trouble>
+        <Trouble title="Timestamp outside the 5-minute window (401)">
+          The signature was valid but the delivery is too old (or from the future) — usually
+          a wrong server clock or a replayed capture. Sync time (NTP) and send fresh
+          timestamps; retries must re-sign with a new timestamp, not resend the old one.
         </Trouble>
         <Trouble title="Connector still “pending”">
           No verified event has arrived yet. Send the test event above and check the

@@ -25,7 +25,8 @@ export default function ConnectStripe() {
             After connecting, Stackduck shows you an <strong>endpoint URL</strong>. In Stripe,
             go to <strong>Developers → Webhooks → Add endpoint</strong>, paste the URL, and
             listen to charge and payout events. Stripe hands you an endpoint{' '}
-            <strong>signing secret</strong> (whsec_…) — paste it back into the connector and
+            <strong>signing secret</strong> (whsec_…) — paste it into the connector's
+            webhook-secret box when connecting and
             every event arrives verified within seconds. Skip this and you still get nightly
             revenue totals.
           </p>

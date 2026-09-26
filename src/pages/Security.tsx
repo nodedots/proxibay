@@ -53,12 +53,12 @@ export default function Security() {
         <Section title="One honest exception: Supabase">
           <p>
             The Supabase connector asks for your project's <strong>service_role</strong> key,
-            which bypasses Row Level Security and has broader access than a typical
-            API key. We need it for reliable aggregate reads (a limited key could
-            silently hide data from your own monitoring), but you should know what
-            you are handing over: treat it as a sensitive credential, and rotate it
-            in your Supabase dashboard if it is ever exposed. The connect screen says
-            this too — this page is the second place, not the first.
+            which bypasses Row Level Security and is not structurally read-only, even
+            though we only ever read with it. We need it for reliable aggregate reads
+            (a limited key could silently hide data from your own monitoring), but you
+            should know what you are handing over: treat it as a sensitive credential,
+            and rotate it in your Supabase dashboard if it is ever exposed. The connect
+            screen says this too — this page is the second place, not the first.
           </p>
         </Section>
 

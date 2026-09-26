@@ -73,9 +73,9 @@ export default function Privacy() {
         <Section title="Connector credentials">
           <p>
             Connectors that need secrets — such as a Firebase service-account key, an API key,
-            or a webhook signing secret — are stored in a dedicated secret manager, never in
-            the main database alongside your project data. Our database holds only a reference
-            pointing at the secret. Secrets are used solely to fetch your metrics and run
+            or a webhook signing secret — are encrypted before they are stored, never kept
+            alongside your project data in readable form. Secrets are never returned by
+            the API or written to logs. Secrets are used solely to fetch your metrics and run
             connection health checks.
           </p>
         </Section>

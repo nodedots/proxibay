@@ -68,8 +68,8 @@ export default function Terms() {
 
         <Section title="Credentials you provide">
           <p>
-            Service-account keys, API keys, and webhook secrets you supply are stored in a
-            dedicated secret manager and used solely for the connector they belong to. Use
+            Service-account keys, API keys, and webhook secrets you supply are encrypted
+            at rest and used solely for the connector they belong to. Use
             least-privilege, read-only credentials where the connected service allows it, and
             rotate a secret immediately if you believe it has been exposed.
           </p>

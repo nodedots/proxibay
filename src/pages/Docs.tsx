@@ -92,7 +92,8 @@ export default function Docs() {
             <h3 className="font-inter text-body font-semibold">Metric — what you actually read</h3>
             <p className="mt-1 text-body-sm leading-relaxed text-ink-secondary">
               Every data point lands in one of five buckets: users, errors, revenue, uptime, or
-              custom. Points are stored as daily aggregates per project, which is why a year of
+              custom. Points are stored individually in a time-series store and rolled up
+              into daily aggregates when you read them, which is why a year of
               charts loads as fast as a week. Cards show the latest numbers; detail pages chart
               the history.
             </p>
@@ -104,8 +105,10 @@ export default function Docs() {
         <h3 className="mt-6 font-inter text-body font-semibold">Run your own copy</h3>
         <div className="mt-3 flex flex-col gap-3 text-body text-ink-muted">
           <p>
-            Everything below runs on your machine. You need Node 20+ and a Firebase
-            project with Authentication, Firestore, and Functions enabled.
+            Everything below runs on your machine. You need Node 20+, a Firebase
+            project with Authentication and Firestore enabled (the UI still signs in
+            and reads through Firebase until the backend cutover), plus Docker for
+            the API's Postgres database.
           </p>
         </div>
         <div className="mt-3">
@@ -120,11 +123,19 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <strong>Firebase console</strong>, enable <strong>Email/Password</strong>{' '}
             sign-in plus <strong>Firestore</strong>, and paste the web SDK config into{' '}
             <code>.env</code>. Run <code>firebase init</code> once and select Firestore
-            + Hosting so deploys have somewhere to go, then:
+            + Hosting so deploys have somewhere to go. For the self-managed API
+            (which takes over auth, connectors, and metrics at cutover), start its
+            database and server from <code>backend/</code>:
           </p>
         </div>
         <div className="mt-3">
           <Code>{`npm run dev   # the whole UI on Auth + Firestore alone`}</Code>
+        </div>
+        <div className="mt-3">
+          <Code>{`docker compose -f backend/docker-compose.yml up -d
+cd backend
+cp .env.example .env   # fill in JWT + encryption secrets
+npm run start:dev   # API on :3001, /v1/health`}</Code>
         </div>
 
         <h3 className="mt-8 font-inter text-body font-semibold">Your first project</h3>
@@ -139,7 +150,8 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p>
               Pick a connector right after creating the project, or any time later from
               its page. Connect supported services with a scoped read token or service
-              credential; Stackduck verifies access and polls on a schedule. Any other
+              credential; Stackduck verifies access and polls on a schedule (about every
+              30 minutes; Stripe revenue reconciliation runs nightly). Any other
               backend can push signed events to a unique URL we generate for you.
             </p>
           </Step>
@@ -147,7 +159,8 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p>
               Your home page becomes the morning check: every project a card, color-coded
               by health, key numbers on the front. Click through for charts and history.
-              You can save threshold rule configurations; automatic evaluation and delivery are still in development.
+              You can save threshold rules that are evaluated every few minutes and notify
+              you by email or webhook when they trip.
             </p>
           </Step>
         </div>
@@ -185,7 +198,9 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               Paste your project URL plus the service_role secret and Stackduck checks it
               on the spot, then polls user totals, signups, and 30-day active users. The
               anon key can't list users, so the health check tells you immediately if you
-              pasted the wrong one.{' '}
+              pasted the wrong one. Note: this key has broader access than we use — we only
+              read from it, but the key itself isn't restricted to read-only the way our
+              other connectors' credentials are.{' '}
               <Link to="/docs/connect/supabase" className="text-link-emphasis text-link">Step-by-step key guide <ArrowRight size={14} className="ml-1 inline" aria-hidden="true" /></Link>
             </p>
           </div>
@@ -239,10 +254,11 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
               github.com/nodedots/stackduck
             </a>
             . To run your own copy, follow <a href="#quickstart" className="text-link-emphasis text-link">Quickstart</a> above;
-            a few notes that only matter once you're running it: deploying{' '}
-            <code>functions/</code> needs the Blaze plan (Secret Manager + scheduled
-            polling live there), while Auth + Firestore alone is enough to explore the
-            whole UI. The API contract lives in <code>API_CONTRACT.md</code> and every
+            a few notes that only matter once you're running it: scheduled polling and
+            alert evaluation now run as cron jobs inside the API in <code>backend/</code>
+            (backed by Postgres/TimescaleDB — see <code>backend/RAILWAY.md</code> for
+            hosting), while Auth + Firestore alone is still enough to explore the
+            whole UI until the cutover. The API contract lives in <code>API_CONTRACT.md</code> and every
             open question gets logged in <code>DECISIONS.md</code>.
           </p>
           <p>
@@ -255,9 +271,9 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             >
               GitHub Issues
             </a>
-            , pull requests are welcome. A new connector is one file in{' '}
-            <code>functions/src/*Connector.ts</code> plus a card in the Add flow — the
-            existing four are the template.
+            , pull requests are welcome. A new connector is one provider file in{' '}
+            <code>backend/src/connectors/providers/</code> plus a card in the Add flow — the
+            existing providers are the template.
           </p>
         </div>
 
@@ -267,7 +283,7 @@ cp .env.example .env   # paste your Firebase web config`}</Code>
             <p>For Firebase: no. For other backends: a few lines to sign and post events to your ingest URL. No agents, no SDKs to install.</p>
           </Faq>
           <Faq q="What happens to the keys I paste in?">
-            <p>Secrets go straight into a dedicated secret manager. The database keeps only a reference, never the secret itself. Rotate a key any time if you're unsure.</p>
+            <p>Secrets are encrypted with AES-256-GCM before they reach the database, and the API never returns them or writes them to logs. Rotate a key any time if you're unsure.</p>
           </Faq>
           <Faq q="Can I track projects for clients or a team?">
             <p>Accounts are single-owner right now: your projects, your logins. Sharing comes later.</p>

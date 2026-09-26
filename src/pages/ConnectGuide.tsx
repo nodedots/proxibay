@@ -85,7 +85,7 @@ export default function ConnectGuide() {
         <Trouble title="“Could not create” / connector won't generate">
           Stackduck couldn't reach its own services — usually you're offline, the request
           timed out, or (if you run your own copy) the API backend isn't deployed yet:
-          connectors need the Functions API, Auth + database alone aren't enough. Check
+          connectors need the API backend, Auth + database alone aren't enough. Check
           your connection and try again; nothing is half-created, so it's safe to retry.
           Each connector's own page covers what comes next.
         </Trouble>
