@@ -38,10 +38,47 @@ function verifyHmac(body, s, sig) {
   const b = Buffer.from(String(sig).trim(), 'utf8');
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
+
+// Mirror of CredentialsService.verifyWebhookSignature (replay-protected scheme).
+function toSeconds(header) {
+  const parsed = Number(header);
+  if (!header || !Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed > 1e12 ? Math.floor(parsed / 1000) : Math.floor(parsed);
+}
+function checkTimestampWindow(header, nowMs = Date.now(), toleranceSec = 300) {
+  const sec = toSeconds(header);
+  if (sec === null) return 'missing_timestamp';
+  if (Math.abs(Math.floor(nowMs / 1000) - sec) > toleranceSec) return 'stale_timestamp';
+  return 'ok';
+}
+function verifyWebhookSignature(header, body, secret, signature, nowMs = Date.now(), toleranceSec = 300) {
+  const window = checkTimestampWindow(header, nowMs, toleranceSec);
+  if (window !== 'ok') return window;
+  const sec = toSeconds(header);
+  const signed = Buffer.concat([Buffer.from(`${sec}.`, 'utf8'), body]);
+  const expected = crypto.createHmac('sha256', secret).update(signed).digest('hex');
+  const a = Buffer.from(expected, 'utf8');
+  const b = Buffer.from(String(signature).trim(), 'utf8');
+  return a.length === b.length && crypto.timingSafeEqual(a, b) ? 'ok' : 'bad_signature';
+}
+
 const body = Buffer.from('{"metricType":"custom","key":"k","value":1}', 'utf8');
 const sig = crypto.createHmac('sha256', secret).update(body).digest('hex');
+const nowSec = Math.floor(Date.now() / 1000);
+const goodSig = (t) => crypto.createHmac('sha256', secret).update(`${t}.${body.toString('utf8')}`).digest('hex');
+
 check('webhook valid hmac', () => assert(verifyHmac(body, secret, sig), 'should verify'));
 check('webhook tampered body', () => assert(!verifyHmac(Buffer.from('{}', 'utf8'), secret, sig), 'should reject'));
+check('webhook timestamped signature ok', () =>
+  assert(verifyWebhookSignature(String(nowSec), body, secret, goodSig(nowSec)) === 'ok', 'should verify'));
+check('webhook missing timestamp rejected', () =>
+  assert(verifyWebhookSignature(undefined, body, secret, goodSig(nowSec)) === 'missing_timestamp', 'should require timestamp'));
+check('webhook stale timestamp rejected even when signature is valid', () =>
+  assert(verifyWebhookSignature(String(nowSec - 600), body, secret, goodSig(nowSec - 600)) === 'stale_timestamp', 'should reject replay'));
+check('webhook future timestamp rejected', () =>
+  assert(verifyWebhookSignature(String(nowSec + 600), body, secret, goodSig(nowSec + 600)) === 'stale_timestamp', 'should reject future'));
+check('webhook tampered body with fresh timestamp rejected', () =>
+  assert(verifyWebhookSignature(String(nowSec), Buffer.from('{"x":1}', 'utf8'), secret, goodSig(nowSec)) === 'bad_signature', 'should reject'));
 
 const key = crypto.randomBytes(32);
 function enc(pt) {

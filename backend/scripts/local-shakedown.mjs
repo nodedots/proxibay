@@ -46,12 +46,17 @@ step('attach Generic Webhook connector', Boolean(connectorId && signingSecret), 
 step('connector starts pending (push flips on first event)', conn.body?.connector?.status === 'pending', `status ${conn.body?.connector?.status}`);
 if (!connectorId) { console.log(JSON.stringify(conn.body)); finish(1); }
 
-// 4. Signed ingest (+ negative case)
+// 4. Signed ingest (+ negative cases: tampered body, stale replay, no timestamp)
 const payload = JSON.stringify({ metricType: 'custom', key: KEY, value: VALUE, metadata: { source: 'shakedown' } });
-const signature = createHmac('sha256', signingSecret).update(payload).digest('hex');
+const ts = String(Math.floor(Date.now() / 1000));
+const signature = createHmac('sha256', signingSecret).update(`${ts}.${payload}`).digest('hex');
 const good = await fetch(`${API}/v1/ingest/${connectorId}`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'X-Stackduck-Signature': signature },
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Stackduck-Signature': signature,
+    'X-Stackduck-Timestamp': ts,
+  },
   body: payload,
 });
 const goodBody = await good.json().catch(() => null);
@@ -59,10 +64,38 @@ step('signed ingest accepted (202)', good.status === 202 && goodBody?.accepted =
 
 const bad = await fetch(`${API}/v1/ingest/${connectorId}`, {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json', 'X-Stackduck-Signature': 'deadbeef' },
-  body: payload,
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Stackduck-Signature': signature,
+    'X-Stackduck-Timestamp': ts,
+  },
+  body: JSON.stringify({ metricType: 'custom', key: KEY, value: VALUE }),
 });
 step('tampered signature rejected (401)', bad.status === 401, `status ${bad.status}`);
+
+// Replay: signature is valid for this old timestamp, but the window refuses it.
+const oldTs = String(Math.floor(Date.now() / 1000) - 600);
+const oldSig = createHmac('sha256', signingSecret).update(`${oldTs}.${payload}`).digest('hex');
+const replay = await fetch(`${API}/v1/ingest/${connectorId}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Stackduck-Signature': oldSig,
+    'X-Stackduck-Timestamp': oldTs,
+  },
+  body: payload,
+});
+step('stale timestamp rejected even with a valid signature (401)', replay.status === 401, `status ${replay.status}`);
+
+const noTs = await fetch(`${API}/v1/ingest/${connectorId}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Stackduck-Signature': createHmac('sha256', signingSecret).update(payload).digest('hex'),
+  },
+  body: payload,
+});
+step('missing timestamp rejected (401)', noTs.status === 401, `status ${noTs.status}`);
 
 // 5. Read back through the metrics endpoint (time_bucket rollup)
 const from = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);

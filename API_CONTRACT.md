@@ -4,6 +4,24 @@ This file records the original API design and is not a complete or normative des
 of the current API. See [CONNECTORS.md](CONNECTORS.md) for the current connector inventory,
 setup permissions, metric coverage, and token-based connector API.
 
+**Backend pivot (2026-09-25, [D28](DECISIONS.md)):** a self-managed NestJS + PostgreSQL/TimescaleDB API
+now lives in [`backend/`](backend/README.md) and will replace this Cloud Functions API at cutover. It keeps
+the same route shapes and error envelope so the frontend's data layer can switch with minimal change, with
+these differences:
+
+- **Auth:** `Authorization: Bearer <JWT access token>` issued by `/v1/auth/*`, instead of a Firebase ID token.
+  Owners are still derived from the token, never from the request body.
+- **Credentials:** stored encrypted in Postgres ([D29](DECISIONS.md)) instead of Secret Manager; the
+  `credentialsRef` pointer no longer exists and no connector endpoint returns secret material.
+- **Metrics:** read back from a TimescaleDB hypertable via `time_bucket()` ([D30](DECISIONS.md)) instead of
+  daily bucket documents. The response still arrives as `{ buckets: [{ date, points, dailyAggregate }] }`.
+- **Alerts:** `alertRules` are served under `/v1/projects/:projectId/alerts` (CRUD), with evaluation every
+  5 minutes and email delivery via Resend.
+- **Scheduled work:** `/v1/internal/jobs/*` can run polling and alert evaluation on demand when
+  `JOBS_TRIGGER_SECRET` is set; otherwise those routes 404.
+
+Everything below describes the Firebase backend, which still serves live traffic until Phase 3/4 completes.
+
 Base URL (emulator): `http://localhost:5001/proxibay-dev/europe-west1/api`
 Base URL (prod): `https://europe-west1-proxibay-dev.cloudfunctions.net/api`
 All paths below are relative to the base. One Express-style v2 `onRequest` function

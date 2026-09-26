@@ -48,10 +48,56 @@ export class CredentialsService {
     return `whsec_${crypto.randomBytes(32).toString('hex')}`;
   }
 
-  static verifyHmac(rawBody: Buffer, secret: string, signature: string): boolean {
-    const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  /**
+   * Freshness window for webhook delivery (Security Plan §5). The sender must
+   * supply `X-Stackduck-Timestamp` in unix seconds (milliseconds tolerated).
+   * Anything outside `toleranceSec` — 5 minutes — is refused even when the
+   * signature is still mathematically valid, which is what stops a captured
+   * payload from being replayed later.
+   */
+  static checkTimestampWindow(
+    timestampHeader: string | undefined,
+    nowMs = Date.now(),
+    toleranceSec = 300,
+  ): 'ok' | 'missing_timestamp' | 'stale_timestamp' {
+    const seconds = CredentialsService.toSeconds(timestampHeader);
+    if (seconds === null) return 'missing_timestamp';
+    if (Math.abs(Math.floor(nowMs / 1000) - seconds) > toleranceSec) return 'stale_timestamp';
+    return 'ok';
+  }
+
+  /**
+   * Generic-webhook signature: X-Stackduck-Signature must equal
+   * hex HMAC-SHA256(secret, `${timestamp}.${rawBody}`), verified inside the
+   * freshness window.
+   *
+   * Signing the timestamp (rather than the body alone) is the whole point: an
+   * attacker cannot refresh the header on a captured request without breaking
+   * the MAC, so a stolen payload has a short useful life. The body is
+   * concatenated as raw bytes, so senders should reproduce
+   * `HMAC(secret, timestamp + '.' + body)` over the exact bytes they transmitted.
+   */
+  static verifyWebhookSignature(
+    timestampHeader: string | undefined,
+    rawBody: Buffer,
+    secret: string,
+    signature: string,
+    nowMs = Date.now(),
+    toleranceSec = 300,
+  ): 'ok' | 'missing_timestamp' | 'stale_timestamp' | 'bad_signature' {
+    const window = CredentialsService.checkTimestampWindow(timestampHeader, nowMs, toleranceSec);
+    if (window !== 'ok') return window;
+    const sec = CredentialsService.toSeconds(timestampHeader)!;
+    const signed = Buffer.concat([Buffer.from(`${sec}.`, 'utf8'), rawBody]);
+    const expected = crypto.createHmac('sha256', secret).update(signed).digest('hex');
     const a = Buffer.from(expected, 'utf8');
     const b = Buffer.from(signature.trim(), 'utf8');
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
+    return a.length === b.length && crypto.timingSafeEqual(a, b) ? 'ok' : 'bad_signature';
+  }
+
+  private static toSeconds(timestampHeader: string | undefined): number | null {
+    const parsed = Number(timestampHeader);
+    if (!timestampHeader || !Number.isFinite(parsed) || parsed <= 0) return null;
+    return parsed > 1e12 ? Math.floor(parsed / 1000) : Math.floor(parsed);
   }
 }

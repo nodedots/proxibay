@@ -4,6 +4,7 @@ const PAGES = [
   { to: '/license', label: 'License', key: 'license' },
   { to: '/privacy', label: 'Privacy', key: 'privacy' },
   { to: '/terms', label: 'Terms', key: 'terms' },
+  { to: '/security', label: 'Security', key: 'security' },
 ] as const
 
 export default function LegalNav({ active }: { active: (typeof PAGES)[number]['key'] }) {

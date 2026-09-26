@@ -80,3 +80,26 @@ These are sheet-specific and belong to the Add-flow pass; listed so nothing is m
 3. `connectorStatusLine(status)` → {dot, headline} per spec §3 (single source; replaces CONN_PILL + ad-hoc ternaries).
 4. `describeRule(rule)` → the §5 sentence (used by both the rule list and, later, the feed).
 5. Centralize the C2 error-code table in `lib/api.ts` next to `connectErrorMessage`.
+
+## Follow-up audit: strings added 2026-09-25 (portfolio removal + migration reconnect)
+
+New user-visible copy since the original pass, checked against the same
+non-developer-reading-it-cold standard. Line numbers omitted on purpose — they
+drift faster than the last audit already did.
+
+| # | Location | Current | Verdict |
+|---|----------|---------|---------|
+| F1 | `PortfolioHome.tsx` Remove button (card bottom right) | `Remove` + `aria-label="Remove {name} from your portfolio"` | Kept. Short button label is fine because the dialog carries the consequence; the accessible name names the target so a screen-reader user never hears a bare "Remove". |
+| F2 | `ConfirmDialog.tsx` heading | `Remove "{name}"?` | Kept. Names the specific project, so it reads as a question about *this* thing rather than a generic warning. |
+| F3 | `ConfirmDialog.tsx` body | `This permanently deletes the project and everything attached to it — data sources, metrics history, and alert rules. It can't be undone.` | Kept. States the blast radius in product words, not collection names. |
+| F4 | `ConfirmDialog.tsx` body, second line | `Only want it out of the way for now? Open the project and use Archive instead — archived projects keep their history and can be restored.` | Kept. Offer the reversible path in the same breath as the destructive one; most "delete" intent is really "hide this". |
+| F5 | `ConfirmDialog.tsx` prompt | `Type {name} to confirm` / `Remove permanently` | Kept. Matches the detail page's delete, so the two confirmations cost the same intent. "Remove permanently" not "Delete forever" — same meaning, less dramatic. |
+| F6 | `PortfolioHome.tsx` success toast | `"{name}" was removed, along with its data sources, metrics, and alert rules.` | Kept. Confirms what actually happened after the card has already vanished — the absence of the card is not enough feedback on its own. |
+| F7 | `ReconnectBanner.tsx` heading | `Reconnect your project — your credentials didn't carry over during our move to the new backend.` | Kept. Names the cause as a one-time migration event rather than a fault, which is the whole point of this step existing. |
+| F8 | `ReconnectBanner.tsx` per-connector detail | e.g. `A fresh signing secret is generated below — update the secret where your backend sends metrics.` | Kept. Says what to do next instead of what broke. |
+| F9 | `ReconnectBanner.tsx` dismiss | `Later` (not `Dismiss` / `Got it`) | Kept. Honest — the task is genuinely deferrable, and "Later" doesn't imply the problem went away. |
+| F10 | `ConfirmDialog.tsx` busy label | `Removing…` | Kept. Mirrors the app's existing `Checking…` / `Importing…` pattern. |
+
+Not covered here (out of scope for this audit): API error strings from the new
+backend, which surface through the existing C2 error-code mapping in `lib/api.ts`.
+

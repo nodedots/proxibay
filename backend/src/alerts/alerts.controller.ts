@@ -4,11 +4,12 @@ import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { err } from '../common/errors';
+import { METRIC_TYPES, MetricType } from '../common/types';
 import { AlertRule } from '../entities/alert-rule.entity';
 import { Project } from '../entities/project.entity';
 
 class CreateRuleDto {
-  @IsString() metricType!: string;
+  @IsIn(METRIC_TYPES) metricType!: MetricType;
   @IsString() key!: string;
   @IsIn(['above', 'below']) condition!: 'above' | 'below';
   @IsInt() threshold!: number;
@@ -20,7 +21,7 @@ class CreateRuleDto {
 }
 
 class UpdateRuleDto {
-  @IsOptional() @IsString() metricType?: string;
+  @IsOptional() @IsIn(METRIC_TYPES) metricType?: MetricType;
   @IsOptional() @IsString() key?: string;
   @IsOptional() @IsIn(['above', 'below']) condition?: 'above' | 'below';
   @IsOptional() @IsInt() threshold?: number;

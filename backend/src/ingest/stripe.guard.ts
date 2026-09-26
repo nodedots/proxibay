@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { AuditService } from '../common/audit.service';
 import { CredentialsService } from '../credentials/credentials.service';
 import { StripeConnector } from '../connectors/providers/stripe.connector';
 import { Connector } from '../entities/connector.entity';
@@ -13,6 +14,7 @@ export class StripeGuard implements CanActivate {
     @InjectRepository(Connector) private readonly connectors: Repository<Connector>,
     @InjectRepository(Project) private readonly projects: Repository<Project>,
     private readonly creds: CredentialsService,
+    private readonly audit: AuditService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -44,6 +46,9 @@ export class StripeGuard implements CanActivate {
       throw new UnauthorizedException({ error: { code: 'invalid_argument', message: 'No webhook secret saved on this connector — push is not configured (poll still runs).' } });
     }
     if (!StripeConnector.verifySignature(req.body, webhookSecret, signature)) {
+      this.audit.event('connector.ingest.rejected', {
+        connector_id: conn.id, project_id: conn.projectId, reason: 'stripe_signature',
+      });
       throw new UnauthorizedException({ error: { code: 'bad_signature', message: 'Signature mismatch. Check the endpoint secret matches Stripe’s dashboard.' } });
     }
     req.stripe = { connector: conn, projectId: conn.projectId };

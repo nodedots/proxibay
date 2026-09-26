@@ -28,6 +28,7 @@ import ConnectSupabase from './pages/ConnectSupabase'
 import Pricing from './pages/Pricing'
 import Changelog from './pages/Changelog'
 import License from './pages/License'
+import Security from './pages/Security'
 import Support from './pages/Support'
 import Feedback from './pages/Feedback'
 import BillingSuccess from './pages/BillingSuccess'
@@ -39,7 +40,7 @@ import LogoStudies from './pages/LogoStudies'
 import { LayoutDashboard } from 'lucide-react'
 import { captureOAuthConflict, clearOAuthConflict, oauthLinkCompleteEventName, oauthLinkFailedEventName, readOAuthConflict } from './lib/auth-conflict'
 
-const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/privacy', '/terms', '/logo-studies']
+const MARKETING_PATHS = ['/', '/about', '/docs', '/pricing', '/support', '/feedback', '/changelog', '/license', '/privacy', '/terms', '/security', '/logo-studies']
 
 /** Marketing + docs pages own their chrome — match exact or nested paths. */
 function isMarketing(pathname: string): boolean {
@@ -203,6 +204,7 @@ export default function App() {
             <Route path="/billing/success" element={<BillingSuccess />} />
             <Route path="/changelog" element={<Changelog />} />
             <Route path="/license" element={<License />} />
+            <Route path="/security" element={<Security />} />
             <Route path="/" element={<Landing />} />
             <Route
               path="/portfolio"

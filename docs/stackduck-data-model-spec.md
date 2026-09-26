@@ -66,6 +66,15 @@ interface NormalizedEvent {
 
 ## 3. Time-Series Storage (Bucketed Documents)
 
+> **Partially superseded (2026-09-25, [D30](../DECISIONS.md)).** On the new
+> NestJS backend this section's daily-bucket documents are gone: individual points
+> go into a TimescaleDB hypertable (`metric_points`) and rollups are computed on
+> read with `time_bucket()`. That removes the `projectId_metricType_key_date`
+> document-ID scheme below, the per-bucket point cap, and the read-append-write
+> transaction per incoming point; retention becomes a `time_bucket` retention
+> policy rather than a cleanup job. The section is retained because the live
+> Firebase backend still stores buckets this way until the cutover.
+
 Raw `NormalizedEvent`s are not stored one-per-document. They're aggregated into daily buckets:
 
 ### `metrics/{projectId}_{metricType}_{key}_{YYYY-MM-DD}`

@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuditService } from '../common/audit.service';
 import { err } from '../common/errors';
 import { projectHomeStatus } from '../common/types';
 import { Connector } from '../entities/connector.entity';
@@ -14,7 +15,7 @@ const STATUSES = ['active', 'paused', 'archived'] as const;
 class CreateProjectDto {
   @IsString() name!: string;
   @IsOptional() @IsString() description?: string;
-  @IsOptional() stackTags?: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) stackTags?: string[];
   @IsOptional() @IsString() repoUrl?: string;
   @IsOptional() @IsString() liveUrl?: string;
   @IsOptional() @IsIn(['production', 'staging', 'development']) environment?: 'production' | 'staging' | 'development';
@@ -24,7 +25,7 @@ class CreateProjectDto {
 class UpdateProjectDto {
   @IsOptional() @IsString() name?: string | null;
   @IsOptional() @IsString() description?: string | null;
-  @IsOptional() stackTags?: string[] | null;
+  @IsOptional() @IsArray() @IsString({ each: true }) stackTags?: string[] | null;
   @IsOptional() @IsString() repoUrl?: string | null;
   @IsOptional() @IsString() liveUrl?: string | null;
   @IsOptional() @IsIn(['production', 'staging', 'development']) environment?: 'production' | 'staging' | 'development' | null;
@@ -39,6 +40,7 @@ export class ProjectsController {
     @InjectRepository(Project) private readonly projects: Repository<Project>,
     @InjectRepository(Connector) private readonly connectors: Repository<Connector>,
     private readonly metrics: MetricsService,
+    private readonly audit: AuditService,
   ) {}
 
   @Post()
@@ -55,6 +57,7 @@ export class ProjectsController {
       environment: dto.environment,
       notes: dto.notes,
     }));
+    this.audit.event('project.created', { project_id: p.id, owner_id: p.ownerId });
     return { project: p };
   }
 
@@ -110,6 +113,7 @@ export class ProjectsController {
     const conns = await this.connectors.find({ where: { projectId } });
     await this.projects.update({ id: projectId }, { status: 'archived' });
     for (const c of conns) await this.connectors.update({ id: c.id }, { status: 'error' });
+    this.audit.event('project.deleted', { project_id: projectId, owner_id: p.ownerId, disabled_connectors: conns.length });
     return {
       project: { ...p, status: 'archived' as const },
       disabledConnectors: conns.length,

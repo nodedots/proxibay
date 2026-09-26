@@ -237,4 +237,137 @@ desktop header). Inline text links (nav/footer) gained vertical padding for
 touch. Pricing table scrolls inside its card by design; everything else fits
 with zero page-level overflow, verified by measurement on all primary views.
 
+---
+
+**Numbering note (2026-09-25):** D21 and D22 were each reused for two unrelated
+entries (theme switcher / guided UX pass, and mobile pass / GCP notes), and
+D20/D23/D24/D25/D26/D27 appear out of order. The duplicates are left as-is rather
+than renumbered — renumbering would invalidate cross-references already scattered
+through the docs — so new entries continue from **D28**, and old labels should be
+read as "the D21 about X" rather than a unique key.
+
+## D28 — Backend pivot: NestJS + PostgreSQL/TimescaleDB, frontend unchanged (2026-09-25)
+
+Firestore + Firebase Auth + Cloud Functions are replaced by a self-managed NestJS
+API (`backend/`) over PostgreSQL with the TimescaleDB extension. The React
+frontend is untouched apart from its data-fetching layer, which moves from
+Firebase SDK calls to REST (Phase 3). Built and typechecked as Phase 1; nothing is
+cut over yet — Firebase stays live so behaviour can be compared before the old
+project is retired. Rationale: Firebase's managed auth, rules, and bucketing
+economics were paid for in lock-in (no SQL, no time-series functions, per-document
+write amplification), and the queries this product wants are analytical, not
+document-shaped. Reversible cost: high at the data layer, low at the UI layer —
+which is exactly why the frontend boundary was chosen as the cutover seam.
+Supersedes D13 (single Express function) and D14 (client-side direct-Firestore
+fallback) **at cutover**, not before.
+
+## D29 — Connector credentials: encrypted Postgres columns, not Secret Manager (2026-09-25)
+
+Supersedes D4. Connector secrets (service-account JSON, API keys, OAuth tokens,
+webhook signing secrets) live in a `credentials_enc` column on `connectors`,
+encrypted with AES-256-GCM at the application layer
+(`v1:<iv>:<tag>:<ciphertext>`, 32-byte key from `CREDENTIALS_ENCRYPTION_KEY`).
+Rationale: the point of the pivot was dropping a GCP dependency, so keeping Secret
+Manager standalone would have preserved the tie-in the pivot was meant to remove,
+and `pgcrypto` keeps the key inside the database it protects. Trade-off accepted:
+key rotation becomes ours to implement (no versioned secrets), and a lost key
+means every connector must be reconnected — documented rather than discovered.
+Controllers strip `credentialsEnc`/`previousCredentialsEnc` from every response, so
+secrets cannot leak through the API surface.
+
+## D30 — MetricPoint hypertable replaces hand-bucketed daily documents (2026-09-25)
+
+Supersedes D2 and the trim half of D6. Individual data points
+(`project_id, connector_id, metric_type, key, value, timestamp, metadata`) are
+written to a TimescaleDB hypertable, and rollups are computed on read with
+`time_bucket()`. This deletes three Firestore-era workarounds outright: the
+`projectId_metricType_key_date` document-ID scheme (D2), the 5,000-point
+per-bucket cap, and the read-append-recompute-write transaction per incoming
+point. Retention becomes `add_retention_policy` (30 days of raw points) instead of
+a scheduled cleanup job. Deliberately a strict improvement, not a port: the manual
+bucketing existed only because Firestore has no time-series functions. Fallback:
+without TimescaleDB the API still boots — `time_bucket` becomes `date_trunc` and
+the hypertable stays a plain indexed table. `REQUIRE_TIMESCALE=true` turns that
+degradation into a hard failure and is set in staging/production so a wrong
+database cannot silently look healthy.
+
+## D31 — Auth: passport-local + Google/GitHub OAuth + JWT access/refresh (2026-09-25)
+
+Replaces Firebase Auth. Email/password is bcrypt (cost 12). Google requests
+`profile`/`email`; GitHub requests `repo` plus `read:user`/`user:email` for repo
+import. Sessions are a 15-minute JWT access token plus a 30-day opaque refresh
+token stored **hashed** (SHA-256) and rotated on every use, so a database dump
+yields no usable tokens. The existing signup/consent-checkbox flow is preserved —
+consent is required on register and on first-time OAuth, and recorded as
+`consentAcceptedAt` — amending D15/D16's mechanism while keeping their intent.
+`ownerId` is derived from the JWT subject and never trusted from a request body,
+the same rule as the Firebase-token era.
+
+## D32 — Hosting: Railway, TimescaleDB marketplace template (2026-09-25)
+
+Railway's own documentation states their Postgres templates do not ship extensions
+and points at the template marketplace for Timescale — so the **TimescaleDB
+template** is required, and plain Postgres is not an acceptable substitute because
+D30 depends on the extension. All configuration lives in Railway environment
+variables (database URL, JWT signing secrets, `CREDENTIALS_ENCRYPTION_KEY`, Resend
+key, OAuth client secrets); nothing is committed — `backend/.env` is gitignored
+while `backend/.env.example` stays tracked as the schema of record. Setup steps,
+the `.env` key list, and the `pg_available_extensions` verification query are in
+`backend/RAILWAY.md`; `backend/railway.json` holds the build/start commands and
+`/v1/health` healthcheck.
+
+## D33 — Alert email delivery via Resend (2026-09-25)
+
+The log-only email placeholder is replaced with real delivery through Resend
+(`RESEND_API_KEY` + `ALERT_FROM_EMAIL`, per Alerting Model §5). Delivery failures
+throw, so a rule is never recorded as fired when nothing was sent. With no key
+configured the service logs `EMAIL (unsent — no RESEND_API_KEY)` rather than
+silently pretending to notify — local development must not be indistinguishable
+from a delivered alert. Webhook delivery is unchanged. Email stays the channel with
+the least operational overhead at solo-maintainer scale; native Slack/Discord
+integrations remain deferred.
+
+## D34 — Migration: secrets cannot transfer, so reconnecting is an explicit step (2026-09-25)
+
+The Phase 2 Firestore → Postgres script migrates projects, connectors, alert rules,
+and metric buckets, but **cannot** migrate credentials: the D4-era ciphertext lives
+in Secret Manager and cannot be decrypted or re-encrypted without the original IAM.
+Rather than let users discover silently broken connectors, migrated rows land in
+`error` carrying a `Migrated from Firestore …` marker, and the UI shows a one-time
+"Reconnect your project" prompt — neutral styling, per-connector guidance, and a
+Reconnect action that opens that connector's original setup form. The copy reads as
+an expected migration step rather than a fault. Owner identity is re-linked through
+a `firestore_owner_uid` note, and metric buckets are flattened back into individual
+points (D30) instead of being carried across as documents. Secrets are never
+fabricated to fill the gap.
+
+## D35 — Portfolio Home: per-card removal behind typed confirmation (2026-09-25)
+
+Amends the Portfolio Home spec §5 ("no inline actions on the card itself").
+Removal lives on the card because deleting an imported project previously required
+opening it first, which is a poor fit for cleaning up a bulk import; every other
+action stays on the detail page. Confirmation requires typing the exact project
+name (the same deliberate step as the detail page's delete), the dialog offers
+Archive as the reversible alternative, and the copy states plainly that connectors,
+metrics history, and alert rules go with it. Deletion logic was extracted to
+`deleteProjectData()` in `src/lib/store.ts` so the card and the detail page cannot
+drift apart. The card was restructured (link moved onto the project name with a
+stretched overlay) because the previous whole-card anchor would have nested a
+button inside a link. Open item: the data model has no `imported` flag — GitHub
+imports set `repoUrl` and GCP imports write to `notes`, but ordinary projects can
+too, so removal is offered on **every** card rather than gated on a fragile
+heuristic. Scoping it to imports only would need a real marker.
+
+## D36 — Manual job triggers, gated by JOBS_TRIGGER_SECRET (2026-09-25)
+
+`POST /v1/internal/jobs/{evaluate-alerts,poll-providers,reconcile-stripe}` run the
+scheduled work on demand. Rationale: "the alert fires" and "cooldown blocks the
+re-fire" cannot be asserted honestly by waiting on two 5-minute crons, and those
+are exactly the behaviours worth proving before cutover. The routes 404 when
+`JOBS_TRIGGER_SECRET` is unset (constant-time comparison on the request header), so
+production is unaffected by their existence and no separate environment is needed
+to keep them off the public surface.
+
+
+
 

@@ -228,7 +228,8 @@ export default function Landing() {
             <p className="mt-2 text-body text-ink-muted">
               Stackduck only asks for the access it needs to monitor your projects.
               Credentials stay encrypted and under your control — revoke anytime
-              from your own accounts.
+              from your own accounts.{' '}
+              <Link to="/security" className="text-link">How we protect your data</Link>
             </p>
           </Reveal>
         </div>

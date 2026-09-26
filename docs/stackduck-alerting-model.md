@@ -48,7 +48,7 @@ This is simpler and cheaper than evaluating on every single ingest event, and fi
 
 ## 5. Delivery Channels (v1 scope)
 
-- **Email** — simplest, no infra beyond an email-sending service (e.g. SendGrid, or Firebase Extensions' email trigger)
+- **Email** — simplest, no infra beyond an email-sending service. **Implemented via Resend** ([D33](../DECISIONS.md)) on the new backend: `RESEND_API_KEY` + `ALERT_FROM_EMAIL` send the alert directly from the evaluation job. A delivery failure throws, so a rule is never recorded as fired when nothing was sent, and without a key the service logs `EMAIL (unsent — no RESEND_API_KEY)` instead of pretending to notify
 - **Webhook** — POST a JSON payload to a URL the dev controls; this is what lets a dev route alerts into Slack/Discord/etc. themselves without Proxibay needing native integrations for each
 
 **Explicitly deferred:** native Slack/Discord/SMS integrations — the generic webhook covers this need without Proxibay maintaining N integrations at dogfood stage.

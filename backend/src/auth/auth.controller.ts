@@ -1,10 +1,13 @@
-import { Body, Controller, Get, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { IsBoolean, IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { GithubCallbackGuard, GithubStartGuard, GoogleCallbackGuard, GoogleStartGuard } from './oauth-guards';
+import type { OAuthStateClaim } from './oauth-state.service';
 import { err } from '../common/errors';
 
 class RegisterDto {
@@ -38,6 +41,9 @@ export class AuthController {
     return res.redirect(url.toString());
   }
 
+  // Brute-force protection: auth endpoints sit on their own, much tighter
+  // buckets than the general API limit (Security Plan §1).
+  @Throttle({ signup: { limit: 5, ttl: 60000 } })
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     if (!dto.consent) return err(400, 'consent_required', 'You must accept the terms to create an account.');
@@ -45,11 +51,13 @@ export class AuthController {
   }
 
   @UseGuards(AuthGuard('local'))
+  @Throttle({ auth: { limit: 10, ttl: 60000 } })
   @Post('login')
   async login(@Req() req: { user: Parameters<AuthService['issueTokens']>[0] }) {
     return this.auth.issueTokens(req.user);
   }
 
+  @Throttle({ auth: { limit: 10, ttl: 60000 } })
   @Post('refresh')
   async refresh(@Body() dto: RefreshDto) {
     return this.auth.rotateRefresh(dto.refreshToken);
@@ -69,35 +77,46 @@ export class AuthController {
     return { user: { id: user.id, email: user.email, displayName: user.displayName, photoUrl: user.photoUrl } };
   }
 
-  // OAuth — callback URLs point at THIS backend (Phase 3 updates the
-  // Google Cloud Console + GitHub OAuth App configs to match).
+  // OAuth — callback URLs point at THIS backend. `state` is issued and bound to
+  // this browser on the way out, and verified before the code exchange.
+  // Phase 3 updates the Google Cloud Console + GitHub OAuth App configs.
   @Get('google')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleStartGuard)
   googleStart() {}
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleCallbackGuard, AuthGuard('google'))
   async googleCallback(
-    @Req() req: { user: { providerId: string; email?: string; displayName?: string; photoUrl?: string } },
-    @Query('consent') consent: string | undefined,
+    @Req() req: Request & {
+      user: { providerId: string; email?: string; displayName?: string; photoUrl?: string };
+      oauthState?: OAuthStateClaim;
+    },
     @Res() res: Response,
   ) {
-    const tokens = await this.auth.upsertOAuth('google', req.user.providerId, req.user.email, req.user.displayName, req.user.photoUrl, consent === '1');
+    const tokens = await this.auth.upsertOAuth(
+      'google', req.user.providerId, req.user.email, req.user.displayName, req.user.photoUrl,
+      req.oauthState?.consent === true,
+    );
     return this.redirectWithTokens(res, tokens);
   }
 
   @Get('github')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(GithubStartGuard)
   githubStart() {}
 
   @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(GithubCallbackGuard, AuthGuard('github'))
   async githubCallback(
-    @Req() req: { user: { providerId: string; email?: string; displayName?: string; photoUrl?: string } },
-    @Query('consent') consent: string | undefined,
+    @Req() req: Request & {
+      user: { providerId: string; email?: string; displayName?: string; photoUrl?: string };
+      oauthState?: OAuthStateClaim;
+    },
     @Res() res: Response,
   ) {
-    const tokens = await this.auth.upsertOAuth('github', req.user.providerId, req.user.email, req.user.displayName, req.user.photoUrl, consent === '1');
+    const tokens = await this.auth.upsertOAuth(
+      'github', req.user.providerId, req.user.email, req.user.displayName, req.user.photoUrl,
+      req.oauthState?.consent === true,
+    );
     return this.redirectWithTokens(res, tokens);
   }
 }

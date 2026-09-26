@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { err } from '../common/errors';
+import { METRIC_TYPES } from '../common/types';
 import { Project } from '../entities/project.entity';
 import { MetricsService } from './metrics.service';
 
@@ -25,6 +26,9 @@ export class MetricsController {
     @Query('to') to: string | undefined,
   ) {
     if (!metricType || !key) return err(400, 'invalid_argument', '"metricType" and "key" are required.');
+    if (!(METRIC_TYPES as readonly string[]).includes(metricType)) {
+      return err(400, 'invalid_argument', `"metricType" must be one of ${METRIC_TYPES.join(', ')}.`);
+    }
     const p = await this.projects.findOne({ where: { id: projectId } });
     if (!p || p.ownerId !== req.user.userId) return err(404, 'not_found', 'Project not found.');
     const end = to ? new Date(`${to}T23:59:59.999Z`) : new Date();

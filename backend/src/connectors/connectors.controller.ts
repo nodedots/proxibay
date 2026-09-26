@@ -2,6 +2,7 @@ import { Body, Controller, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AuditService } from '../common/audit.service';
 import { err } from '../common/errors';
 import { ConnectorType } from '../common/types';
 import { CredentialsService } from '../credentials/credentials.service';
@@ -21,6 +22,7 @@ export class ConnectorsController {
     @InjectRepository(Connector) private readonly connectors: Repository<Connector>,
     private readonly registry: ConnectorsRegistry,
     private readonly creds: CredentialsService,
+    private readonly audit: AuditService,
   ) {}
 
   async ownProject(userId: string, projectId: string): Promise<Project | null> {
@@ -56,6 +58,11 @@ export class ConnectorsController {
       lastHealthCheck: new Date(),
       pollIntervalMinutes: pollInterval ?? 30,
     }));
+    // Connection event only — credentials are never part of the log line.
+    this.audit.event('connector.created', {
+      connector_id: id, project_id: projectId, owner_id: userId, type,
+      health: healthCheck.ok ? 'ok' : 'failed',
+    });
     const base = process.env.PUBLIC_API_BASE ?? `http://localhost:${process.env.PORT ?? 3001}`;
     const extra = type === 'generic-webhook'
       ? { signingSecret: secretPayload, ingestUrl: `${base}/v1/ingest/${id}` }
@@ -128,6 +135,9 @@ export class ConnectorsController {
       return err(400, 'invalid_argument', 'healthCheck is only callable for API-key/poll connectors.');
     }
     const healthCheck = await this.registry.healthCheck(conn.type, conn.credentialsEnc);
+    this.audit.event('connector.healthcheck', {
+      connector_id: conn.id, project_id: projectId, type: conn.type, ok: healthCheck.ok,
+    });
     await this.connectors.update({ id: conn.id }, {
       status: healthCheck.ok ? 'connected' : 'error',
       lastError: healthCheck.ok ? null : healthCheck.detail, lastHealthCheck: new Date(),
@@ -151,6 +161,7 @@ export class ConnectorsController {
       previousCredentialsEnc: conn.credentialsEnc,
       credentialsEnc: this.creds.encrypt(newSecret), graceUntil,
     });
+    this.audit.event('connector.secret_rotated', { connector_id: conn.id, project_id: projectId });
     return { signingSecret: newSecret, graceUntil: graceUntil.toISOString() };
   }
 }

@@ -74,6 +74,7 @@ const GROUPS: Array<{
       { to: '/license', label: 'License' },
       { to: '/privacy', label: 'Privacy' },
       { to: '/terms', label: 'Terms' },
+      { to: '/security', label: 'Security' },
     ],
   },
 ]

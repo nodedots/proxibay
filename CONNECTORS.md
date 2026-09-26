@@ -1,6 +1,8 @@
 # Connector reference
 
-Connectors attach to a project and write normalized metrics into its existing charts and alert system. Provider credentials are sent to the authenticated Functions API, stored as secrets, and never saved in the connector document. Poll-based integrations run every 30 minutes. Provider permissions should be limited to read access.
+Connectors attach to a project and write normalized metrics into its existing charts and alert system. Provider credentials are sent to the authenticated API, encrypted, and never saved in the connector document or returned to the client. Poll-based integrations run every 30 minutes. Provider permissions should be limited to read access.
+
+Credential storage differs between the two backends while the migration completes. The live Firebase backend keeps secrets in Secret Manager and stores only a `credentialsRef` on the connector. The new NestJS backend stores them in an encrypted column (`credentials_enc`, AES-256-GCM, key from `CREDENTIALS_ENCRYPTION_KEY`) — see [D29](DECISIONS.md) — and strips that column from every API response. Because Secret Manager ciphertext can't be decrypted without the original IAM, credentials do not migrate: after the cutover each connector shows a one-time "reconnect" prompt instead of failing silently ([D34](DECISIONS.md)).
 
 ## Available connectors
 
@@ -34,10 +36,12 @@ Token-based connectors use the authenticated endpoint:
 
 ```http
 POST /v1/projects/:projectId/connectors/:provider
-Authorization: Bearer <Firebase ID token>
+Authorization: Bearer <access token>
 Content-Type: application/json
 ```
 
+The new backend issues its own JWT access tokens (with rotating refresh tokens); the live Firebase backend still expects a Firebase ID token. Both derive the owning account from the token, never from the request body.
+
 Provider values are `sentry`, `github-actions`, `posthog`, `betterstack`, and `vercel`. The request fields correspond to the setup table, with `token` required for all five. Successful responses include the connector and inline health check. A failed health check returns `422` with the saved connector marked `error`; correct the credentials and submit the form again to replace the failed connector credentials.
 
-Manual health checks use `POST /v1/projects/:projectId/connectors/:connectorId/healthcheck`. Metrics are stored in Stackduck's existing daily metric buckets and can be used in alerts.
+Manual health checks use `POST /v1/projects/:projectId/connectors/:connectorId/healthcheck`. On the Firebase backend metrics land in daily bucket documents; on the NestJS backend they are individual rows in a TimescaleDB hypertable rolled up on read with `time_bucket()` ([D30](DECISIONS.md)). Either way they feed the same charts and alert rules.

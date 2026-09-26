@@ -53,7 +53,8 @@ else → green (healthy or no connector attached — deliberately not distinguis
 ## 5. Interaction
 
 - Clicking a card → project detail view (per the Add Project Flow doc's Step 4/5)
-- No inline actions on the card itself beyond navigation — editing, connector management, etc. all happen on the detail page, keeping the home view purely a scanning/triage surface
+- Editing and connector management still happen on the detail page, keeping the home view a scanning/triage surface
+- **Amended 2026-09-25 ([D35](../DECISIONS.md)): one inline action is now allowed — Remove.** Deleting a project previously required opening it first, which is awkward for cleaning up a bulk import. Remove sits at the card's bottom right behind a confirmation prompt that requires typing the exact project name (matching the detail page's delete), states that connectors, metrics history, and alert rules go with it, and offers Archive as the reversible alternative. The prompt stays open on failure rather than closing on an error the user can't see. Because the data model has no `imported` flag (GitHub imports set `repoUrl`, GCP imports write to `notes`, and ordinary projects can do both), removal is offered on every card rather than gated on a heuristic. Implementation note: the card's link moved onto the project name with a stretched overlay so the Remove button is never nested inside an anchor.
 
 ## 6. Open Items Surfaced by This Spec
 

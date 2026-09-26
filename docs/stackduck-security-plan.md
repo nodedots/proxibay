@@ -14,8 +14,8 @@ Written after the pivot decision from Firebase to a self-managed NestJS + Postgr
 ## 2. Data Protection
 
 - **Encryption in transit:** HTTPS enforced everywhere, HSTS header set, no HTTP fallback
-- **Encryption at rest:** connector credentials (service account JSON, API keys, OAuth tokens) must be encrypted before storage, not stored as plaintext columns — either application-level encryption (e.g. `pgcrypto`, or a library like `@nestjs/config` + a KMS-backed key) or continue using Google Secret Manager standalone (it works independently of Firestore) as decided in the pivot plan
-- **Database-level encryption at rest:** whatever Postgres host is chosen (Railway, Fly.io, etc.) should have disk-level encryption at rest enabled — confirm this is on by default for the chosen provider, don't assume
+- **Encryption at rest:** **decided ([D29](../DECISIONS.md)) — application-level AES-256-GCM.** Connector credentials (service account JSON, API keys, OAuth tokens, webhook signing secrets) are encrypted before storage in the `credentials_enc` column, formatted `v1:<iv>:<tag>:<ciphertext>`, keyed from `CREDENTIALS_ENCRYPTION_KEY` (32 bytes, base64). Standalone Google Secret Manager was rejected because keeping it would have preserved the GCP tie-in the pivot exists to remove. Consequences to own: the key lives in environment variables, not in the database, so it must be backed up outside the database itself; a lost key means every connector must be reconnected; key rotation is manual (no versioned secrets — rotate by re-encrypting rows, or accept reconnections); the encrypted column is never returned by any endpoint (controllers strip it)
+- **Database-level encryption at rest:** the application-level encryption above protects the specific secrets. Disk-level encryption is a property of the host — verify it is on by default for the chosen provider (Railway), do not assume
 - **Backups:** encrypted backups, tested restore process — a backup that's never been restored isn't a real backup
 
 ## 3. API & Network Security
@@ -33,7 +33,7 @@ Written after the pivot decision from Firebase to a self-managed NestJS + Postgr
 - **GitHub repo import:** GitHub App with explicitly read-only repository permissions (per the earlier security correction) — not the classic write-capable `repo` OAuth scope
 - **GCP project import:** read-only Cloud Resource Manager scope
 - **Supabase connector:** service_role key is NOT structurally read-only — this remains an honest, disclosed exception (per the Security page plan), not something to paper over
-- **Webhook signature verification:** HMAC-SHA256 for the Generic Webhook connector, Stripe's own signature scheme for Stripe — both already specified, must be preserved exactly in the NestJS port, implemented as Nest guards so they can't accidentally be bypassed by a future route
+- **Webhook signature verification:** HMAC-SHA256 for the Generic Webhook connector, Stripe's own signature scheme for Stripe — both already specified, must be preserved exactly in the NestJS port. **Implemented as Nest guards** (`WebhookGuard`, `StripeGuard` in `backend/src/ingest/`), including the 24-hour rotation grace window for the generic webhook, the 5-minute timestamp tolerance for Stripe, and timing-safe comparison. Raw bodies are parsed only on `/v1/ingest` and `/v1/stripe` so the guards always see the exact bytes that were signed
 
 ## 5. Ingest Endpoint Hardening
 
@@ -62,7 +62,10 @@ Written after the pivot decision from Firebase to a self-managed NestJS + Postgr
 
 ## 9. Open Items From This Plan
 
-- [ ] Decide credential-encryption approach for Postgres (app-level encryption vs. standalone Secret Manager) — flagged in the pivot plan, still unresolved
-- [ ] Choose and configure a Postgres hosting provider with confirmed encryption-at-rest
+- [x] **Decided:** credential encryption for Postgres — application-level AES-256-GCM in an encrypted column ([D29](../DECISIONS.md)), replacing the earlier standalone-Secret-Manager option. See §2 for the rotation/backup consequences that decision created.
+- [x] **Provisioned:** Postgres hosting — Railway, using their **TimescaleDB** marketplace template ([D32](../DECISIONS.md); Railway's plain Postgres templates ship no extensions, and the metric hypertable depends on it). Disk-level encryption-at-rest still needs confirming against Railway's docs rather than assumed — see §2.
+- [ ] Implement the connector-credential key rotation this decision requires (re-encrypt rows, or accept reconnection on rotation)
 - [ ] Write the actual `SECURITY.md` and repo-root security policy
 - [ ] Set up Dependabot/Renovate on the GitHub repo
+- [ ] Helmet-equivalent security headers (`@nestjs/helmet`) — listed in §3, not yet applied
+- [ ] Rate limit the auth endpoints specifically (§1) separately from the general ingest/API limits

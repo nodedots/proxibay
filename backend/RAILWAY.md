@@ -28,8 +28,14 @@ use the **TimescaleDB template**, not the plain Postgres one).
 2. **Variables** (all in Railway → API service → Variables; nothing hardcoded,
    nothing committed — `.env` is gitignored and `.env.example` is the schema):
    - `DATABASE_URL` — reference the TimescaleDB service (`${{TimescaleDB.DATABASE_URL}}`)
-   - `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` — generate per environment:
+   - `DATABASE_SSL` — `true` when the API connects over Railway's public TCP
+     proxy (TLS); `false` for Railway internal service networking
+   - `JWT_ACCESS_SECRET` — generate per environment:
      `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+     (There is no `JWT_REFRESH_SECRET`: refresh tokens are opaque random values
+     stored SHA-256-hashed in Postgres, not signed tokens.)
+   - `JWT_OAUTH_STATE_SECRET` — optional; when blank it is derived from
+     `JWT_ACCESS_SECRET`. Set explicitly in production for independent rotation.
    - `CREDENTIALS_ENCRYPTION_KEY` — 32 bytes base64:
      `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
    - `RESEND_API_KEY` + `ALERT_FROM_EMAIL` — Resend (see below)
@@ -79,3 +85,45 @@ cooldown blocks re-fire. Report anything off — don't silently patch.
 - GitHub → OAuth App settings → Authorization callback URL →
   `https://<staging-api>/v1/auth/github/callback`
 - Keep the **live** app on Firebase handlers until Phase 3/4. Staging-only.
+
+## 6. Security-plan operations checklist (do before production traffic)
+
+These are Railway-dashboard/console steps, not code — all verified against the
+Security Plan §2/§5. HTTPS is enforced end-to-end by Railway's proxy (TLS
+termination + automatic redirect); the API adds HSTS via Helmet
+(`max-age=15552000, includeSubDomains`) so browsers refuse later HTTP downgrades.
+
+1. **Encryption at rest — verify, don't assume.** Railway states volumes are
+   encrypted at rest; confirm the current wording in the dashboard/docs for the
+   region/plan in use and note the answer (algorithm + key management) in the
+   repo's Security page before claiming it publicly. If the answer is ever "no",
+   treat disk theft as in-scope and lean on the app-level AES-256-GCM
+   credential columns (D29) as the backstop.
+2. **Automated backups — enable and test-restore.** For the TimescaleDB
+   service, enable PITR (`railway postgres pitr enable`) and/or a scheduled
+   volume-backup policy (`railway postgres pitr schedule set --daily --weekly`),
+   then **restore once to a throwaway sibling service**
+   (`railway postgres pitr restore --at <timestamp>` or `backup restore`) and
+   confirm the API boots against it. A backup that has never been restored is
+   unverified — record the date of the last successful test restore here.
+3. **Least-privilege Postgres role.** The app must not run as the
+   Railway-provisioned superuser. After first deploy, create a dedicated role
+   and grant only what the app needs (TypeORM `synchronize` needs DDL at boot,
+   so keep this to `CONNECT` + full rights **on the app schema only**, never
+   superuser):
+   ```sql
+   CREATE USER stackduck_app WITH PASSWORD '<strong-random-password>';
+   GRANT CONNECT ON DATABASE stackduck TO stackduck_app;
+   GRANT ALL ON SCHEMA public TO stackduck_app;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public
+     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO stackduck_app;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public
+     GRANT USAGE, SELECT ON SEQUENCES TO stackduck_app;
+   ```
+   Point the API's `DATABASE_URL` at this role and keep the superuser URL in
+   Railway variables only for admin work. Rotate via Railway → database
+   variables, then redeploy.
+4. **Dependabot + audit CI** are already wired in-repo
+   (`.github/dependabot.yml`, `npm audit --audit-level=high` in
+   `.github/workflows/ci.yml`) — confirm the Security tab shows them active
+   after the repo went public.

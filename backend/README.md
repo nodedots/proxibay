@@ -42,9 +42,13 @@ npm run start:dev         # API on :3001, /v1/health
 ```
 
 Without TimescaleDB the API still boots (plain table + `date_trunc()` fallback);
-set `REQUIRE_TIMESCALE=true` to fail fast instead. Hosting (Railway / Fly.io /
-Supabase Postgres-only / VPS) is **not decided** — flagged back when Phase 1 is
-otherwise ready, per the brief.
+set `REQUIRE_TIMESCALE=true` to fail fast instead. Hosting is decided: Railway
+using their **TimescaleDB** template — see [RAILWAY.md](RAILWAY.md).
+
+Alert email is delivered by Resend: set `RESEND_API_KEY` and `ALERT_FROM_EMAIL`
+to enable it. With the key absent the evaluation job logs
+`EMAIL (unsent — no RESEND_API_KEY)` rather than pretending to notify, so a local
+run is never mistaken for a delivered alert. `smoke:email` performs the real send.
 
 ## Verification (no Docker on this machine — Docker Desktop daemon is down)
 
@@ -88,8 +92,11 @@ wrong database fails fast instead of silently degrading to `date_trunc()`.
 - `POST/GET/PATCH/DELETE /v1/projects…`
 - `POST /v1/projects/:id/connectors/:provider` + `:id/healthcheck` + `:id/rotate-secret`
 - `GET /v1/projects/:id/metrics?metricType=&key=[&from=&to=]` (90d max)
+- `POST/GET/PATCH/DELETE /v1/projects/:id/alerts…` (CRUD; evaluated every 5 min)
 - `POST /v1/ingest/:connectorId` (public, HMAC guard, 60/min throttle)
 - `POST /v1/stripe/:connectorId` (public, Stripe guard, 60/min throttle)
+- `POST /v1/internal/jobs/{evaluate-alerts,poll-providers,reconcile-stripe}`
+  (only when `JOBS_TRIGGER_SECRET` is set; 404s otherwise)
 
 ## Phase 2 migration notes
 
